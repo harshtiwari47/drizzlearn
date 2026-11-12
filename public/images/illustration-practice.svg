@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400" fill="none">
+  <defs>
+    <filter id="pr-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="laser-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <linearGradient id="pedestal-top" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#23243a" />
+      <stop offset="100%" stop-color="#121320" />
+    </linearGradient>
+    <linearGradient id="pedestal-side" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#18192a" />
+      <stop offset="100%" stop-color="#0a0b12" />
+    </linearGradient>
+    <linearGradient id="violet-beam" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc" />
+      <stop offset="100%" stop-color="#7c3aed" />
+    </linearGradient>
+    <linearGradient id="lime-accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d4ff3a" />
+      <stop offset="100%" stop-color="#65a30d" />
+    </linearGradient>
+  </defs>
+
+  <!-- Ambient Backdrop Glow -->
+  <ellipse cx="300" cy="210" rx="180" ry="90" fill="#8555ff" opacity="0.18" filter="url(#pr-glow)" />
+  <circle cx="300" cy="180" r="50" fill="#d4ff3a" opacity="0.12" filter="url(#pr-glow)" />
+
+  <!-- Hexagonal Pedestal (Isometric) -->
+  <!-- Base Shadow -->
+  <polygon points="300,320 440,250 440,270 300,340 160,270 160,250" fill="#0c0d16" />
+  <!-- Side Faces -->
+  <polygon points="300,320 440,250 440,265 300,335" fill="url(#pedestal-side)" stroke="#272942" stroke-width="1" />
+  <polygon points="300,320 160,250 160,265 300,335" fill="#0f101b" stroke="#272942" stroke-width="1" />
+  <!-- Top Surface -->
+  <polygon points="300,180 440,250 300,320 160,250" fill="url(#pedestal-top)" stroke="#8555ff" stroke-width="1.5" stroke-opacity="0.8" />
+  <polygon points="300,200 410,250 300,300 190,250" stroke="#d4ff3a" stroke-width="1" stroke-opacity="0.4" stroke-dasharray="5 5" fill="none" />
+
+  <!-- Laser Projector Ring on Pedestal -->
+  <ellipse cx="300" cy="250" rx="60" ry="25" stroke="url(#violet-beam)" stroke-width="2" filter="url(#laser-glow)" />
+  <circle cx="240" cy="250" r="3" fill="#d4ff3a" filter="url(#laser-glow)" />
+  <circle cx="360" cy="250" r="3" fill="#d4ff3a" filter="url(#laser-glow)" />
+  <circle cx="300" cy="275" r="3" fill="#a87cff" filter="url(#laser-glow)" />
+
+  <!-- Floating Holographic Core: The Interactive Challenge Cube -->
+  <!-- Top Face -->
+  <polygon points="300,100 340,120 300,140 260,120" fill="#2d2e48" stroke="#8555ff" stroke-width="1.5" filter="url(#laser-glow)" />
+  <!-- Right Face -->
+  <polygon points="300,140 340,120 340,165 300,185" fill="url(#violet-beam)" fill-opacity="0.8" stroke="#a87cff" stroke-width="1.5" />
+  <!-- Left Face -->
+  <polygon points="300,140 260,120 260,165 300,185" fill="#18192c" stroke="#6366f1" stroke-width="1.5" />
+
+  <!-- Neon Seam Beams on Cube -->
+  <line x1="300" y1="100" x2="300" y2="140" stroke="#d4ff3a" stroke-width="2" filter="url(#laser-glow)" />
+  <line x1="260" y1="165" x2="300" y2="185" stroke="#d4ff3a" stroke-width="2" filter="url(#laser-glow)" />
+
+  <!-- Floating Glowing Syntax Brackets { } -->
+  <!-- Left Bracket { -->
+  <g transform="translate(190, 110)" filter="url(#laser-glow)">
+    <path d="M 30 0 C 15 0 10 15 10 25 C 10 35 0 40 0 40 C 0 40 10 45 10 55 C 10 65 15 80 30 80" stroke="url(#violet-beam)" stroke-width="3" fill="none" stroke-linecap="round" />
+    <circle cx="30" cy="0" r="2.5" fill="#d4ff3a" />
+    <circle cx="30" cy="80" r="2.5" fill="#d4ff3a" />
+  </g>
+  <!-- Right Bracket } -->
+  <g transform="translate(370, 110)" filter="url(#laser-glow)">
+    <path d="M 0 0 C 15 0 20 15 20 25 C 20 35 30 40 30 40 C 30 40 20 45 20 55 C 20 65 15 80 0 80" stroke="url(#lime-accent-grad)" stroke-width="3" fill="none" stroke-linecap="round" />
+    <circle cx="0" cy="0" r="2.5" fill="#a87cff" />
+    <circle cx="0" cy="80" r="2.5" fill="#a87cff" />
+  </g>
+
+  <!-- Interactive Checkpoint Nodes (Floating Orbital Orbs) -->
+  <g transform="translate(230, 80)">
+    <circle cx="0" cy="0" r="8" fill="#161726" stroke="#d4ff3a" stroke-width="1.5" />
+    <circle cx="0" cy="0" r="4" fill="#d4ff3a" filter="url(#laser-glow)" />
+    <!-- Connector ray to cube -->
+    <line x1="0" y1="0" x2="50" y2="35" stroke="#d4ff3a" stroke-width="1" stroke-dasharray="3 3" opacity="0.7" />
+  </g>
+  <g transform="translate(370, 75)">
+    <circle cx="0" cy="0" r="8" fill="#161726" stroke="#8555ff" stroke-width="1.5" />
+    <circle cx="0" cy="0" r="4" fill="#c084fc" filter="url(#laser-glow)" />
+    <!-- Connector ray to cube -->
+    <line x1="0" y1="0" x2="-45" y2="40" stroke="#8555ff" stroke-width="1" stroke-dasharray="3 3" opacity="0.7" />
+  </g>
+
+  <!-- Holographic Terminal Output Stream Floating Below -->
+  <g transform="translate(250, 205)" opacity="0.85">
+    <rect x="0" y="0" width="100" height="24" rx="4" fill="#141524" stroke="#8555ff" stroke-width="1" />
+    <circle cx="12" cy="12" r="3" fill="#d4ff3a" filter="url(#laser-glow)" />
+    <line x1="24" y1="12" x2="65" y2="12" stroke="#e0e7ff" stroke-width="2" stroke-linecap="round" />
+    <line x1="72" y1="12" x2="90" y2="12" stroke="#8555ff" stroke-width="2" stroke-linecap="round" />
+  </g>
+</svg>

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <defs>
+    <filter id="logo-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <linearGradient id="violet-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc" />
+      <stop offset="50%" stop-color="#8555ff" />
+      <stop offset="100%" stop-color="#4c1d95" />
+    </linearGradient>
+    <linearGradient id="lime-beam" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#a3e635" />
+      <stop offset="100%" stop-color="#d4ff3a" />
+    </linearGradient>
+    <linearGradient id="surface-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#222338" />
+      <stop offset="100%" stop-color="#11121d" />
+    </linearGradient>
+    <linearGradient id="surface-deep" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#18192a" />
+      <stop offset="100%" stop-color="#0c0d16" />
+    </linearGradient>
+  </defs>
+
+  <!-- Ambient Glow Behind Logo -->
+  <circle cx="60" cy="60" r="38" fill="url(#violet-glow)" opacity="0.3" filter="url(#logo-glow)" />
+
+  <!-- Outer Protective Hexagon Ring -->
+  <polygon points="60,10 98,32 98,76 60,98 22,76 22,32" stroke="url(#violet-glow)" stroke-width="2" stroke-opacity="0.5" fill="none" />
+  
+  <!-- Subtle Lime Outer Nodes -->
+  <circle cx="60" cy="10" r="3" fill="#d4ff3a" filter="url(#logo-glow)" />
+  <circle cx="98" cy="76" r="2.5" fill="#a87cff" />
+  <circle cx="22" cy="76" r="2.5" fill="#a87cff" />
+
+  <!-- Isometric Polyhedral Core / LearnOS Neural Crystal -->
+  <!-- Top Face -->
+  <polygon points="60,26 90,43 60,60 30,43" fill="url(#surface-dark)" stroke="#8555ff" stroke-width="1.5" stroke-linejoin="round" />
+  
+  <!-- Right Face -->
+  <polygon points="60,60 90,43 90,78 60,95" fill="url(#violet-glow)" fill-opacity="0.85" stroke="#a87cff" stroke-width="1.5" stroke-linejoin="round" />
+  
+  <!-- Left Face -->
+  <polygon points="60,60 30,43 30,78 60,95" fill="url(#surface-deep)" stroke="#6366f1" stroke-width="1.5" stroke-linejoin="round" />
+
+  <!-- Inner Radiant Neural Beam (Lime Core) -->
+  <line x1="60" y1="26" x2="60" y2="60" stroke="url(#lime-beam)" stroke-width="3" stroke-linecap="round" filter="url(#logo-glow)" />
+  <line x1="60" y1="60" x2="90" y2="78" stroke="url(#lime-beam)" stroke-width="2" stroke-linecap="round" opacity="0.8" />
+  
+  <!-- Center Core Fusion Star -->
+  <circle cx="60" cy="60" r="4.5" fill="#ffffff" filter="url(#logo-glow)" />
+  <circle cx="60" cy="60" r="2.5" fill="#d4ff3a" />
+</svg>

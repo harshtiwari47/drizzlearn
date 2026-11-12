@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" width="240" height="200" fill="none">
+  <defs>
+    <filter id="p-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="p-blush" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" />
+    </filter>
+    <linearGradient id="p-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3e8ff" />
+      <stop offset="30%" stop-color="#c084fc" />
+      <stop offset="85%" stop-color="#7c3aed" />
+      <stop offset="100%" stop-color="#4c1d95" />
+    </linearGradient>
+    <linearGradient id="puzzle-lime" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ecfccb" />
+      <stop offset="40%" stop-color="#d4ff3a" />
+      <stop offset="100%" stop-color="#84cc16" />
+    </linearGradient>
+  </defs>
+
+  <!-- Ambient Glow -->
+  <ellipse cx="120" cy="115" rx="75" ry="60" fill="#a855f7" opacity="0.2" filter="url(#p-glow)" />
+
+  <!-- Cute Round Head/Body (Smooth Rounded Dome - NO Antenna!) -->
+  <ellipse cx="120" cy="94" rx="60" ry="50" fill="url(#p-body)" />
+  <ellipse cx="120" cy="94" rx="59" ry="49" stroke="rgba(255,255,255,0.7)" stroke-width="2" />
+  <!-- Glossy Dome Highlight -->
+  <ellipse cx="120" cy="54" rx="28" ry="7" fill="#ffffff" opacity="0.4" />
+
+  <!-- Visor -->
+  <rect x="74" y="74" width="92" height="46" rx="20" fill="#140f29" stroke="rgba(192,132,252,0.45)" stroke-width="1.5" />
+
+  <!-- Cute Round Smart Glasses Frame (Glowing Lavender/Lime!) -->
+  <!-- Left Lens -->
+  <circle cx="95" cy="96" r="14" stroke="#d4ff3a" stroke-width="2.5" fill="rgba(212,255,58,0.08)" filter="url(#p-glow)" />
+  <!-- Right Lens -->
+  <circle cx="145" cy="96" r="14" stroke="#d4ff3a" stroke-width="2.5" fill="rgba(212,255,58,0.08)" filter="url(#p-glow)" />
+  <!-- Bridge -->
+  <path d="M 109 95 Q 120 90 131 95" stroke="#d4ff3a" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+  <!-- Cute Eyes Behind Glasses (Smiling ^ ^) -->
+  <path d="M 88 97 Q 95 89 102 97" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" fill="none" filter="url(#p-glow)" />
+  <path d="M 138 97 Q 145 89 152 97" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" fill="none" filter="url(#p-glow)" />
+
+  <!-- Blushing Cheeks -->
+  <circle cx="82" cy="104" r="5.5" fill="#f43f5e" opacity="0.75" filter="url(#p-blush)" />
+  <circle cx="158" cy="104" r="5.5" fill="#f43f5e" opacity="0.75" filter="url(#p-blush)" />
+
+  <!-- Confident Cute Smile -->
+  <path d="M 115 106 Q 120 112 125 106" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+  <!-- Glowing Transparent Interactive Puzzle Piece Held Up Proudly -->
+  <g transform="translate(100, 136)" filter="url(#p-glow)">
+    <path d="M 10 0 C 10 0 16 -8 24 -8 C 32 -8 38 0 38 0 L 48 0 L 48 10 C 48 10 56 16 56 24 C 56 32 48 38 48 38 L 48 48 L 38 48 C 38 48 32 40 24 40 C 16 40 10 48 10 48 L 0 48 L 0 38 C 0 38 8 32 8 24 C 8 16 0 10 0 10 Z" fill="url(#puzzle-lime)" stroke="#ffffff" stroke-width="2" />
+    <circle cx="24" cy="24" r="5" fill="#ffffff" opacity="0.8" />
+  </g>
+
+  <!-- Paws Holding Puzzle Piece -->
+  <circle cx="94" cy="155" r="8" fill="#c084fc" stroke="#ffffff" stroke-width="1.5" />
+  <circle cx="152" cy="155" r="8" fill="#c084fc" stroke="#ffffff" stroke-width="1.5" />
+
+  <!-- Floating Sparkles & Code Syntax Tags -->
+  <g filter="url(#p-glow)">
+    <text x="44" y="90" font-family="'Space Grotesk', monospace" font-size="16" font-weight="700" fill="#c084fc">&lt;/&gt;</text>
+    <text x="184" y="90" font-family="'Space Grotesk', monospace" font-size="16" font-weight="700" fill="#d4ff3a">{ }</text>
+  </g>
+  <circle cx="52" cy="120" r="3" fill="#d4ff3a" filter="url(#p-glow)" />
+  <circle cx="196" cy="125" r="3" fill="#c084fc" filter="url(#p-glow)" />
+</svg>

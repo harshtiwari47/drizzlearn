@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" width="240" height="200" fill="none">
+  <defs>
+    <filter id="c-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="c-blush" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" />
+    </filter>
+    <linearGradient id="c-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3e8ff" />
+      <stop offset="30%" stop-color="#c084fc" />
+      <stop offset="85%" stop-color="#7c3aed" />
+      <stop offset="100%" stop-color="#4c1d95" />
+    </linearGradient>
+    <linearGradient id="c-highlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="c-book" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+    <linearGradient id="c-lime" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d4ff3a" />
+      <stop offset="100%" stop-color="#84cc16" />
+    </linearGradient>
+  </defs>
+
+  <!-- Ambient Glow (Transparent) -->
+  <ellipse cx="120" cy="115" rx="75" ry="60" fill="#a855f7" opacity="0.2" filter="url(#c-glow)" />
+
+  <!-- Cute Ears / Headphones -->
+  <rect x="56" y="66" width="13" height="24" rx="6.5" fill="url(#c-lime)" filter="url(#c-glow)" />
+  <rect x="171" y="66" width="13" height="24" rx="6.5" fill="url(#c-lime)" filter="url(#c-glow)" />
+
+  <!-- Cute Plump Body (Smooth Rounded Dome - NO Antenna!) -->
+  <ellipse cx="120" cy="86" rx="57" ry="48" fill="url(#c-body)" />
+  <ellipse cx="120" cy="86" rx="56" ry="47" stroke="rgba(255,255,255,0.7)" stroke-width="2" />
+  
+  <!-- Glossy Dome Highlight -->
+  <ellipse cx="120" cy="50" rx="26" ry="7" fill="#ffffff" opacity="0.4" />
+
+  <!-- Face Visor -->
+  <rect x="74" y="66" width="92" height="46" rx="19" fill="#140f29" stroke="rgba(192, 132, 252, 0.45)" stroke-width="1.5" />
+
+  <!-- Blushing Cheeks -->
+  <circle cx="88" cy="94" r="6.5" fill="#f43f5e" opacity="0.75" filter="url(#c-blush)" />
+  <circle cx="152" cy="94" r="6.5" fill="#f43f5e" opacity="0.75" filter="url(#c-blush)" />
+
+  <!-- Happy Focused Eyes -->
+  <path d="M 90 87 Q 97 78 104 87" stroke="#ffffff" stroke-width="4" stroke-linecap="round" fill="none" filter="url(#c-glow)" />
+  <path d="M 136 87 Q 143 78 150 87" stroke="#ffffff" stroke-width="4" stroke-linecap="round" fill="none" filter="url(#c-glow)" />
+
+  <!-- Tiny Happy Mouth -->
+  <ellipse cx="120" cy="95" rx="3.5" ry="2" fill="#d4ff3a" />
+
+  <!-- Glowing Transparent Book Held in Front -->
+  <!-- Left Page -->
+  <path d="M 120 135 C 105 125 75 125 55 132 L 55 168 C 75 161 105 161 120 171 Z" fill="rgba(224, 231, 255, 0.88)" stroke="#818cf8" stroke-width="2" />
+  <!-- Right Page -->
+  <path d="M 120 135 C 135 125 165 125 185 132 L 185 168 C 165 161 135 161 120 171 Z" fill="rgba(243, 232, 255, 0.92)" stroke="#c084fc" stroke-width="2" />
+
+  <!-- Cute Holographic Lines on Pages -->
+  <line x1="68" y1="142" x2="108" y2="138" stroke="#818cf8" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+  <line x1="68" y1="150" x2="102" y2="146" stroke="#818cf8" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+  <line x1="68" y1="158" x2="95" y2="155" stroke="#d4ff3a" stroke-width="2" stroke-linecap="round" />
+
+  <line x1="132" y1="138" x2="172" y2="142" stroke="#c084fc" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+  <line x1="132" y1="146" x2="166" y2="150" stroke="#c084fc" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+  <line x1="132" y1="155" x2="158" y2="158" stroke="#d4ff3a" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Cute Little Paws Holding Book -->
+  <circle cx="56" cy="148" r="9" fill="#c084fc" stroke="#ffffff" stroke-width="1.5" />
+  <circle cx="184" cy="148" r="9" fill="#c084fc" stroke="#ffffff" stroke-width="1.5" />
+
+  <!-- Floating Bookmark Star -->
+  <g transform="translate(120, 116)" filter="url(#c-glow)">
+    <path d="M 0 -10 L 3 -3 L 10 0 L 3 3 L 0 10 L -3 3 L -10 0 L -3 -3 Z" fill="#d4ff3a" />
+  </g>
+
+  <!-- Floating Magic Sparks -->
+  <circle cx="38" cy="115" r="3" fill="#d4ff3a" filter="url(#c-glow)" />
+  <circle cx="204" cy="110" r="3.5" fill="#c084fc" filter="url(#c-glow)" />
+  <circle cx="48" cy="75" r="2" fill="#ffffff" />
+  <circle cx="196" cy="70" r="2.5" fill="#d4ff3a" />
+</svg>

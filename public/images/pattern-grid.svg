@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60" fill="none">
+  <defs>
+    <radialGradient id="dot-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8555ff" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#8555ff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <!-- Grid Lines -->
+  <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#1d1e2f" stroke-width="1" stroke-opacity="0.45" />
+  <!-- Corner Intersection Cross -->
+  <path d="M 0 3 L 0 -3 M -3 0 L 3 0" stroke="#8555ff" stroke-width="1" stroke-opacity="0.6" />
+  <!-- Center Ambient Point -->
+  <circle cx="30" cy="30" r="1" fill="#d4ff3a" opacity="0.3" />
+</svg>

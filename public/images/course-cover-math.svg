@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 160" width="400" height="160" fill="none">
+  <defs>
+    <linearGradient id="math-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b152b" />
+      <stop offset="100%" stop-color="#0a0a12" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="160" fill="url(#math-bg)" />
+  <circle cx="320" cy="80" r="90" fill="#a87cff" opacity="0.12" />
+
+  <!-- Geometric Coordinate Curves & Sine Waves -->
+  <g stroke="#a87cff" stroke-width="1.5" stroke-opacity="0.4" fill="none">
+    <path d="M 180 80 Q 220 20 260 80 T 340 80 T 400 80" />
+    <path d="M 180 80 Q 220 140 260 80 T 340 80 T 400 80" stroke="#d4ff3a" stroke-opacity="0.5" />
+    <circle cx="260" cy="80" r="4" fill="#ffffff" />
+    <circle cx="340" cy="80" r="4" fill="#d4ff3a" />
+  </g>
+  <!-- Polyhedral Geometry Wireframe -->
+  <polygon points="320,30 360,60 340,110 300,110 280,60" stroke="#c084fc" stroke-width="1.5" stroke-dasharray="4 4" fill="none" opacity="0.6" />
+  <polygon points="320,50 350,70 335,100 305,100 290,70" stroke="#d4ff3a" stroke-width="1" fill="none" opacity="0.4" />
+</svg>

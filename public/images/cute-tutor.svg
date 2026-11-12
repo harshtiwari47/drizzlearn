@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140" width="160" height="140" fill="none">
+  <defs>
+    <!-- Soft Ambient Glow -->
+    <filter id="bot-glow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <!-- Eye Neon Glow -->
+    <filter id="eye-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    
+    <!-- Exact Head Gradient matching Image 1 -->
+    <linearGradient id="bot-head-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0eaff" />
+      <stop offset="28%" stop-color="#a88aff" />
+      <stop offset="72%" stop-color="#4d347e" />
+      <stop offset="100%" stop-color="#201a38" />
+    </linearGradient>
+
+    <!-- Ear Gradient matching Image 1 -->
+    <linearGradient id="bot-ear-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8f6de3" />
+      <stop offset="100%" stop-color="#d9caff" />
+    </linearGradient>
+  </defs>
+
+  <!-- Ambient Glow Behind Head (100% Transparent background) -->
+  <ellipse cx="80" cy="70" rx="55" ry="45" fill="#8353ed" opacity="0.35" filter="url(#bot-glow)" />
+
+  <!-- Left Capsule Ear -->
+  <rect x="14" y="52" width="18" height="34" rx="8" fill="url(#bot-ear-grad)" stroke="rgba(255,255,255,0.55)" stroke-width="1.2" />
+
+  <!-- Right Capsule Ear -->
+  <rect x="128" y="52" width="18" height="34" rx="8" fill="url(#bot-ear-grad)" stroke="rgba(255,255,255,0.55)" stroke-width="1.2" />
+
+  <!-- Main Capsule Head (Smooth Rounded Squircle) -->
+  <rect x="25" y="24" width="110" height="90" rx="38" fill="url(#bot-head-grad)" stroke="rgba(225, 213, 255, 0.75)" stroke-width="1.5" />
+  
+  <!-- Head Top Bevel Highlight -->
+  <path d="M 45 32 Q 80 26 115 32" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" fill="none" />
+
+  <!-- Dark Pill Visor Screen -->
+  <rect x="40" y="46" width="80" height="48" rx="24" fill="#100d1d" stroke="rgba(221, 202, 255, 0.65)" stroke-width="1.5" />
+  
+  <!-- Subtle Visor Glass Reflection (Top curve) -->
+  <path d="M 50 54 Q 80 48 110 54" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" stroke-linecap="round" fill="none" />
+
+  <!-- Pure, Clean Caret Eyes (^ ^) - Glowing White/Lavender, NO red line, NO mouth, NO antennae -->
+  <g stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#eye-glow)">
+    <!-- Left Eye ^ -->
+    <path d="M 59 74 L 67 64 L 75 74" />
+    <!-- Right Eye ^ -->
+    <path d="M 85 74 L 93 64 L 101 74" />
+  </g>
+</svg>

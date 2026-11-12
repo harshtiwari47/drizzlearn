@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 200" width="260" height="200" fill="none">
+  <defs>
+    <filter id="st-cute-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="st-blush" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" />
+    </filter>
+    <!-- Buddy 1 (Violet) -->
+    <linearGradient id="b1-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3e8ff" />
+      <stop offset="30%" stop-color="#c084fc" />
+      <stop offset="85%" stop-color="#7c3aed" />
+    </linearGradient>
+    <!-- Buddy 2 (Lime/Mint) -->
+    <linearGradient id="b2-body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f7fee7" />
+      <stop offset="30%" stop-color="#bef264" />
+      <stop offset="85%" stop-color="#65a30d" />
+    </linearGradient>
+  </defs>
+
+  <!-- Ambient Glow -->
+  <ellipse cx="130" cy="120" rx="95" ry="60" fill="#a855f7" opacity="0.18" filter="url(#st-cute-glow)" />
+
+  <!-- Heart / Sparkle Between Buddies (Floating Friendship Aura) -->
+  <g transform="translate(130, 50)" filter="url(#st-cute-glow)">
+    <path d="M 0 -8 C -6 -16 -16 -10 -16 -2 C -16 6 0 16 0 16 C 0 16 16 6 16 -2 C 16 -10 6 -16 0 -8 Z" fill="#f43f5e" opacity="0.9" />
+    <circle cx="-5" cy="-6" r="2.5" fill="#ffffff" opacity="0.8" />
+  </g>
+
+  <!-- BUDDY 1 (Left - Lavender, Smooth Dome - NO Antenna!) -->
+  <g transform="translate(45, 52)">
+    <!-- Ear -->
+    <rect x="-4" y="55" width="8" height="16" rx="4" fill="#d4ff3a" />
+    <!-- Body -->
+    <ellipse cx="40" cy="70" rx="44" ry="38" fill="url(#b1-body)" stroke="rgba(255,255,255,0.7)" stroke-width="1.8" />
+    <ellipse cx="40" cy="38" rx="18" ry="5" fill="#ffffff" opacity="0.4" />
+    <!-- Visor -->
+    <rect x="12" y="54" width="60" height="30" rx="13" fill="#140f29" stroke="rgba(192,132,252,0.4)" stroke-width="1.5" />
+    <!-- Eyes (^ ^) -->
+    <path d="M 24 68 Q 30 60 36 68" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#st-cute-glow)" />
+    <path d="M 48 68 Q 54 60 60 68" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#st-cute-glow)" />
+    <!-- Blush -->
+    <circle cx="20" cy="72" r="4.5" fill="#f43f5e" opacity="0.75" filter="url(#st-blush)" />
+    <circle cx="64" cy="72" r="4.5" fill="#f43f5e" opacity="0.75" filter="url(#st-blush)" />
+    <!-- Smile -->
+    <path d="M 38 73 Q 42 77 46 73" stroke="#d4ff3a" stroke-width="2" stroke-linecap="round" fill="none" />
+  </g>
+
+  <!-- BUDDY 2 (Right - Mint Lime, Smooth Dome - NO Antenna!) -->
+  <g transform="translate(135, 52)">
+    <!-- Ear -->
+    <rect x="76" y="55" width="8" height="16" rx="4" fill="#c084fc" />
+    <!-- Body -->
+    <ellipse cx="40" cy="70" rx="44" ry="38" fill="url(#b2-body)" stroke="rgba(255,255,255,0.7)" stroke-width="1.8" />
+    <ellipse cx="40" cy="38" rx="18" ry="5" fill="#ffffff" opacity="0.4" />
+    <!-- Visor -->
+    <rect x="8" y="54" width="60" height="30" rx="13" fill="#0f1d17" stroke="rgba(190,242,100,0.4)" stroke-width="1.5" />
+    <!-- Eyes (^ ^) -->
+    <path d="M 20 68 Q 26 60 32 68" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#st-cute-glow)" />
+    <path d="M 44 68 Q 50 60 56 68" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#st-cute-glow)" />
+    <!-- Blush -->
+    <circle cx="16" cy="72" r="4.5" fill="#f43f5e" opacity="0.75" filter="url(#st-blush)" />
+    <circle cx="60" cy="72" r="4.5" fill="#f43f5e" opacity="0.75" filter="url(#st-blush)" />
+    <!-- Smile -->
+    <path d="M 34 73 Q 38 77 42 73" stroke="#c084fc" stroke-width="2" stroke-linecap="round" fill="none" />
+  </g>
+
+  <!-- Buddies High-Fiving Hands in Center! -->
+  <g filter="url(#st-cute-glow)">
+    <circle cx="124" cy="116" r="7" fill="#c084fc" stroke="#ffffff" stroke-width="1.5" />
+    <circle cx="136" cy="116" r="7" fill="#bef264" stroke="#ffffff" stroke-width="1.5" />
+    <!-- High-five spark -->
+    <circle cx="130" cy="114" r="4" fill="#ffffff" />
+    <line x1="130" y1="106" x2="130" y2="102" stroke="#d4ff3a" stroke-width="2" stroke-linecap="round" />
+    <line x1="130" y1="122" x2="130" y2="126" stroke="#d4ff3a" stroke-width="2" stroke-linecap="round" />
+    <line x1="122" y1="114" x2="118" y2="114" stroke="#d4ff3a" stroke-width="2" stroke-linecap="round" />
+    <line x1="138" y1="114" x2="142" y2="114" stroke="#d4ff3a" stroke-width="2" stroke-linecap="round" />
+  </g>
+
+  <!-- Floating Sparkles -->
+  <circle cx="36" cy="130" r="3" fill="#d4ff3a" filter="url(#st-cute-glow)" />
+  <circle cx="225" cy="130" r="3" fill="#c084fc" filter="url(#st-cute-glow)" />
+  <circle cx="48" cy="80" r="2" fill="#ffffff" />
+  <circle cx="215" cy="75" r="2" fill="#ffffff" />
+</svg>

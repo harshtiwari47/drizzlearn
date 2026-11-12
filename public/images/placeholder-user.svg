@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none">
+  <!-- Crisp, highly-visible user profile avatar icon in dark obsidian (#1b1231) with visible stroke -->
+  <!-- User Head -->
+  <circle cx="16" cy="10" r="4.8" fill="#1b1231" stroke="#1b1231" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- User Shoulders / Torso -->
+  <path d="M 6.5 26.5 C 6.5 21 10.7 17.5 16 17.5 C 21.3 17.5 25.5 21 25.5 26.5 C 25.5 27.2 24.8 27.8 24 27.8 L 8 27.8 C 7.2 27.8 6.5 27.2 6.5 26.5 Z" fill="#1b1231" stroke="#1b1231" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
