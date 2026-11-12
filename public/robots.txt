@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Allow: /courses
+Allow: /today
+Allow: /study-together
+Allow: /notes
+Allow: /flashcards
+Allow: /practice
+Allow: /progress
+Allow: /tutor
+Allow: /goal
+
+Disallow: /api/
+Disallow: /settings
+Disallow: /search
+Disallow: /login
+Disallow: /signup
+Disallow: /auth
+Disallow: /verify
+Disallow: /reset-password
+Disallow: /verified
+
+Sitemap: /sitemap.xml

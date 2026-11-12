@@ -463,6 +463,7 @@ export function scoreAndRankCandidates(
 
       let affinityBoost = 0;
       if (targetCourseId && item.course_id === targetCourseId) affinityBoost += 0.008;
+      if (targetCourseId && item.course_id && item.course_id !== targetCourseId) affinityBoost -= 0.05;
       if (targetLessonId && item.lesson_id === targetLessonId) affinityBoost += 0.014;
 
       const meta = parseJsonSafe(item.metadata, {});

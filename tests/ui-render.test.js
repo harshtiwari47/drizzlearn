@@ -180,6 +180,8 @@ test("screenshot regressions stay fixed in the stylesheet", async () => {
   assert.match(css, /@media \(max-width: 620px\)/);
   assert.match(css, /\.study-room-heading h2 \{ overflow-wrap:anywhere; \}/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(css, /\.quiet-btn \{\s*width: auto;\s*min-width: 34px;\s*height: auto;\s*min-height: 36px;\s*padding: 8px 14px;/);
+  assert.match(css, /\.quiet-btn\.compact \{\s*min-height: 32px;\s*padding: 6px 11px;/);
   const home=renderRoute();
   assert.match(home,/class="brand-name">Drizzlearn<\/div>/);
 });
@@ -263,4 +265,61 @@ test("full page login and signup routes render as dedicated pages with brand hea
   const css = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
   assert.match(css, /\.login-fullpage\s*\{/);
   assert.match(css, /\.auth-page-card\s*\{/);
+});
+
+test("study tools expose topics and filters across all courses instead of only the latest active course", () => {
+  localStorageValues.set(
+    "learnos.local.v2",
+    JSON.stringify({
+      courses: [
+        {
+          id: "c-new",
+          title: "React Hooks Mastery",
+          status: "active",
+          modules: [{ id: "m-new", title: "Hooks Core", lessons: [{ id: "l-new", title: "Latest React Lesson", objective: "Use state" }] }],
+        },
+        {
+          id: "c-old",
+          title: "Python Foundations",
+          status: "active",
+          modules: [{ id: "m-old", title: "Python Basics", lessons: [{ id: "l-old", title: "Old Python Lesson", objective: "Use lists" }] }],
+        },
+      ],
+      activeCourseId: "c-new",
+      goals: [],
+      tasks: [],
+      notes: [],
+      flashcards: [
+        { id: "f-old", front: "Python list push?", back: "append()", lesson_id: "l-old", course_id: "c-old", due_at: "2025-01-01T00:00:00Z" },
+      ],
+      attempts: [],
+      settings: {},
+    })
+  );
+
+  const practiceHtml = renderRoute("practice");
+  assert.ok(practiceHtml.includes("All courses (2 topics)"));
+  assert.ok(practiceHtml.includes("React Hooks Mastery"));
+  assert.ok(practiceHtml.includes("Python Foundations"));
+  assert.ok(practiceHtml.includes("Latest React Lesson"));
+  assert.ok(practiceHtml.includes("Old Python Lesson"));
+
+  const tutorHtml = renderRoute("tutor");
+  assert.ok(tutorHtml.includes("All courses (2 topics)"));
+  assert.ok(tutorHtml.includes("Python Foundations"));
+  assert.ok(tutorHtml.includes("Old Python Lesson"));
+
+  const flashcardsHtml = renderRoute("flashcards");
+  assert.ok(flashcardsHtml.includes("All courses (1)"));
+  assert.ok(flashcardsHtml.includes("Python Foundations"));
+  assert.ok(flashcardsHtml.includes("Old Python Lesson"));
+
+  const progressHtml = renderRoute("progress");
+  assert.ok(progressHtml.includes("All courses (2)"));
+  assert.ok(progressHtml.includes("React Hooks Mastery"));
+  assert.ok(progressHtml.includes("Python Foundations"));
+
+  const notesHtml = renderRoute("notes");
+  assert.ok(notesHtml.includes("React Hooks Mastery"));
+  assert.ok(notesHtml.includes("Python Foundations"));
 });

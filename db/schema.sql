@@ -151,12 +151,24 @@ CREATE TABLE IF NOT EXISTS flashcards (
   lesson_id UUID REFERENCES lessons(id) ON DELETE SET NULL,
   front TEXT NOT NULL,
   back TEXT NOT NULL,
+  hint TEXT NOT NULL DEFAULT '',
+  card_type TEXT NOT NULL DEFAULT 'qa' CHECK (card_type IN ('qa','cloze','formula','application')),
+  origin TEXT NOT NULL DEFAULT 'learner' CHECK (origin IN ('learner','ai_generated')),
+  state TEXT NOT NULL DEFAULT 'new' CHECK (state IN ('new','learning','review','relearning')),
+  lapses INTEGER NOT NULL DEFAULT 0,
+  last_reviewed_at TIMESTAMPTZ,
   due_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   interval_days INTEGER NOT NULL DEFAULT 0,
   ease NUMERIC(4,2) NOT NULL DEFAULT 2.50,
   repetitions INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS hint TEXT NOT NULL DEFAULT '';
+ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS card_type TEXT NOT NULL DEFAULT 'qa';
+ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS origin TEXT NOT NULL DEFAULT 'learner';
+ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS state TEXT NOT NULL DEFAULT 'new';
+ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS lapses INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS last_reviewed_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS flashcards_user_due_idx ON flashcards(user_id, due_at);
 CREATE INDEX IF NOT EXISTS flashcards_course_idx ON flashcards(course_id);
 CREATE INDEX IF NOT EXISTS flashcards_lesson_idx ON flashcards(lesson_id);
@@ -166,9 +178,15 @@ CREATE TABLE IF NOT EXISTS review_events (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   flashcard_id UUID NOT NULL REFERENCES flashcards(id) ON DELETE CASCADE,
   rating TEXT NOT NULL CHECK (rating IN ('Again','Hard','Good','Easy')),
+  interval_before INTEGER,
+  interval_after INTEGER,
+  ease_after NUMERIC(4,2),
   reviewed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   next_due_at TIMESTAMPTZ NOT NULL
 );
+ALTER TABLE review_events ADD COLUMN IF NOT EXISTS interval_before INTEGER;
+ALTER TABLE review_events ADD COLUMN IF NOT EXISTS interval_after INTEGER;
+ALTER TABLE review_events ADD COLUMN IF NOT EXISTS ease_after NUMERIC(4,2);
 CREATE INDEX IF NOT EXISTS review_events_user_reviewed_idx ON review_events(user_id, reviewed_at DESC);
 CREATE INDEX IF NOT EXISTS review_events_flashcard_idx ON review_events(flashcard_id);
 

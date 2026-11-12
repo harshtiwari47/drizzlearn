@@ -136,7 +136,7 @@ export async function generateCourseMaterials(userId, courseId, options = {}) {
     // 5. Build material artifacts (AI or rule-based fallback)
     const materials = buildCourseMaterials(course, modules, lessons, aiResult?.data);
 
-    // 6. Persist Roadmap Note
+    // 6. Persist Roadmap Note (strictly idempotent: only 1 AI-generated roadmap note per course)
     let roadmapCreated = false;
     const existingRoadmap = await queryFn(
       `SELECT id FROM notes WHERE user_id=$1 AND course_id=$2 AND origin='ai_draft' AND lesson_id IS NULL`,
@@ -209,7 +209,7 @@ export async function generateCourseMaterials(userId, courseId, options = {}) {
     let practiceCreated = 0;
 
     for (const lesson of lessons) {
-      // 8a. Structured Lesson Notes
+      // 8a. Structured Lesson Notes (strictly idempotent: only 1 AI-drafted note per topic/lesson)
       const existingLessonNote = await queryFn(
         `SELECT id FROM notes WHERE user_id=$1 AND course_id=$2 AND lesson_id=$3 AND origin='ai_draft'`,
         [userId, courseId, lesson.id]
@@ -378,6 +378,7 @@ async function tryAiMaterialsGeneration(candidates, course, modules, lessons) {
 
   const systemPrompt = `You are the Lead Curriculum Specialist for Drizzlearn.
 Generate comprehensive study materials for the provided course in strict JSON format.
+Always strictly match the academic discipline, tone, and subject matter of the course (for example, if the course is about English language, grammar, or communication, all concepts, step-by-step reasoning, worked examples, and checkpoints must focus on natural language usage; do NOT generate computer programming code or software engineering analogies unless the course is explicitly about computer programming).
 Return a single JSON object with this exact shape:
 {
   "roadmap": {

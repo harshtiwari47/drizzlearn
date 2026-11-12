@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TutorMarkdown } from "./tutor-markdown.jsx";
+import { FlashcardPortalModal } from "./flashcard-portal.jsx";
+import { previewFlashcardIntervals, scheduleFlashcardReview } from "./srs.js";
 import {
   buildTutorThreadId,
   clearTutorThread,
@@ -14,6 +16,20 @@ import {
   savePracticeSet,
 } from "./practice-db.js";
 import { PracticeStudioRunner } from "./practice-exercises.jsx";
+import {
+  calculateLearnerMetrics,
+  recordBehavior,
+} from "./behavior-tracking.js";
+import {
+  buildPath,
+  getActiveNav,
+  getPageTitle,
+  getRouteContext,
+  navigateTo,
+  parseLocation,
+  shouldInterceptNavClick,
+  updateDocumentMeta,
+} from "./router.js";
 
 const navItems = [
   ["home","Home","home"],["courses","My Courses","book"],["today","Today’s Plan","calendar"],
@@ -30,6 +46,33 @@ const legacySeedFlashcardId=/^f(?:[1-9]|[12]\d|3[12])$/;
 
 function emptyWorkspace(){
   return {courses:[],activeCourseId:null,goals:[],tasks:[],notes:[],flashcards:[],attempts:[],settings:{fullName:"",timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC",preferredStudyDays:[],sessionMinutes:120,weeklyMinutes:360,notificationPreferences:{study:false,review:false}}};
+}
+
+function collectAllCourseLessons(courses=[],fallbackLessons=[],fallbackCourse=null){
+  const courseList=Array.isArray(courses)?courses:[];
+  if(courseList.length>0){
+    return courseList.flatMap((course,cIdx)=>
+      (course.modules||[]).flatMap((mod,mIdx)=>
+        (mod.lessons||[]).map((lesson,lIdx)=>({
+          ...lesson,
+          courseId:course.id,
+          courseTitle:course.title||`Course ${cIdx+1}`,
+          courseStatus:course.status,
+          moduleId:mod.id,
+          moduleTitle:mod.title||`Module ${mIdx+1}`,
+          moduleIndex:mIdx,
+          lessonIndex:lIdx,
+        }))
+      )
+    );
+  }
+  return (Array.isArray(fallbackLessons)?fallbackLessons:[]).map((lesson,lIdx)=>({
+    ...lesson,
+    courseId:lesson.courseId||fallbackCourse?.id||"",
+    courseTitle:lesson.courseTitle||fallbackCourse?.title||"",
+    moduleTitle:lesson.moduleTitle||"Module",
+    lessonIndex:lIdx,
+  }));
 }
 function sanitizeStoredWorkspace(raw,{legacy=false}={}){
   const empty=emptyWorkspace(),stored=raw&&typeof raw==="object"?raw:{};
@@ -80,8 +123,9 @@ const loadCachedUser=()=>{
     return loadCachedRemote()?.user||null;
   }catch{return null;}
 };
-const initialPage=()=>typeof window==="undefined"?"home":window.location.hash.replace(/^#\/?/,"").split("?")[0]||"home";
-const initialLoginMode=()=>typeof window!=="undefined"&&window.location.hash.replace(/^#\/?/,"").split("?")[0]==="signup"?"signup":"login";
+const initialRoute=()=>typeof window==="undefined"?{page:"home",params:{},query:new URLSearchParams(),isLegacyHash:false}:parseLocation(window.location);
+const initialPage=()=>initialRoute().page||"home";
+const initialLoginMode=()=>initialRoute().page==="signup"?"signup":"login";
 function buildApiError(data,fallback="That request could not be completed."){
   const payload=data?.error&&typeof data.error==="object"?data.error:data;
   const message=payload?.message||(typeof data?.error==="string"?data.error:"")||fallback;
@@ -235,12 +279,12 @@ const prettyDate=(value,opts={weekday:"short",month:"short",day:"numeric"})=>val
 const minuteLabel=(n)=>`${Number(n)||0} min`;
 
 function Icon({name,size=18}){
-  const paths={home:<><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1z"/></>,plus:<><path d="M12 5v14M5 12h14"/></>,book:<><path d="m12 3 9 5-9 5-9-5zM3 12l9 5 9-5M3 16l9 5 9-5"/></>,calendar:<><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></>,people:<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,more:<><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></>,notes:<><path d="M6 2h9l5 5v15H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></>,cards:<><rect x="4" y="5" width="14" height="16" rx="2"/><path d="M8 3h12a2 2 0 0 1 2 2v13M8 10h6M8 14h6"/></>,practice:<><path d="m8 5-6 7 6 7M16 5l6 7-6 7M14 3l-4 18"/></>,progress:<><path d="M4 20V12h4v8M10 20V5h4v15M16 20V2h4v18"/></>,tutor:<><rect x="4" y="6" width="16" height="13" rx="4"/><path d="M9 12h.01M15 12h.01M9 16h6M12 2v4"/></>,search:<><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></>,clock:<><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,play:<path d="m8 5 11 7-11 7z"/>,check:<path d="m5 12 4 4L19 6"/>,arrow:<><path d="M5 12h14M13 6l6 6-6 6"/></>,alert:<><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></>,chevron:<><path d="m6 9 6 6 6-6"/></>,chevronLeft:<><path d="m15 18-6-6 6-6"/></>,chevronRight:<><path d="m9 18 6-6-6-6"/></>,spark:<path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/>};
+  const paths={home:<><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1z"/></>,plus:<><path d="M12 5v14M5 12h14"/></>,book:<><path d="m12 3 9 5-9 5-9-5zM3 12l9 5 9-5M3 16l9 5 9-5"/></>,calendar:<><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></>,people:<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,more:<><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></>,notes:<><path d="M6 2h9l5 5v15H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></>,cards:<><rect x="4" y="5" width="14" height="16" rx="2"/><path d="M8 3h12a2 2 0 0 1 2 2v13M8 10h6M8 14h6"/></>,practice:<><path d="m8 5-6 7 6 7M16 5l6 7-6 7M14 3l-4 18"/></>,progress:<><path d="M4 20V12h4v8M10 20V5h4v15M16 20V2h4v18"/></>,tutor:<><rect x="4" y="6" width="16" height="13" rx="4"/><path d="M9 12h.01M15 12h.01M9 16h6M12 2v4"/></>,search:<><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></>,clock:<><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,play:<path d="m8 5 11 7-11 7z"/>,check:<path d="m5 12 4 4L19 6"/>,arrow:<><path d="M5 12h14M13 6l6 6-6 6"/></>,arrowLeft:<><path d="M19 12H5M11 6l-6 6 6 6"/></>,alert:<><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></>,chevron:<><path d="m6 9 6 6 6-6"/></>,chevronLeft:<><path d="m15 18-6-6 6-6"/></>,chevronRight:<><path d="m9 18 6-6-6-6"/></>,spark:<path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/>,edit:<><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,trash:<><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>,eye:<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>};
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]||paths.spark}</svg>;
 }
 
 export default function App(){
-  const [data,setData]=useState(loadSaved),[user,setUser]=useState(loadCachedUser),[remote,setRemote]=useState(()=>Boolean(loadCachedUser())),[page,setPage]=useState(initialPage),[toast,setToast]=useState(""),[busy,setBusy]=useState(false),[queryText,setQueryText]=useState(""),[searchResults,setSearchResults]=useState(null),[modal,setModal]=useState(null),[activeLessonId,setActiveLessonId]=useState(null),[proposal,setProposal]=useState(null),[courseFilter,setCourseFilter]=useState("all"),[mobileMoreOpen,setMobileMoreOpen]=useState(false),[generatingCourseId,setGeneratingCourseId]=useState(null);
+  const [data,setData]=useState(loadSaved),[user,setUser]=useState(loadCachedUser),[remote,setRemote]=useState(()=>Boolean(loadCachedUser())),[page,setPage]=useState(initialPage),[routeParams,setRouteParams]=useState(()=>initialRoute().params),[routeQuery,setRouteQuery]=useState(()=>initialRoute().query),[toast,setToast]=useState(""),[busy,setBusy]=useState(false),[queryText,setQueryText]=useState(""),[searchResults,setSearchResults]=useState(null),[modal,setModal]=useState(null),[activeLessonId,setActiveLessonId]=useState(()=>initialRoute().params?.lessonId||null),[proposal,setProposal]=useState(null),[courseFilter,setCourseFilter]=useState("all"),[mobileMoreOpen,setMobileMoreOpen]=useState(false),[generatingCourseId,setGeneratingCourseId]=useState(null);
   const [loginMode,setLoginMode]=useState(initialLoginMode),[authError,setAuthError]=useState(""),[authMessage,setAuthMessage]=useState(""),[returnPage,setReturnPage]=useState("home");
   const [generationProgress,setGenerationProgress]=useState(null);
   const [generationError,setGenerationError]=useState("");
@@ -304,7 +348,55 @@ export default function App(){
     },3200);
     return ()=>clearTimeout(timer);
   },[generatingCourseId,remote,refreshRemote,flashToast]);
-  useEffect(()=>{const onHash=()=>{const raw=location.hash.replace(/^#\/?/,"");const p=raw.split("?")[0];if(p){if(p==="signup")setLoginMode("signup");else if(p==="login"||p==="auth")setLoginMode("login");setPage(p);}};window.addEventListener("hashchange",onHash);onHash();return()=>window.removeEventListener("hashchange",onHash);},[]);
+  useEffect(()=>{
+    const syncRoute=(normalizeLegacy=false)=>{
+      const parsed=parseLocation(window.location);
+      if(parsed.page==="signup")setLoginMode("signup");
+      else if(parsed.page==="login"||parsed.page==="auth")setLoginMode("login");
+      setPage(parsed.page);
+      setRouteParams(parsed.params);
+      setRouteQuery(parsed.query);
+      if(parsed.params?.lessonId)setActiveLessonId(parsed.params.lessonId);
+      if(parsed.params?.courseId){
+        setData(current=>current.activeCourseId===parsed.params.courseId?current:{...current,activeCourseId:parsed.params.courseId});
+      }
+      if(typeof document!=="undefined"){
+        updateDocumentMeta(parsed.page,{url:buildPath(parsed.page,{params:parsed.params,query:parsed.query})});
+      }
+      if(normalizeLegacy&&parsed.isLegacyHash&&typeof window.history?.replaceState==="function"){
+        navigateTo(parsed.page,{params:parsed.params,query:parsed.query,replace:true,scrollTop:false});
+      }
+    };
+    const onRouteChange=()=>syncRoute(false);
+    window.addEventListener("popstate",onRouteChange);
+    window.addEventListener("hashchange",onRouteChange);
+    syncRoute(true);
+    return()=>{
+      window.removeEventListener("popstate",onRouteChange);
+      window.removeEventListener("hashchange",onRouteChange);
+    };
+  },[]);
+  useEffect(()=>{
+    recordBehavior("page_view",{page,courseId:routeParams?.courseId||null,lessonId:routeParams?.lessonId||null});
+  },[page,routeParams?.courseId,routeParams?.lessonId]);
+  useEffect(()=>{
+    if(typeof window==="undefined")return;
+    let userActive=false;
+    const onUserActivity=()=>{userActive=true;};
+    window.addEventListener("pointerdown",onUserActivity,{passive:true});
+    window.addEventListener("keydown",onUserActivity,{passive:true});
+    const interval=setInterval(()=>{
+      if(userActive){
+        recordBehavior("session_heartbeat",{minutes:1});
+        userActive=false;
+      }
+    },60000);
+    return()=>{
+      clearInterval(interval);
+      window.removeEventListener("pointerdown",onUserActivity);
+      window.removeEventListener("keydown",onUserActivity);
+    };
+  },[]);
   useEffect(()=>{if(!mobileMoreOpen)return;const close=e=>{if(e.key==="Escape")setMobileMoreOpen(false);};window.addEventListener("keydown",close);return()=>window.removeEventListener("keydown",close);},[mobileMoreOpen]);
   useEffect(()=>{
     let mounted=true;
@@ -325,10 +417,34 @@ export default function App(){
     });
     return ()=>{mounted=false;};
   },[]);
-  const go=useCallback((next)=>{setPage(next);if(next!=="search")setSearchResults(null);location.hash=`/${next}`;window.scrollTo({top:0,behavior:"instant"});},[]);
-  const activeCourse=useMemo(()=>data.courses.find(c=>c.id===data.activeCourseId)||data.courses.find(c=>c.status==="active")||data.courses[0]||null,[data]);
+  const go=useCallback((next,options={})=>{
+    const cleanOptions=options&&typeof options==="object"?options:{};
+    const targetUrl=navigateTo(next,cleanOptions);
+    const parsed=parseLocation({pathname:targetUrl.split("?")[0],search:targetUrl.includes("?")?`?${targetUrl.split("?")[1]}`:"",hash:""});
+    if(parsed.page==="signup")setLoginMode("signup");
+    else if(parsed.page==="login"||parsed.page==="auth")setLoginMode("login");
+    setPage(parsed.page);
+    setRouteParams(parsed.params);
+    setRouteQuery(parsed.query);
+    if(parsed.page!=="search")setSearchResults(null);
+  },[]);
+  const activeCourse=useMemo(()=>{
+    if(routeParams?.courseId){
+      return data.courses.find(c=>c.id===routeParams.courseId)||data.courses.find(c=>c.status==="active")||data.courses[0]||null;
+    }
+    const targetLessonId=routeParams?.lessonId||activeLessonId;
+    if(targetLessonId){
+      const byLesson=data.courses.find(c=>c.modules?.some(m=>m.lessons?.some(l=>l.id===targetLessonId)));
+      if(byLesson)return byLesson;
+    }
+    return data.courses.find(c=>c.id===data.activeCourseId)||data.courses.find(c=>c.status==="active")||data.courses[0]||null;
+  },[data,routeParams?.courseId,routeParams?.lessonId,activeLessonId]);
   const lessons=useMemo(()=>activeCourse?.modules?.flatMap(m=>m.lessons.map(l=>({...l,moduleTitle:m.title})))||[],[activeCourse]);
-  const activeLesson=useMemo(()=>lessons.find(l=>l.id===activeLessonId)||lessons.find(l=>l.id===data.tasks.find(t=>t.status!=="completed")?.lesson_id)||lessons[0]||null,[lessons,activeLessonId,data.tasks]);
+  const allLessons=useMemo(()=>collectAllCourseLessons(data.courses),[data.courses]);
+  const activeLesson=useMemo(()=>{
+    const targetLessonId=routeParams?.lessonId||activeLessonId;
+    return lessons.find(l=>l.id===targetLessonId)||lessons.find(l=>l.id===data.tasks.find(t=>t.status!=="completed")?.lesson_id)||lessons[0]||null;
+  },[lessons,activeLessonId,routeParams?.lessonId,data.tasks]);
   const dueCards=data.flashcards.filter(c=>!c.due_at||new Date(c.due_at)<=new Date());
   const completedTasks=data.tasks.filter(t=>t.status==="completed").length;
   const totalTasks=data.tasks.length||0;
@@ -337,7 +453,7 @@ export default function App(){
   const nextTask=pendingTasks.sort((a,b)=>new Date(a.scheduled_at||0)-new Date(b.scheduled_at||0))[0];
   const stats={notes:data.notes.length,flashcards:data.flashcards.length,attempts:data.attempts.length,completed:completedTasks,total:totalTasks};
 
-  const openLesson=(id)=>{const target=data.courses.find(c=>c.modules?.some(m=>m.lessons?.some(l=>l.id===id)));if(target)updateData(current=>({...current,activeCourseId:target.id}));setActiveLessonId(id);go("lesson");};
+  const openLesson=(id)=>{const target=data.courses.find(c=>c.modules?.some(m=>m.lessons?.some(l=>l.id===id)));if(target)updateData(current=>({...current,activeCourseId:target.id}));setActiveLessonId(id);go("lesson",{params:{lessonId:id}});};
   const persistRemote=async()=>{if(remote)await refreshRemote();};
   const submitGoal=async(form)=>{
     if(!remote){sessionStorage.setItem("learnos.goal.draft",JSON.stringify(form));flashToast("Your goal is saved. Sign in to generate a course plan.");openAccount();return;}
@@ -352,7 +468,7 @@ export default function App(){
       setProposal(result.course);
       sessionStorage.removeItem("learnos.goal.draft");
       sessionStorage.removeItem("learnos.goal.prefill");
-      go("proposal");
+      go("proposal",{params:{courseId:result.course?.id}});
     }catch(error){
       const msg=error?.message||"Course generation could not be completed.";
       setGenerationError(msg);
@@ -381,7 +497,7 @@ export default function App(){
       setProposal(null);
       setGeneratingCourseId(courseToApprove.id);
       flashToast("Course approved! Generating roadmap, study notes & flashcards in background...");
-      go("course");
+      go("course",{params:{courseId:courseToApprove.id}});
     }catch(error){if(error.code==="PLAN_OVER_BUDGET"){setModal({type:"overload",details:error.details});}else flashToast(error.message);}finally{setBusy(false);}
   };
   const submitCheckpoint=async(answerIndex)=>{
@@ -390,17 +506,51 @@ export default function App(){
       if(remote)await request("practice",{method:"POST",body:JSON.stringify({lessonId:activeLesson.id,concept:activeLesson.title,prompt:activeLesson.checkpoint?.question,answer:activeLesson.checkpoint?.options?.[answerIndex]||"",selectedIndex:Number(answerIndex)})});
       if(remote&&correct){const task=data.tasks.find(t=>t.lesson_id===activeLesson.id&&t.status!=="completed");if(task)await request(`tasks/${task.id}/complete`,{method:"POST",body:JSON.stringify({actualMinutes:task.estimated_minutes})});}
       updateData(current=>{const attempts=[{id:`a-${Date.now()}`,lesson_id:activeLesson.id,concept:activeLesson.title,score:correct?100:0,created_at:new Date().toISOString()},...current.attempts];const tasks=current.tasks.map(t=>t.lesson_id===activeLesson.id&&correct?{...t,status:"completed",completed_at:new Date().toISOString()}:t);return {...current,attempts,tasks};});
+      recordBehavior("checkpoint_attempt",{lessonId:activeLesson.id,concept:activeLesson.title,score:correct?100:0,passed:correct});
       if(correct){flashToast("Checkpoint passed. Understanding evidence saved.");if(remote)await refreshRemote();}else flashToast("Not quite. Review the explanation and try again.");
       return {correct,explanation:activeLesson.checkpoint?.explanation||"Review the lesson objective and try again."};
     }catch(error){flashToast(error.message);return {correct:false,explanation:"Your answer could not be saved. Try again when you are connected."};}
   };
   const saveNote=async(note)=>{
-    try{if(remote){const result=note.id?await request(`notes/${note.id}`,{method:"PUT",body:JSON.stringify(note)}):await request("notes",{method:"POST",body:JSON.stringify(note)});const saved=result.note;updateData(c=>({...c,notes:[saved,...c.notes.filter(n=>n.id!==saved.id)]}));}
-      else {const saved={...note,id:note.id||`n-${Date.now()}`,origin:note.origin||"learner",updated_at:new Date().toISOString()};updateData(c=>({...c,notes:[saved,...c.notes.filter(n=>n.id!==saved.id)]}));}
+    try{
+      if(remote){
+        const result=note.id?await request(`notes/${note.id}`,{method:"PUT",body:JSON.stringify(note)}):await request("notes",{method:"POST",body:JSON.stringify(note)});
+        const saved=result.note;
+        updateData(c=>({...c,notes:[saved,...c.notes.filter(n=>n.id!==saved.id)]}));
+      }
+      else {
+        // In local mode, if saving an ai_draft note for a lesson, deduplicate by updating existing AI draft if present
+        const existingLocalAiNote=note.origin==="ai_draft"&&note.lessonId?data.notes.find(n=>n.lesson_id===note.lessonId&&n.origin==="ai_draft"):null;
+        const noteIdToUse=note.id||existingLocalAiNote?.id||`n-${Date.now()}`;
+        const saved={...note,id:noteIdToUse,origin:note.origin||"learner",updated_at:new Date().toISOString()};
+        updateData(c=>({...c,notes:[saved,...c.notes.filter(n=>n.id!==saved.id)]}));
+      }
       setModal(null);flashToast("Note saved.");
+      recordBehavior("note_save",{noteId:note.id||undefined,origin:note.origin||"learner",courseId:note.course_id||note.courseId||null});
     }catch(error){flashToast(error.message);}
   };
-  const draftNote=async(lessonId)=>{const lesson=data.courses.flatMap(c=>c.modules||[]).flatMap(m=>m.lessons||[]).find(l=>l.id===lessonId);if(!lesson)return flashToast("Open a lesson before drafting notes.");try{let body;if(remote){const result=await request("tutor",{method:"POST",body:JSON.stringify({mode:"Explain",prompt:"Turn this lesson into concise, editable study notes. Use a short summary and key points. Do not add facts or citations beyond the lesson.",lessonId})});body=result.reply;}else{body=`Objective\n${lesson.objective}\n\nKey ideas\n${String(lesson.content||lesson.content_markdown||"").split(/\n\n+/).slice(0,3).join("\n\n")}\n\nExample\n${lesson.workedExample||lesson.worked_example||"Add an example in your own words."}`;}await saveNote({title:`Notes — ${lesson.title}`,body,lessonId,sourceRef:lesson.title,origin:"ai_draft"});}catch(error){flashToast(error.message);}};
+  const draftNote=async(lessonId)=>{
+    const lesson=data.courses.flatMap(c=>c.modules||[]).flatMap(m=>m.lessons||[]).find(l=>l.id===lessonId);
+    if(!lesson)return flashToast("Open a lesson before drafting notes.");
+    const existingAiNote=data.notes.find(n=>n.lesson_id===lessonId&&n.origin==="ai_draft");
+    try{
+      let body;
+      if(remote){
+        const result=await request("tutor",{method:"POST",body:JSON.stringify({mode:"Explain",prompt:"Turn this lesson into concise, editable study notes. Use a short summary and key points. Do not add facts or citations beyond the lesson.",lessonId})});
+        body=result.reply;
+      }else{
+        body=`Objective\n${lesson.objective}\n\nKey ideas\n${String(lesson.content||lesson.content_markdown||"").split(/\n\n+/).slice(0,3).join("\n\n")}\n\nExample\n${lesson.workedExample||lesson.worked_example||"Add an example in your own words."}`;
+      }
+      await saveNote({
+        id:existingAiNote?.id||undefined,
+        title:`Notes — ${lesson.title}`,
+        body,
+        lessonId,
+        sourceRef:lesson.title,
+        origin:"ai_draft"
+      });
+    }catch(error){flashToast(error.message);}
+  };
   const deleteNote=async(id)=>{
     try{
       if(remote)await request(`notes/${id}`,{method:"DELETE"});
@@ -457,10 +607,112 @@ export default function App(){
       setDeletingCourseId(null);
     }
   };
-  const rateCard=async(card,rating)=>{try{if(remote)await request(`flashcards/${card.id}/review`,{method:"POST",body:JSON.stringify({rating})});const days=rating==="Again"?0:rating==="Hard"?1:rating==="Good"?3:7;updateData(c=>({...c,flashcards:c.flashcards.map(x=>x.id===card.id?{...x,due_at:new Date(Date.now()+Math.max(days*86400000,10*60000)).toISOString()}:x)}));if(remote)await refreshRemote();}catch(error){flashToast(error.message);}};
-  const addFlashcard=async(card)=>{try{if(remote){const result=await request("flashcards",{method:"POST",body:JSON.stringify(card)});updateData(c=>({...c,flashcards:[result.flashcard,...c.flashcards]}));}else updateData(c=>({...c,flashcards:[{...card,id:`f-${Date.now()}`,due_at:new Date().toISOString()},...c.flashcards]}));flashToast("Flashcard added.");}catch(error){flashToast(error.message);}};
-  const sendTutor=async({mode,prompt,attempt})=>{if(!prompt.trim())return null;if(!remote){flashToast("Sign in to connect the AI tutor.");return null;}try{const r=await request("tutor",{method:"POST",body:JSON.stringify({mode,prompt,attempt,lessonId:activeLesson?.id})});return {text:r.reply,structured:r.structured||null,mode:r.mode||mode,source:r.source,model:r.model||null,failoverCount:Number(r.failoverCount||0),sources:Array.isArray(r.sources)?r.sources:[]};}catch(error){const message=error?.message||"The tutor could not complete your request.";flashToast(message);return {error:message};}};
-  const submitSearch=async(event)=>{event.preventDefault();if(!queryText.trim())return;try{if(remote){const result=await request(`search?q=${encodeURIComponent(queryText)}`);setSearchResults(result);}else{const q=queryText.toLowerCase();setSearchResults({courses:data.courses.filter(c=>c.title.toLowerCase().includes(q)),notes:data.notes.filter(n=>(n.title+n.body).toLowerCase().includes(q)),lessons:lessons.filter(l=>(l.title+l.objective).toLowerCase().includes(q)),flashcards:data.flashcards.filter(c=>(c.front+c.back).toLowerCase().includes(q))});}go("search");}catch(error){flashToast(error.message);}};
+  const rateCard=async(card,rating)=>{
+    try{
+      const scheduled=scheduleFlashcardReview(card,rating);
+      let serverCard=null;
+      if(remote){
+        const res=await request(`flashcards/${card.id}/review`,{method:"POST",body:JSON.stringify({rating})});
+        serverCard=res?.flashcard||null;
+      }
+      updateData(c=>({
+        ...c,
+        flashcards:c.flashcards.map(x=>x.id===card.id?{...x,...scheduled,...(serverCard||{})}:x),
+      }));
+      recordBehavior("flashcard_review",{cardId:card.id,rating,isRetention:rating==="good"||rating==="easy"});
+    }catch(error){
+      flashToast(error.message);
+    }
+  };
+  const addFlashcard=async(card)=>{
+    const payload={
+      front:card.front,
+      back:card.back,
+      hint:card.hint||"",
+      cardType:card.cardType||card.card_type||"qa",
+      origin:card.origin||"learner",
+      courseId:card.courseId??card.course_id??null,
+      lessonId:card.lessonId??card.lesson_id??null,
+    };
+    if(remote){
+      const result=await request("flashcards",{method:"POST",body:JSON.stringify(payload)});
+      updateData(c=>({...c,flashcards:[result.flashcard,...c.flashcards]}));
+      flashToast("Flashcard added.");
+      return result.flashcard;
+    }
+    const localCard={
+      ...payload,
+      card_type:payload.cardType,
+      course_id:payload.courseId,
+      lesson_id:payload.lessonId,
+      id:`f-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+      due_at:new Date().toISOString(),
+      interval_days:0,
+      ease:2.5,
+      repetitions:0,
+      lapses:0,
+      state:"new",
+    };
+    updateData(c=>({...c,flashcards:[localCard,...c.flashcards]}));
+    flashToast("Flashcard added.");
+    return localCard;
+  };
+  const updateFlashcard=async(id,card)=>{
+    const payload={
+      front:card.front,
+      back:card.back,
+      hint:card.hint||"",
+      cardType:card.cardType||card.card_type||"qa",
+      courseId:card.courseId??card.course_id??null,
+      lessonId:card.lessonId??card.lesson_id??null,
+    };
+    if(remote){
+      const result=await request(`flashcards/${id}`,{method:"PUT",body:JSON.stringify(payload)});
+      const updated=result?.flashcard;
+      updateData(c=>({...c,flashcards:c.flashcards.map(x=>x.id===id?{...x,...(updated||payload),card_type:payload.cardType,course_id:payload.courseId,lesson_id:payload.lessonId}:x)}));
+      flashToast("Flashcard updated.");
+      return updated;
+    }
+    updateData(c=>({...c,flashcards:c.flashcards.map(x=>x.id===id?{...x,...payload,card_type:payload.cardType,course_id:payload.courseId,lesson_id:payload.lessonId}:x)}));
+    flashToast("Flashcard updated.");
+    return null;
+  };
+  const deleteFlashcard=async(id)=>{
+    if(remote){
+      await request(`flashcards/${id}`,{method:"DELETE"});
+    }
+    updateData(c=>({...c,flashcards:c.flashcards.filter(x=>x.id!==id)}));
+    flashToast("Flashcard deleted.");
+  };
+  const addFlashcardsBatch=async(cards)=>{
+    const created=[];
+    for(const item of cards){
+      if(remote){
+        const res=await request("flashcards",{method:"POST",body:JSON.stringify(item)});
+        if(res?.flashcard)created.push(res.flashcard);
+      }else{
+        created.push({
+          ...item,
+          card_type:item.cardType||"qa",
+          course_id:item.courseId||null,
+          lesson_id:item.lessonId||null,
+          id:`f-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+          due_at:new Date().toISOString(),
+          interval_days:0,
+          ease:2.5,
+          repetitions:0,
+          lapses:0,
+          state:"new",
+        });
+      }
+    }
+    if(created.length){
+      updateData(c=>({...c,flashcards:[...created,...c.flashcards]}));
+    }
+    return created;
+  };
+  const sendTutor=async({mode,prompt,attempt,lessonId})=>{if(!prompt.trim())return null;if(!remote){flashToast("Sign in to connect the AI tutor.");return null;}const resolvedLessonId=lessonId===undefined?activeLesson?.id:lessonId;try{const r=await request("tutor",{method:"POST",body:JSON.stringify({mode,prompt,attempt,lessonId:resolvedLessonId||undefined})});recordBehavior("tutor_query",{mode,lessonId:resolvedLessonId||null});return {text:r.reply,structured:r.structured||null,mode:r.mode||mode,source:r.source,model:r.model||null,failoverCount:Number(r.failoverCount||0),sources:Array.isArray(r.sources)?r.sources:[]};}catch(error){const message=error?.message||"The tutor could not complete your request.";flashToast(message);return {error:message};}};
+  const submitSearch=async(event)=>{event.preventDefault();if(!queryText.trim())return;try{if(remote){const result=await request(`search?q=${encodeURIComponent(queryText)}`);setSearchResults(result);}else{const q=queryText.toLowerCase();setSearchResults({courses:data.courses.filter(c=>c.title.toLowerCase().includes(q)),notes:data.notes.filter(n=>(n.title+n.body).toLowerCase().includes(q)),lessons:allLessons.filter(l=>(l.title+l.objective).toLowerCase().includes(q)).map(l=>({...l,course_title:l.courseTitle})),flashcards:data.flashcards.filter(c=>(c.front+c.back).toLowerCase().includes(q))});}go("search");}catch(error){flashToast(error.message);}};
   const openAccount=useCallback((mode="login")=>{setLoginMode(mode);setAuthError("");setAuthMessage("");setModal(null);if(page!=="login"&&page!=="signup"&&page!=="auth"){setReturnPage(page||"home");}go(mode==="signup"?"signup":"login");},[go,page]);
   const authSubmit=async(e)=>{
     e.preventDefault();
@@ -499,8 +751,13 @@ export default function App(){
     go("home");
     flashToast("Signed out.");
   };
-  const mobileToolPage=toolNavItems.some(([name])=>name===page);
-  const nav=(name,label,glyph)=> <button key={name} className={`nav-link ${page===name?"active":""}`} type="button" onClick={()=>{setMobileMoreOpen(false);go(name);}} aria-current={page===name?"page":undefined} aria-label={label} title={label}><span className="nav-icon"><Icon name={glyph} size={19}/></span><span>{label}</span></button>;
+  const activeNav=getActiveNav(page);
+  const mobileToolPage=toolNavItems.some(([name])=>name===activeNav);
+  const nav=(name,label,glyph)=>{
+    const isExact=page===name;
+    const isActive=activeNav===name;
+    return <a key={name} href={buildPath(name)} className={`nav-link ${isActive?"active":""}`} onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();setMobileMoreOpen(false);go(name);}} aria-current={isExact?"page":isActive?"true":undefined} aria-label={label} title={label}><span className="nav-icon"><Icon name={glyph} size={19}/></span><span>{label}</span></a>;
+  };
 
   if(page==="login"||page==="signup"||page==="auth"){
     return <>
@@ -527,7 +784,7 @@ export default function App(){
         <form className="top-search flex items-center gap-2.5" onSubmit={submitSearch}><Icon name="search"/><input value={queryText} onChange={e=>setQueryText(e.target.value)} type="search" placeholder="Search lessons and tools" aria-label="Search lessons and tools" /></form>
         <button className={`avatar grid place-items-center ${!(user?.fullName||data.settings.fullName)?"logged-out":""}`} type="button" aria-label={user?.fullName||data.settings.fullName||"Sign in"} title={user?.fullName||data.settings.fullName||"Sign in to your account"} onClick={()=>user?go("settings"):openAccount()}>{(user?.fullName||data.settings.fullName||"?").split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase()}</button>
       </header>
-      <PageContent page={page} data={data} setData={setData} user={user} setUser={setUser} remote={remote} setRemote={setRemote} logout={logout} openAccount={openAccount} activeCourse={activeCourse} lessons={lessons} activeLesson={activeLesson} dueCards={dueCards} nextTask={nextTask} stats={stats} progressPercent={progressPercent} pendingTasks={pendingTasks} proposal={proposal} setProposal={setProposal} busy={busy} generationProgress={generationProgress} generationError={generationError} setGenerationError={setGenerationError} courseFilter={courseFilter} setCourseFilter={setCourseFilter} go={go} openLesson={openLesson} submitGoal={submitGoal} approveProposal={approveProposal} submitCheckpoint={submitCheckpoint} saveNote={saveNote} draftNote={draftNote} deleteNote={deleteNote} confirmDeleteCourse={confirmDeleteCourse} deletingCourseId={deletingCourseId} rateCard={rateCard} addFlashcard={addFlashcard} sendTutor={sendTutor} updateData={updateData} request={request} requestStream={requestStream} refreshRemote={refreshRemote} flashToast={flashToast} setModal={setModal} setActiveLessonId={setActiveLessonId} setSearchResults={setSearchResults} searchResults={searchResults} setLoginMode={setLoginMode} setModalState={setModal} generatingCourseId={generatingCourseId} syncing={syncing} activeRequests={activeRequests} />
+      <PageContent page={page} routeParams={routeParams} routeQuery={routeQuery} data={data} setData={setData} user={user} setUser={setUser} remote={remote} setRemote={setRemote} logout={logout} openAccount={openAccount} activeCourse={activeCourse} lessons={lessons} allLessons={allLessons} activeLesson={activeLesson} dueCards={dueCards} nextTask={nextTask} stats={stats} progressPercent={progressPercent} pendingTasks={pendingTasks} proposal={proposal} setProposal={setProposal} busy={busy} generationProgress={generationProgress} generationError={generationError} setGenerationError={setGenerationError} courseFilter={courseFilter} setCourseFilter={setCourseFilter} go={go} openLesson={openLesson} submitGoal={submitGoal} approveProposal={approveProposal} submitCheckpoint={submitCheckpoint} saveNote={saveNote} draftNote={draftNote} deleteNote={deleteNote} confirmDeleteCourse={confirmDeleteCourse} deletingCourseId={deletingCourseId} rateCard={rateCard} addFlashcard={addFlashcard} updateFlashcard={updateFlashcard} deleteFlashcard={deleteFlashcard} addFlashcardsBatch={addFlashcardsBatch} sendTutor={sendTutor} updateData={updateData} request={request} requestStream={requestStream} refreshRemote={refreshRemote} flashToast={flashToast} setModal={setModal} setActiveLessonId={setActiveLessonId} setSearchResults={setSearchResults} searchResults={searchResults} setLoginMode={setLoginMode} setModalState={setModal} generatingCourseId={generatingCourseId} syncing={syncing} activeRequests={activeRequests} />
       <footer className="app-footer flex items-center justify-between text-sm"><span>Drizzlearn</span><button type="button" onClick={()=>go("settings")}>Settings</button></footer>
     </main>
     {toast&&<div className="toast show fixed z-50" role="status" aria-live="polite">{toast}</div>}
@@ -535,13 +792,37 @@ export default function App(){
   </div>;
 }
 
+function PageContextBar({context,go}){
+  if(!context)return null;
+  const {back,breadcrumbs}=context;
+  const navigateItem=(e,item)=>{
+    if(!item?.page||!shouldInterceptNavClick(e))return;
+    e.preventDefault();
+    go(item.page,{params:item.params||{},query:item.query||{}});
+  };
+  return <div className="page-context-bar">
+    {back&&<a href={buildPath(back.page,{params:back.params,query:back.query})} className="page-back-btn" onClick={e=>navigateItem(e,back)}><Icon name="arrowLeft" size={14}/><span>{back.label}</span></a>}
+    {breadcrumbs?.length>0&&<nav className="page-breadcrumb" aria-label="Breadcrumb"><ol className="page-breadcrumb-list">{breadcrumbs.map((crumb,idx)=>{
+      const isLast=idx===breadcrumbs.length-1||crumb.current;
+      return <li key={`${crumb.label}-${idx}`} className="page-breadcrumb-item">
+        {idx>0&&<span className="page-breadcrumb-sep" aria-hidden="true"><Icon name="chevronRight" size={12}/></span>}
+        {isLast||!crumb.page
+          ?<span className="page-breadcrumb-current" aria-current={isLast?"page":undefined} title={crumb.label}>{crumb.label}</span>
+          :<a href={buildPath(crumb.page,{params:crumb.params,query:crumb.query})} className="page-breadcrumb-link" title={crumb.label} onClick={e=>navigateItem(e,crumb)}>{crumb.label}</a>}
+      </li>;
+    })}</ol></nav>}
+  </div>;
+}
+
 function PageContent(props){
-  const {page,data,activeCourse,lessons,activeLesson,dueCards,nextTask,stats,progressPercent,pendingTasks,proposal,busy,go,openLesson}=props;
+  const {page,routeParams,routeQuery,data,activeCourse,lessons,activeLesson,dueCards,nextTask,stats,progressPercent,pendingTasks,proposal,busy,go,openLesson}=props;
   const common={...props};
   const titles={courses:"My Courses",today:"Today’s plan","study-together":"Study Together",notes:"Notes",flashcards:"Flashcards",practice:"Practice",progress:"Your progress",tutor:"AI Tutor",settings:"Settings",goal:"Build a learning plan",proposal:"Your course proposal",course:"Course roadmap",lesson:"Lesson workspace",search:"Search results",verify:"Verify your email", "reset-password":"Choose a new password",verified:"Email verified",login:"Account",signup:"Create account",auth:"Account"};
   if(page==="home")return <Home {...common} />;
+  const routeContext=getRouteContext({page,routeParams,routeQuery,activeCourse,activeLesson,proposalCourse:proposal||activeCourse,pageTitle:titles[page]||"Workspace",knownTitles:titles});
   return <div className="workspace-page">
-    <div className="page-heading"><div>{page==="lesson"&&<span className="eyebrow">{activeLesson?.moduleTitle||"Learning session"}</span>}<h1>{page==="lesson"?activeLesson?.title||"Lesson":titles[page]||"Drizzlearn"}</h1></div>{page==="courses"&&<button className="primary-btn" onClick={()=>go("goal")}><Icon name="plus" size={14}/>Create a course</button>}</div>
+    <PageContextBar context={routeContext} go={go}/>
+    <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""}`}><div>{page==="lesson"&&<span className="eyebrow">{activeLesson?.moduleTitle||"Learning session"}</span>}<h1>{page==="lesson"?activeLesson?.title||"Lesson":titles[page]||"Drizzlearn"}</h1></div>{page==="courses"&&<button className="primary-btn" onClick={()=>go("goal")}><Icon name="plus" size={14}/>Create a course</button>}</div>
     {page==="courses"&&<CoursesPage {...common}/>}
     {page==="today"&&<TodayPage {...common}/>}
     {page==="study-together"&&<StudyTogetherPage {...common}/>}
@@ -606,7 +887,7 @@ function StudyTogetherPage(p){
       let next;
       if(p.remote){const result=await p.request(join?`study-rooms/${clean}/join`:`study-rooms/${clean}`,{method:join?"POST":"GET",...(join?{body:JSON.stringify({})}:{})});next=roomFromApi(result.room);}
       else {next=readLocalRooms().find(x=>x.code===clean)||null;if(!next){setRoomError("No room with that code could be found. Sign in to share rooms across devices.");return;}if(!next.participants.some(m=>m.name===selfName))next={...next,participants:[...next.participants,{id:`guest-${Date.now()}`,name:selfName,isOnline:true}]};}
-      rememberRoom(next);setJoinCode(clean);if(typeof window!=="undefined")location.hash=`/study-together?room=${encodeURIComponent(clean)}`;
+      rememberRoom(next);setJoinCode(clean);if(typeof window!=="undefined")p.go("study-together",{query:{room:clean}});
       if(p.remote){const list=await p.request("study-rooms");setRooms((list.rooms||[]).map(roomFromApi));}
     }catch(error){setRoomError(error.message||"This room could not be opened.");}
   };
@@ -614,7 +895,8 @@ function StudyTogetherPage(p){
     let cancelled=false;
     const load=async()=>{
       setRoomsLoading(true);setRoomsLoadError("");setRoomError("");
-      const roomParam=typeof window==="undefined"?"":new URLSearchParams(location.hash.split("?")[1]||"").get("room")||"";
+      const parsed=typeof window==="undefined"?null:parseLocation(window.location);
+      const roomParam=p.routeParams?.roomCode||p.routeQuery?.get?.("room")||parsed?.params?.roomCode||parsed?.query?.get?.("room")||"";
       if(p.remote){
         try{const list=await p.request("study-rooms");if(cancelled)return;setRooms((list.rooms||[]).map(roomFromApi));}
         catch(error){if(!cancelled)setRoomsLoadError(error.message||"Your rooms could not be loaded.");}
@@ -634,7 +916,7 @@ function StudyTogetherPage(p){
       let created;
       if(p.remote){const result=await p.request("study-rooms",{method:"POST",body:JSON.stringify(config)});created=roomFromApi(result.room);}
       else {const alphabet="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",code=Array.from({length:8},()=>alphabet[Math.floor(Math.random()*alphabet.length)]).join("");created={...config,code,phase:"idle",completedFocuses:0,phaseStartedAt:null,phaseEndsAt:null,pausedRemainingSeconds:0,participants:[{id:"self",name:selfName,role:"owner",isOnline:true}],isOwner:true,createdAt:new Date().toISOString()};}
-      rememberRoom(created);if(typeof window!=="undefined")location.hash=`/study-together?room=${created.code}`;
+      rememberRoom(created);if(typeof window!=="undefined")p.go("study-together",{query:{room:created.code}});
       if(p.remote){const list=await p.request("study-rooms");setRooms((list.rooms||[]).map(roomFromApi));}
     }catch(error){setRoomError(error.message||"The room could not be created.");}
   };
@@ -643,8 +925,8 @@ function StudyTogetherPage(p){
     try{if(p.remote){const result=await p.request(`study-rooms/${room.code}/timer`,{method:"POST",body:JSON.stringify({action})});rememberRoom(roomFromApi(result.room));}else rememberRoom(controlLocalRoom(room,action));}
     catch(error){setRoomError(error.message||"The timer could not be updated.");}
   };
-  const copyInvite=async()=>{const url=typeof window==="undefined"?"":`${location.origin}${location.pathname}#/study-together?room=${room.code}`;try{await navigator.clipboard.writeText(url);p.flashToast("Invite link copied.");}catch{setRoomError(`Share this room code: ${room.code}`);}};
-  const leaveRoom=()=>{setRoom(null);setRoomError("");if(typeof window!=="undefined")location.hash="/study-together";};
+  const copyInvite=async()=>{const url=typeof window==="undefined"?"":`${location.origin}${buildPath("study-together",{query:{room:room.code}})}`;try{await navigator.clipboard.writeText(url);p.flashToast("Invite link copied.");}catch{setRoomError(`Share this room code: ${room.code}`);}};
+  const leaveRoom=()=>{setRoom(null);setRoomError("");if(typeof window!=="undefined")p.go("study-together");};
   const seconds=room?roomSeconds(room,now):0,timedPhase=room?.phase==="paused"?room.pausedPhase:room?.phase,timerLength=timedPhase==="focus"?room?.focusMinutes:timedPhase==="long_break"?room?.longBreakMinutes:room?.breakMinutes,progress=room&&timerLength&&(["focus","short_break","long_break"].includes(room.phase)||room.phase==="paused")?Math.max(0,Math.min(100,100-(seconds/(timerLength*60))*100)):0;
   return <section className="study-together-workspace flex flex-col gap-6">
     {room?<>
@@ -757,7 +1039,7 @@ function CoursesPage(p){
   const visible=data.courses.filter(c=>courseFilter==="all"||c.status===courseFilter);
   return <>
     <div className="filter-row flex flex-wrap items-center gap-2" role="group" aria-label="Filter courses">{[["all","All courses"],["active","Active"],["proposal","Proposals"],["completed","Completed"]].map(([value,label])=><button key={value} className={`filter-chip cursor-pointer ${courseFilter===value?"selected":""}`} onClick={()=>setCourseFilter(value)}>{label}</button>)}</div>
-    {visible.length?<div className="course-library-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{visible.map((course,i)=>{const all=course.modules?.flatMap(m=>m.lessons)||[],courseTasks=data.tasks.filter(t=>t.course_id===course.id),done=courseTasks.filter(t=>t.status==="completed").length,percent=courseTasks.length?Math.round(done/courseTasks.length*100):0;return <article className="library-course panel flex flex-col overflow-hidden" key={course.id}><div className="library-cover flex items-center justify-between p-3.5" style={{backgroundImage:`linear-gradient(rgba(17,18,29,0.7),rgba(17,18,29,0.92)), url(${courseCovers[i%courseCovers.length]})`,backgroundSize:"cover",backgroundPosition:"center"}}><span>{course.status==="proposal"?"DRAFT PLAN":"LEARNING PATH"}</span><span className={`status-pill ${course.status}`}>{course.status}</span></div><div className="library-course-content flex flex-col p-4 gap-2.5"><div className="course-meta-small flex items-center gap-1.5 text-sm">{course.current_level||course.currentLevel||"Flexible level"} <span>·</span> {course.target_weeks||course.durationWeeks||8} weeks</div><h2>{course.title}</h2><p>{course.summary||course.desired_outcome}</p><div className="course-facts flex flex-wrap items-center gap-3 text-sm"><span><Icon name="book" size={14}/>{all.length} lessons</span><span><Icon name="progress" size={14}/>{course.modules?.length||0} modules</span><span><Icon name="clock" size={14}/>{Math.round((course.estimated_minutes||0)/60)||1} hours</span></div><div className="course-progress-row flex items-center gap-2.5"><div className="progress-track flex-1 overflow-hidden"><div className="progress-fill" style={{width:`${percent}%`}}/></div><span className="progress-number">{percent}%</span></div><div className="library-actions flex items-center gap-2 mt-auto pt-2">{course.status==="proposal"?<button className="primary-btn" onClick={()=>{p.setProposal(course);updateData(x=>({...x,activeCourseId:course.id}));go("proposal");}}>Review plan ↗</button>:<button className="primary-btn" onClick={()=>{updateData(x=>({...x,activeCourseId:course.id}));go("course");}}>Open course ↗</button>}<div className="library-actions-secondary flex items-center gap-2 ml-auto"><button type="button" className="quiet-btn" aria-label={`View roadmap for ${course.title}`} onClick={()=>{updateData(x=>({...x,activeCourseId:course.id}));go(course.status==="proposal"?"proposal":"course");if(course.status==="proposal")p.setProposal(course);}}>⋯</button>{p.confirmDeleteCourse&&<button type="button" className="quiet-btn danger course-delete-btn" aria-label={`Delete ${course.title}`} disabled={p.deletingCourseId===course.id} onClick={()=>p.confirmDeleteCourse(course)}>Delete</button>}</div></div></div></article>;})}</div>:<EmptyState title="No courses yet" body="Write down the capability you want to build. Sign in to generate a course plan with lessons and practice." action="Create a learning goal" onAction={()=>go("goal")}/>}
+    {visible.length?<div className="course-library-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{visible.map((course,i)=>{const all=course.modules?.flatMap(m=>m.lessons)||[],courseTasks=data.tasks.filter(t=>t.course_id===course.id),done=courseTasks.filter(t=>t.status==="completed").length,percent=courseTasks.length?Math.round(done/courseTasks.length*100):0;return <article className="library-course panel flex flex-col overflow-hidden" key={course.id}><div className="library-cover flex items-center justify-between p-3.5" style={{backgroundImage:`linear-gradient(rgba(17,18,29,0.7),rgba(17,18,29,0.92)), url(${courseCovers[i%courseCovers.length]})`,backgroundSize:"cover",backgroundPosition:"center"}}><span>{course.status==="proposal"?"DRAFT PLAN":"LEARNING PATH"}</span><span className={`status-pill ${course.status}`}>{course.status}</span></div><div className="library-course-content flex flex-col p-4 gap-2.5"><div className="course-meta-small flex items-center gap-1.5 text-sm">{course.current_level||course.currentLevel||"Flexible level"} <span>·</span> {course.target_weeks||course.durationWeeks||8} weeks</div><h2>{course.title}</h2><p>{course.summary||course.desired_outcome}</p><div className="course-facts flex flex-wrap items-center gap-3 text-sm"><span><Icon name="book" size={14}/>{all.length} lessons</span><span><Icon name="progress" size={14}/>{course.modules?.length||0} modules</span><span><Icon name="clock" size={14}/>{Math.round((course.estimated_minutes||0)/60)||1} hours</span></div><div className="course-progress-row flex items-center gap-2.5"><div className="progress-track flex-1 overflow-hidden"><div className="progress-fill" style={{width:`${percent}%`}}/></div><span className="progress-number">{percent}%</span></div><div className="library-actions flex items-center gap-2 mt-auto pt-2">{course.status==="proposal"?<button className="primary-btn" onClick={()=>{p.setProposal(course);updateData(x=>({...x,activeCourseId:course.id}));go("proposal",{params:{courseId:course.id}});}}>Review plan ↗</button>:<button className="primary-btn" onClick={()=>{updateData(x=>({...x,activeCourseId:course.id}));go("course",{params:{courseId:course.id}});}}>Open course ↗</button>}<div className="library-actions-secondary flex items-center gap-2 ml-auto"><button type="button" className="quiet-btn" aria-label={`View roadmap for ${course.title}`} onClick={()=>{updateData(x=>({...x,activeCourseId:course.id}));go(course.status==="proposal"?"proposal":"course",{params:{courseId:course.id}});if(course.status==="proposal")p.setProposal(course);}}>⋯</button>{p.confirmDeleteCourse&&<button type="button" className="quiet-btn danger course-delete-btn" aria-label={`Delete ${course.title}`} disabled={p.deletingCourseId===course.id} onClick={()=>p.confirmDeleteCourse(course)}>Delete</button>}</div></div></div></article>;})}</div>:<EmptyState title="No courses yet" body="Write down the capability you want to build. Sign in to generate a course plan with lessons and practice." action="Create a learning goal" onAction={()=>go("goal")}/>}
   </>;
 }
 
@@ -835,7 +1117,7 @@ function TodayPage(p){
       const taskIcon=isPractice?"practice":isReview?"cards":isRoadmap?"progress":"book";
       const actionLabel=task.status==="completed"?"Review":isPractice?"Practice ↗":isReview?"Review ↗":isRoadmap?"Roadmap ↗":"Open ↗";
       const handleAction=()=>{if(isReview)p.go("flashcards");else if(isPractice){if(task.lesson_id)openLesson(task.lesson_id);else p.go("practice");}else if(isRoadmap)p.go("course");else if(task.lesson_id)openLesson(task.lesson_id);else flashToast("Open the course to see this task.");};
-      return <article className={`task-row flex items-center gap-3 p-3 ${task.status} ${task.task_type||"lesson"}`} key={task.id}><span className={`task-check ${task.status==="completed"?"done":""}`} aria-label={task.status==="completed"?"Completed task":"Pending task"}>{task.status==="completed"?"✓":task.status==="in_progress"?"•":""}</span><div className={`task-type-glyph ${task.task_type||"lesson"}`} title={task.task_type||"lesson"} aria-hidden="true"><Icon name={taskIcon} size={15}/></div><div className="task-main-copy flex flex-col flex-1 min-w-0"><div className="flex items-center gap-2 flex-wrap"><strong>{task.title}</strong>{task.task_type&&task.task_type!=="lesson"&&<span className={`task-type-badge ${task.task_type}`}>{task.task_type}</span>}</div><span>{task.course_title||p.activeCourse?.title||"Learning session"} · {minuteLabel(task.estimated_minutes)}</span></div><span className={`task-status ${task.status}`}>{task.status.replace("_"," ")}</span><button className="continue-btn" onClick={handleAction}>{actionLabel}</button>{task.status!=="completed"&&<button className="quiet-btn" aria-label={`Reschedule ${task.title}`} title="Reschedule" onClick={()=>reschedule(task)}>↗</button>}</article>;
+      return <article className={`task-row flex items-center gap-3 p-3 ${task.status} ${task.task_type||"lesson"}`} key={task.id}><span className={`task-check ${task.status==="completed"?"done":""}`} aria-label={task.status==="completed"?"Completed task":"Pending task"}>{task.status==="completed"?"✓":task.status==="in_progress"?"•":""}</span><div className={`task-type-glyph ${task.task_type||"lesson"}`} title={task.task_type||"lesson"} aria-hidden="true"><Icon name={taskIcon} size={15}/></div><div className="task-main-copy flex flex-col flex-1 min-w-0"><div className="flex items-center gap-2 flex-wrap"><strong>{task.title}</strong>{task.task_type&&task.task_type!=="lesson"&&<span className={`task-type-badge ${task.task_type}`}>{task.task_type}</span>}</div><span>{task.course_title||p.activeCourse?.title||"Learning session"} · {minuteLabel(task.estimated_minutes)}</span></div>{task.status!=="upcoming"&&<span className={`task-status ${task.status}`}>{task.status.replace("_"," ")}</span>}<button className="continue-btn" onClick={handleAction}>{actionLabel}</button>{task.status==="completed"?<span className="task-completed-check flex items-center justify-center text-learnos-mint" title="Completed" aria-label="Completed"><Icon name="check" size={16}/></span>:<button className="quiet-btn" aria-label={`Reschedule ${task.title}`} title="Reschedule" onClick={()=>reschedule(task)}>↗</button>}</article>;
     })}</div></section>):<EmptyState title="No study sessions yet" body="Create a learning goal, then sign in to build a course plan and schedule your first session." action="Create a learning goal" onAction={()=>p.go("goal")}/>}</div>
     <aside className="today-aside flex flex-col gap-4"><Panel title="Study rhythm" icon="calendar"><div className="side-panel-copy flex flex-col gap-2 p-4">{tasks.length>0?<><div className="rhythm-big">{tasks.filter(t=>t.status!=="completed").length}<span> sessions left</span></div><p>Study days and session length can be adjusted in settings. Moving a session keeps its original notes and attempts.</p>{overdueTasks.length>0&&<button className="primary-btn compact mt-1" type="button" onClick={rebalanceSchedule}>Rebalance schedule ↻</button>}</>:<p>Study days and session length can be adjusted in settings. Once you approve a plan, your upcoming sessions will appear here.</p>}<button className="text-button" onClick={()=>p.go("settings")}>Edit study schedule ↗</button></div></Panel>{(p.dueCards.length>0||tasks.length>0)&&<Panel title="Review due" icon="cards"><div className="side-panel-copy flex flex-col gap-2 p-4"><div className="rhythm-big">{p.dueCards.length}<span> cards</span></div><p>Short recall sessions help you revisit ideas at the right time.</p><button className="text-button" onClick={()=>p.go("flashcards")}>Start review ↗</button></div></Panel>}</aside></div>;
 }
@@ -915,7 +1197,7 @@ function parseMarkdownToHtml(text){
 function NotesPage(p){
   const [selected,setSelected]=useState(p.data.notes[0]?.id||""),[draft,setDraft]=useState(()=>p.data.notes[0]?{...p.data.notes[0]}:null);
   const [savingNote,setSavingNote]=useState(false),[deletingNote,setDeletingNote]=useState(false);
-  const [searchQuery,setSearchQuery]=useState(""),[filterCourse,setFilterCourse]=useState("all");
+  const [searchQuery,setSearchQuery]=useState(""),[filterCourse,setFilterCourse]=useState(()=>p.routeQuery?.get?.("course")||"all");
   // Default to preview mode when an existing note is selected/opened
   const [viewMode,setViewMode]=useState(()=>p.data.notes[0]?"preview":"edit");
   const [selectedCourseId,setSelectedCourseId]=useState(()=>{
@@ -939,6 +1221,27 @@ function NotesPage(p){
     });
     return map;
   },[allCourses]);
+
+  // Keep selected and draft synchronized with p.data.notes if notes change externally
+  useEffect(()=>{
+    if(selected){
+      const stillExists=p.data.notes.find(n=>n.id===selected);
+      if(!stillExists){
+        const next=p.data.notes[0]||null;
+        if(next){
+          setSelected(next.id);
+          setDraft({...next});
+          const meta=next.lesson_id?allLessonsMap.get(next.lesson_id):null;
+          setSelectedCourseId(meta?.courseId||next.course_id||"");
+          setViewMode("preview");
+        }else{
+          setSelected("");
+          setDraft(null);
+          setSelectedCourseId("");
+        }
+      }
+    }
+  },[p.data.notes,selected,allLessonsMap]);
 
   const startNew=()=>{
     const activeLessonMeta=p.activeLesson?allLessonsMap.get(p.activeLesson.id):null;
@@ -986,11 +1289,23 @@ function NotesPage(p){
   const handleDelete=async()=>{
     if(!draft?.id)return;
     if(!confirm(`Delete "${draft.title||"this note"}"? This cannot be undone.`))return;
+    const targetId=draft.id;
     setDeletingNote(true);
     try{
-      await p.deleteNote(draft.id);
-      setDraft(null);
-      setSelected("");
+      await p.deleteNote(targetId);
+      const remaining=p.data.notes.filter(n=>n.id!==targetId);
+      const nextNote=remaining[0]||null;
+      if(nextNote){
+        setSelected(nextNote.id);
+        setDraft({...nextNote});
+        const meta=nextNote.lesson_id?allLessonsMap.get(nextNote.lesson_id):null;
+        setSelectedCourseId(meta?.courseId||nextNote.course_id||"");
+        setViewMode("preview");
+      }else{
+        setSelected("");
+        setDraft(null);
+        setSelectedCourseId("");
+      }
     }finally{
       setDeletingNote(false);
     }
@@ -1123,7 +1438,6 @@ function NotesPage(p){
               {(draft.origin==="ai_draft"||note?.origin==="ai_draft")&&<span className="ai-draft-badge" title="Drafted by AI — ready for you to personalize"><Icon name="spark" size={11}/>AI DRAFT</span>}
               {(draft.origin==="roadmap"||note?.origin==="roadmap")&&<span className="ai-draft-badge roadmap" title="Created from course roadmap"><Icon name="spark" size={11}/>ROADMAP</span>}
             </div>
-            <span className="autosave-label">{(draft.origin==="ai_draft"||note?.origin==="ai_draft")?"AI draft — edit and personalize your notes below":(draft.origin==="roadmap"||note?.origin==="roadmap")?"Roadmap note — customize your takeaways below":"Saved when you choose Save note"}</span>
           </div>
 
           <div className="note-actions flex items-center gap-2.5">
@@ -1179,7 +1493,6 @@ function NotesPage(p){
         <div className="note-source-row note-link-card">
           <div className="note-link-head">
             <span className="note-link-kicker">Course & Lesson Link</span>
-            <span className="note-link-hint">Connect note to your curriculum and tutor citations</span>
           </div>
 
           <div className="note-link-fields">
@@ -1234,29 +1547,254 @@ function NotesPage(p){
 }
 
 function FlashcardsPage(p){
-  const [index,setIndex]=useState(0),[revealed,setRevealed]=useState(false),[showCreate,setShowCreate]=useState(false),[front,setFront]=useState(""),[back,setBack]=useState("");
-  const [ratingCard,setRatingCard]=useState(false),[savingCard,setSavingCard]=useState(false);
-  const due=p.dueCards;const card=due[index%Math.max(due.length,1)];
+  const [index,setIndex]=useState(0),[revealed,setRevealed]=useState(false),[showHint,setShowHint]=useState(false);
+  const [filterCourse,setFilterCourse]=useState(()=>p.routeQuery?.get?.("course")||"all");
+  const [portalState,setPortalState]=useState({open:false,mode:"manual",editingCard:null});
+  const [confirmDeleteId,setConfirmDeleteId]=useState(null),[deletingId,setDeletingId]=useState(null);
+  const [ratingCard,setRatingCard]=useState(false);
+
+  const allCourses=p.data?.courses||[];
+  const allLessons=useMemo(()=>p.allLessons?.length?p.allLessons:collectAllCourseLessons(allCourses,p.lessons,p.activeCourse),[p.allLessons,allCourses,p.lessons,p.activeCourse]);
+  const allLessonsMap=useMemo(()=>{
+    const map=new Map();
+    allLessons.forEach(l=>map.set(l.id,l));
+    return map;
+  },[allLessons]);
+
+  const resolveCardCourseId=(card)=>{
+    const cLessonId=card?.lesson_id||card?.lessonId;
+    const meta=cLessonId?allLessonsMap.get(cLessonId):null;
+    return meta?.courseId||card?.course_id||card?.courseId||"";
+  };
+  const matchesCourse=(card)=>{
+    if(filterCourse==="all")return true;
+    const cId=resolveCardCourseId(card);
+    if(filterCourse==="unlinked")return !cId&&!(card?.lesson_id||card?.lessonId);
+    return cId===filterCourse;
+  };
+
+  const allInScope=(p.data.flashcards||[]).filter(matchesCourse);
+  const due=p.dueCards.filter(matchesCourse);
+  const dueLater=allInScope.filter(c=>c.due_at&&new Date(c.due_at)>new Date());
+  const savedInScope=allInScope.length;
+  const card=due[index%Math.max(due.length,1)];
+
+  useEffect(()=>{
+    setShowHint(false);
+    setConfirmDeleteId(null);
+  },[card?.id]);
+
   const rating=async(value)=>{
     if(!card||ratingCard)return;
     setRatingCard(true);
     try{
       await p.rateCard(card,value);
       setRevealed(false);
+      setShowHint(false);
       setIndex(0);
     }finally{
       setRatingCard(false);
     }
   };
+
+  const handleSavePortalCard=async(payload)=>{
+    if(payload.id){
+      await p.updateFlashcard?.(payload.id,payload);
+    }else{
+      await p.addFlashcard?.(payload);
+    }
+  };
+
+  const handleDeleteCard=async(cardId)=>{
+    if(!cardId||deletingId)return;
+    setDeletingId(cardId);
+    try{
+      await p.deleteFlashcard?.(cardId);
+      setConfirmDeleteId(null);
+      setRevealed(false);
+      setShowHint(false);
+      setIndex(0);
+    }catch(error){
+      p.flashToast?.(error?.message||"Could not delete flashcard.");
+    }finally{
+      setDeletingId(null);
+    }
+  };
+
+  const openPortal=(mode="manual",editingCard=null)=>{
+    setPortalState({open:true,mode,editingCard});
+  };
+
   const cardLessonId=card?.lesson_id||card?.lessonId;
   const cardCourseId=card?.course_id||card?.courseId;
-  const targetLesson=p.lessons?.find(l=>l.id===cardLessonId)||(cardCourseId?p.lessons?.find(l=>l.course_id===cardCourseId):null);
+  const targetLesson=allLessonsMap.get(cardLessonId)||(cardCourseId?allLessons.find(l=>l.courseId===cardCourseId||l.course_id===cardCourseId):null);
+  const targetCourse=allCourses.find(c=>c.id===(targetLesson?.courseId||cardCourseId));
   const targetLessonId=cardLessonId||targetLesson?.id;
+  const intervalLabels=card?previewFlashcardIntervals(card):{Again:"10m",Hard:"12h",Good:"1d",Easy:"4d"};
+  const isLeech=Number(card?.lapses||0)>=6;
+  const initialPortalCourse=filterCourse!=="all"&&filterCourse!=="unlinked"?filterCourse:"";
 
-  return <div className="flashcards-layout grid gap-4 items-start"><section className="flash-main flex flex-col gap-4"><div className="review-progress-row flex items-center justify-between"><div><span className="eyebrow">SPACED REVIEW</span><h2>{due.length?`${due.length} cards due`:"You’re all caught up"}</h2></div><span className="review-index">{due.length?`${Math.min(index+1,due.length)} / ${due.length}`:"✓"}</span></div>
-    {due.length?<><button className={`flashcard-face flex flex-col items-center justify-center p-8 text-center cursor-pointer ${revealed?"revealed":""}`} onClick={()=>setRevealed(!revealed)} aria-label={revealed?"Show question":"Reveal answer"}><span className="flashcard-label">{revealed?"ANSWER":"PROMPT"}</span><strong>{revealed?card.back:card.front}</strong><span className="flashcard-hint">{revealed?"Choose how well you recalled this":"Tap or press Enter to reveal"}</span></button>{(targetLessonId||cardCourseId)&&<div className="flashcard-source-link flex items-center justify-center gap-2 text-sm"><span className="text-learnos-muted">Review lesson:</span><button type="button" className="text-button inline-flex items-center gap-1 cursor-pointer" onClick={()=>{if(targetLessonId)p.openLesson(targetLessonId);else p.go("course");}}>{targetLesson?.title||card.lesson_title||"Source lesson"} ↗</button></div>}{revealed?<div className="rating-row grid grid-cols-2 sm:grid-cols-4 gap-2"><button disabled={ratingCard} onClick={()=>rating("Again")}><strong>Again</strong><small>Review soon</small></button><button disabled={ratingCard} onClick={()=>rating("Hard")}><strong>Hard</strong><small>Tomorrow</small></button><button disabled={ratingCard} onClick={()=>rating("Good")}><strong>Good</strong><small>In a few days</small></button><button disabled={ratingCard} onClick={()=>rating("Easy")}><strong>Easy</strong><small>Next week</small></button></div>:<div className="flashcard-controls flex items-center justify-center"><button className="primary-btn" onClick={()=>setRevealed(true)}>Reveal answer <span>↗</span></button></div>}</>:<EmptyState title="No cards due right now" body="Your saved cards will return when their next review is due." action="Add a card" onAction={()=>setShowCreate(true)}/>}</section>
-    <aside className="flash-aside flex flex-col gap-4"><Panel title="Your deck" icon="cards"><div className="side-panel-copy flex flex-col gap-2 p-4"><div className="rhythm-big">{p.data.flashcards.length}<span> cards saved</span></div><p>Cards from lessons come back based on your recall rating.</p><button className="text-button" onClick={()=>setShowCreate(true)}><Icon name="plus" size={13}/>Create a flashcard</button></div></Panel><Panel title="Due later" icon="clock"><div className="side-panel-copy card-list-compact flex flex-col gap-2 p-4">{p.data.flashcards.filter(c=>new Date(c.due_at)>new Date()).slice(0,5).map(c=><div key={c.id}><span>{c.front}</span><small>{prettyDate(c.due_at)}</small></div>)}</div></Panel></aside>
-    {showCreate&&<div className="inline-form panel flex flex-col p-4 gap-3"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="cards"/>New flashcard</div><button className="quiet-btn" onClick={()=>setShowCreate(false)}>×</button></div><label>Prompt<input value={front} onChange={e=>setFront(e.target.value)} placeholder="Ask a question"/></label><label>Answer<textarea value={back} onChange={e=>setBack(e.target.value)} placeholder="Write a short answer"/></label><button className="primary-btn" disabled={savingCard} onClick={async()=>{if(!front.trim()||!back.trim())return p.flashToast("Add both a prompt and an answer.");setSavingCard(true);try{await p.addFlashcard({front,back,lessonId:null});setFront("");setBack("");setShowCreate(false);}finally{setSavingCard(false);}}}>{savingCard?<><span className="btn-spinner"/> Saving…</>:"Save flashcard"}</button></div>}
+  const jumpToCard=(target)=>{
+    if(!target?.id)return;
+    const dueIdx=due.findIndex(x=>x.id===target.id);
+    if(dueIdx>=0){
+      setIndex(dueIdx);
+      setRevealed(false);
+      setShowHint(false);
+      return;
+    }
+    setFilterCourse("all");
+    const globalDueIdx=p.dueCards.findIndex(x=>x.id===target.id);
+    if(globalDueIdx>=0)setIndex(globalDueIdx);
+    setRevealed(false);
+    setShowHint(false);
+  };
+
+  return <div className="flashcards-workspace flex flex-col gap-6">
+    <div className="flashcards-layout grid gap-4 items-start">
+      <section className="flash-main flex flex-col gap-4">
+        <div className="review-progress-row flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <span className="eyebrow">SPACED REVIEW</span>
+            <h2>{due.length?`${due.length} cards due`:"You’re all caught up"}</h2>
+          </div>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {allCourses.length>0&&(
+              <select value={filterCourse} onChange={e=>{setFilterCourse(e.target.value);setIndex(0);setRevealed(false);setShowHint(false);}} aria-label="Filter flashcards by course" className="tool-course-select text-xs rounded-lg px-2.5 py-1.5 bg-learnos-bg/70 border border-learnos-line text-learnos-text">
+                <option value="all">All courses ({p.data.flashcards.length})</option>
+                {allCourses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}
+                <option value="unlinked">Personal / Unlinked</option>
+              </select>
+            )}
+            <span className="review-index">{due.length?`${Math.min(index+1,due.length)} / ${due.length}`:"✓"}</span>
+          </div>
+        </div>
+
+        {due.length?<>
+          <div
+            className={`flashcard-face flex flex-col items-center justify-center p-8 text-center cursor-pointer ${revealed?"revealed":""}`}
+            role="button"
+            tabIndex={0}
+            aria-label={revealed?"Show question":"Reveal answer"}
+            onClick={()=>setRevealed(!revealed)}
+            onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setRevealed(!revealed);}}}
+          >
+            <div className="flashcard-face-top">
+              <span className="flashcard-label">{revealed?"ANSWER":"QUESTION"}</span>
+              <div className="flashcard-badges">
+                {card.origin==="ai_generated"&&<span className="fc-badge-ai">AI✦</span>}
+                {card.card_type&&card.card_type!=="qa"&&<span className="fc-badge-type">{card.card_type}</span>}
+                {isLeech&&<span className="fc-badge-leech" title="Frequently missed — consider editing or simplifying this card">Needs rewrite</span>}
+              </div>
+            </div>
+
+            <div className="flashcard-rich-body">
+              <TutorMarkdown content={revealed?card.back:card.front} className="fc-card-markdown"/>
+            </div>
+
+            {!revealed&&card.hint&&(
+              <div className="flashcard-hint-block" onClick={e=>e.stopPropagation()}>
+                <button type="button" className="text-button text-xs" onClick={()=>setShowHint(s=>!s)}>
+                  {showHint?"Hide hint":"Show hint"}
+                </button>
+                {showHint&&<div className="flashcard-hint-box"><TutorMarkdown content={card.hint}/></div>}
+              </div>
+            )}
+
+            <span className="flashcard-hint">{revealed?"Rate how accurately you recalled the answer":"Tap card or press Enter to reveal answer"}</span>
+          </div>
+
+          <div className="flashcard-meta-bar flex items-center justify-between gap-3 flex-wrap">
+            {(targetLessonId||cardCourseId||targetCourse)?(
+              <button
+                type="button"
+                className="flashcard-source-link"
+                onClick={()=>{if(targetLessonId)p.openLesson(targetLessonId);else if(targetCourse?.id)p.go("course",{params:{courseId:targetCourse.id}});else p.go("course");}}
+              >
+                <span className="flashcard-source-prefix">Review lesson:</span>
+                <span className="flashcard-source-title">{targetCourse?.title?`${targetCourse.title} · `:""}{targetLesson?.title||card.lesson_title||targetCourse?.title||"Source lesson"}</span>
+                <span className="flashcard-source-arrow" aria-hidden="true">↗</span>
+              </button>
+            ):<span className="fc-personal-tag">Personal card</span>}
+
+            <div className="flashcard-card-actions flex items-center gap-2">
+              <button type="button" className="quiet-btn compact flex items-center gap-1.5" onClick={()=>openPortal("manual",card)} title="Edit card"><Icon name="edit" size={13}/> Edit</button>
+              {confirmDeleteId===card.id?(
+                <div className="flex items-center gap-1.5">
+                  <button type="button" className="danger-btn compact" disabled={deletingId===card.id} onClick={()=>handleDeleteCard(card.id)}>{deletingId===card.id?"Deleting…":"Confirm"}</button>
+                  <button type="button" className="quiet-btn compact" onClick={()=>setConfirmDeleteId(null)}>Cancel</button>
+                </div>
+              ):(
+                <button type="button" className="quiet-btn danger compact flex items-center gap-1.5" onClick={()=>setConfirmDeleteId(card.id)} title="Delete card"><Icon name="trash" size={13}/> Delete</button>
+              )}
+            </div>
+          </div>
+
+          {revealed?(
+            <div className="rating-row grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button type="button" disabled={ratingCard} onClick={()=>rating("Again")}><strong>Again</strong><small>{intervalLabels.Again}</small></button>
+              <button type="button" disabled={ratingCard} onClick={()=>rating("Hard")}><strong>Hard</strong><small>{intervalLabels.Hard}</small></button>
+              <button type="button" disabled={ratingCard} onClick={()=>rating("Good")}><strong>Good</strong><small>{intervalLabels.Good}</small></button>
+              <button type="button" disabled={ratingCard} onClick={()=>rating("Easy")}><strong>Easy</strong><small>{intervalLabels.Easy}</small></button>
+            </div>
+          ):(
+            <div className="flashcard-controls flex items-center justify-between gap-3 w-full">
+              <button type="button" className="secondary-btn fc-manage-deck-btn" onClick={()=>openPortal("deck",null)}>Manage deck ({(p.data.flashcards||[]).length})</button>
+              <button type="button" className="primary-btn" onClick={()=>setRevealed(true)}>Reveal answer <span>↗</span></button>
+            </div>
+          )}
+        </>:<>
+          <EmptyState title="No cards due right now" body={filterCourse==="all"?"You’re all caught up. Generate AI flashcards from any topic or create your own custom card.":"No cards are due in this course filter right now."} action="Add a card" onAction={()=>openPortal("manual",null)}/>
+          <div className="fc-empty-ai-row flex justify-center gap-2.5 flex-wrap">
+            <button type="button" className="secondary-btn" onClick={()=>openPortal("ai",null)}>Generate with AI ✦</button>
+            {(p.data.flashcards||[]).length>0&&<button type="button" className="quiet-btn fc-manage-deck-btn" onClick={()=>openPortal("deck",null)}>Manage deck ({(p.data.flashcards||[]).length})</button>}
+          </div>
+        </>}
+      </section>
+
+      <aside className="flash-aside flex flex-col gap-4">
+        <Panel title="Your deck" icon="cards">
+          <div className="side-panel-copy flex flex-col gap-3 p-4">
+            <div className="rhythm-big">{savedInScope}<span> cards saved</span></div>
+            <p>Adaptive spaced repetition surfaces each question right before you forget it.</p>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="primary-btn compact" onClick={()=>openPortal("ai",null)}>Generate with AI ✦</button>
+              <button type="button" className="secondary-btn compact" onClick={()=>openPortal("manual",null)}><Icon name="plus" size={13}/>Create a flashcard</button>
+              {(p.data.flashcards||[]).length>0&&<button type="button" className="quiet-btn compact" onClick={()=>openPortal("deck",null)}>Manage deck</button>}
+            </div>
+          </div>
+        </Panel>
+        <Panel title="Due later" icon="clock">
+          <div className="side-panel-copy card-list-compact flex flex-col gap-2 p-4">
+            {dueLater.length>0?dueLater.slice(0,5).map(c=><div key={c.id} className="fc-due-later-item"><span title={c.front}>{c.front}</span><small>{prettyDate(c.due_at)}</small></div>):(
+              <p className="fc-empty-schedule">No upcoming cards scheduled yet. Cards you rate as Hard, Good, or Easy will appear here with their next review date.</p>
+            )}
+          </div>
+        </Panel>
+      </aside>
+    </div>
+
+    <FlashcardPortalModal
+      open={portalState.open}
+      initialMode={portalState.mode}
+      editingCard={portalState.editingCard}
+      currentCard={card||null}
+      flashcards={p.data.flashcards||[]}
+      initialCourseId={initialPortalCourse}
+      initialCourseFilter={filterCourse}
+      allCourses={allCourses}
+      allLessons={allLessons}
+      notes={p.data?.notes||[]}
+      remote={p.remote}
+      request={p.request}
+      onClose={()=>setPortalState({open:false,mode:"manual",editingCard:null})}
+      onSaveCard={handleSavePortalCard}
+      onSaveGeneratedBatch={p.addFlashcardsBatch}
+      onDeleteCard={handleDeleteCard}
+      onJumpToCard={jumpToCard}
+      onOpenAccount={p.openAccount}
+      flashToast={p.flashToast}
+    />
   </div>;
 }
 
@@ -1270,25 +1808,50 @@ const PRACTICE_MODES = [
 ];
 
 function PracticePage(p){
-  const [lessonId,setLessonId]=useState(()=>p.activeLesson?.id||p.lessons[0]?.id||"");
+  const allCourses=useMemo(()=>(p.data?.courses||[]).filter(c=>c.modules?.some(m=>m.lessons?.length)),[p.data?.courses]);
+  const allLessons=useMemo(()=>p.allLessons?.length?p.allLessons:collectAllCourseLessons(p.data?.courses,p.lessons,p.activeCourse),[p.allLessons,p.data?.courses,p.lessons,p.activeCourse]);
+  const [courseFilter,setCourseFilter]=useState(()=>p.routeQuery?.get?.("course")||"all");
+  const visibleLessons=useMemo(()=>courseFilter==="all"?allLessons:allLessons.filter(l=>l.courseId===courseFilter),[allLessons,courseFilter]);
+  const [lessonId,setLessonId]=useState(()=>{
+    const paramLessonId=p.routeParams?.lessonId;
+    if(paramLessonId&&allLessons.some(l=>l.id===paramLessonId))return paramLessonId;
+    const initialList=courseFilter==="all"?allLessons:allLessons.filter(l=>l.courseId===courseFilter);
+    return initialList.find(l=>l.id===p.activeLesson?.id)?.id||initialList[0]?.id||"";
+  });
   const [mode,setMode]=useState("mixed");
   const [answer,setAnswer]=useState("");
   const [result,setResult]=useState(null);
   const [customPrompt]=useState("");
   const [studioSet,setStudioSet]=useState(null);
-  const [studioStatus,setStudioStatus]=useState({kind:"idle",message:""});
+  const [studioStatus,setStudioStatus]=useState(()=>{
+    const firstLesson=allLessons.find(l=>l.id===lessonId);
+    const firstMode=PRACTICE_MODES.find(m=>m.id==="mixed");
+    return firstLesson?{kind:"idle",message:`Select Generate ${firstMode.label} to create fresh drills for ${firstLesson.title}.`}:{kind:"idle",message:""};
+  });
   const [cachedModes,setCachedModes]=useState([]);
   const [generatingKey,setGeneratingKey]=useState(null);
   const generatingKeyRef=useRef(null);
 
   useEffect(()=>{
-    if((!lessonId||!p.lessons.some(l=>l.id===lessonId))&&p.lessons[0]?.id){
-      setLessonId(p.lessons[0].id);
+    const paramLessonId=p.routeParams?.lessonId;
+    if(paramLessonId&&allLessons.some(l=>l.id===paramLessonId)){
+      const target=allLessons.find(l=>l.id===paramLessonId);
+      if(courseFilter!=="all"&&target?.courseId&&target.courseId!==courseFilter){
+        setCourseFilter(target.courseId);
+      }
+      if(paramLessonId!==lessonId){
+        setLessonId(paramLessonId);
+        setResult(null);
+      }
+      return;
     }
-  },[lessonId,p.lessons]);
+    if((!lessonId||!visibleLessons.some(l=>l.id===lessonId))&&visibleLessons[0]?.id){
+      setLessonId(visibleLessons[0].id);
+    }
+  },[lessonId,allLessons,visibleLessons,courseFilter,p.routeParams?.lessonId]);
 
   const userId=p.user?.id||"anon";
-  const lesson=p.lessons.find(l=>l.id===lessonId),checkpoint=lesson?.checkpoint;
+  const lesson=allLessons.find(l=>l.id===lessonId),checkpoint=lesson?.checkpoint;
   const activeModeMeta=PRACTICE_MODES.find(m=>m.id===mode)||PRACTICE_MODES[4];
   const activeKey=lesson&&mode!=="checkpoint"?buildPracticeSetKey(userId,lesson.id,mode):"";
 
@@ -1418,6 +1981,13 @@ function PracticePage(p){
           ...d.attempts,
         ],
       }));
+      recordBehavior("practice_drill",{
+        lessonId:lesson.id,
+        concept:lesson.title,
+        score,
+        passed:Boolean(correct),
+        exerciseType:exercise.type,
+      });
       return true;
     }catch(error){
       p.flashToast(error?.message||"Could not save practice attempt.");
@@ -1434,19 +2004,57 @@ function PracticePage(p){
       if(p.remote&&correct){const task=p.data.tasks.find(t=>t.lesson_id===lessonId&&t.status!=="completed");if(task)await p.request(`tasks/${task.id}/complete`,{method:"POST",body:JSON.stringify({actualMinutes:task.estimated_minutes})});}
       setResult({correct,text:correct===null?"Your response is saved as evidence. Ask the tutor to review your reasoning.":correct?checkpoint.explanation||"That answer shows the key idea.":"Review the lesson and try again. Your attempt is kept."});
       p.updateData(d=>({...d,attempts:[{id:`a-${Date.now()}`,lesson_id:lessonId,concept:lesson?.title,score:correct===null?null:correct?100:0,created_at:new Date().toISOString()},...d.attempts],tasks:d.tasks.map(t=>t.lesson_id===lessonId&&correct?{...t,status:"completed",completed_at:new Date().toISOString()}:t)}));
+      recordBehavior("checkpoint_attempt",{
+        lessonId,
+        concept:lesson?.title,
+        score:correct===null?null:correct?100:0,
+        passed:Boolean(correct),
+      });
       if(p.remote)await p.refreshRemote();
     }catch(error){p.flashToast(error.message);}
   }
 
   const cachedModeSet=new Set(cachedModes.map(m=>m.mode));
   const isGeneratingCurrent=Boolean(generatingKey&&activeKey&&generatingKey===activeKey);
+  const scopedAttempts=useMemo(()=>{
+    const attempts=p.data?.attempts||[];
+    if(courseFilter==="all")return attempts;
+    const courseLessonIds=new Set(visibleLessons.map(l=>l.id));
+    return attempts.filter(a=>a.course_id===courseFilter||(a.lesson_id&&courseLessonIds.has(a.lesson_id)));
+  },[p.data?.attempts,courseFilter,visibleLessons]);
 
-  return <div className="practice-layout grid gap-4 items-start"><section className="panel practice-work flex flex-col p-4 gap-4"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="practice"/>Practice Studio</div><span className="status-pill">UNDERSTANDING EVIDENCE</span></div><div className="practice-body flex flex-col gap-3"><label>Choose a lesson<select value={lessonId} onChange={e=>{setLessonId(e.target.value);setResult(null);}}>{p.lessons.map(l=><option key={l.id} value={l.id}>{l.title}</option>)}</select></label>{lesson?<>
+  const lessonGroups=useMemo(()=>{
+    const groups=[];
+    const byKey=new Map();
+    visibleLessons.forEach(item=>{
+      const groupTitle=courseFilter==="all"&&allCourses.length>1&&item.courseTitle
+        ?`${item.courseTitle}${item.moduleTitle?` · ${item.moduleTitle}`:""}`
+        :item.moduleTitle||"";
+      if(!byKey.has(groupTitle)){
+        const bucket=[];
+        byKey.set(groupTitle,bucket);
+        groups.push([groupTitle,bucket]);
+      }
+      byKey.get(groupTitle).push(item);
+    });
+    return groups;
+  },[visibleLessons,courseFilter,allCourses.length]);
+
+  const handleCourseFilterChange=(nextCourse)=>{
+    setCourseFilter(nextCourse);
+    setResult(null);
+    const nextVisible=nextCourse==="all"?allLessons:allLessons.filter(l=>l.courseId===nextCourse);
+    if(!nextVisible.some(l=>l.id===lessonId)){
+      setLessonId(nextVisible[0]?.id||"");
+    }
+  };
+
+  return <div className="practice-layout grid gap-4 items-start"><section className="panel practice-work flex flex-col p-4 gap-4"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="practice"/>Practice Studio</div><span className="status-pill">UNDERSTANDING EVIDENCE</span></div><div className="practice-body flex flex-col gap-3"><div className={`practice-selectors grid gap-3 ${allCourses.length>0?"sm:grid-cols-2":"grid-cols-1"}`}>{allCourses.length>0&&<label>Course<select value={courseFilter} aria-label="Filter practice topics by course" onChange={e=>handleCourseFilterChange(e.target.value)}><option value="all">All courses ({allLessons.length} topics)</option>{allCourses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label>}<label>Choose a lesson<select value={lessonId} aria-label="Choose a lesson" onChange={e=>{setLessonId(e.target.value);setResult(null);}}>{lessonGroups.every(([label])=>!label)?visibleLessons.map(l=><option key={l.id} value={l.id}>{l.title}</option>):lessonGroups.map(([label,items])=>label?<optgroup key={label} label={label}>{items.map(l=><option key={l.id} value={l.id}>{l.title}</option>)}</optgroup>:items.map(l=><option key={l.id} value={l.id}>{l.title}</option>))}</select></label></div>{lesson?<>
     <div className="practice-mode-tabs flex flex-wrap gap-2" role="tablist" aria-label="Practice exercise modes">
       {PRACTICE_MODES.map(item=>{
         const isActive=mode===item.id;
         const hasCache=item.id!=="checkpoint"&&cachedModeSet.has(item.id);
-        return <button key={item.id} type="button" role="tab" aria-selected={isActive} className={`practice-mode-tab ${isActive?"active":""} ${hasCache?"has-cache":""}`.trim()} onClick={()=>{setMode(item.id);setResult(null);}}><span>{item.label}</span>{hasCache&&<span className="practice-mode-badge" aria-label="Cached">●</span>}</button>;
+        return <button key={item.id} type="button" role="tab" aria-selected={isActive} title={hasCache?`${item.label} (cached locally)`:item.label} className={`practice-mode-tab ${isActive?"selected":""}`.trim()} onClick={()=>{setMode(item.id);setResult(null);}}><span>{item.label}</span>{hasCache&&<span className="cached-dot" aria-label="Cached"/>}</button>;
       })}
     </div>
 
@@ -1458,9 +2066,8 @@ function PracticePage(p){
       <p className="muted-copy">An attempt is kept even when you revisit the lesson. Task completion is tracked separately.</p>
     </>:<>
       <div className="practice-studio-bar flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <span className="eyebrow">{lesson.moduleTitle||"PRACTICE STUDIO"}</span>
-          <p className="muted-copy">{activeModeMeta.hint}</p>
+        <div className="practice-studio-meta">
+          <span className="eyebrow">{lesson.courseTitle?`${lesson.courseTitle} · ${lesson.moduleTitle||"Lesson"}`:(lesson.moduleTitle||"PRACTICE STUDIO")}</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {studioSet?.exercises?.length>0&&<span className="status-pill">Cached locally</span>}
@@ -1490,17 +2097,414 @@ function PracticePage(p){
         />
       )}
     </>}
-  </>:<EmptyState title="Choose a lesson first" body="Open a course to see its practice checkpoints." action="Browse courses" onAction={()=>p.go("courses")}/>}</div></section><aside className="practice-aside flex flex-col gap-4"><Panel title="Recent evidence" icon="progress"><EvidenceList attempts={p.data.attempts.slice(0,6)}/></Panel><Panel title="More practice" icon="tutor"><div className="side-panel-copy flex flex-col gap-2 p-4"><p>Ask the tutor for a hint, a new quiz question, or feedback on your approach.</p><button className="text-button" onClick={()=>p.go("tutor")}>Open AI Tutor ↗</button></div></Panel></aside></div>;
+  </>:<EmptyState title="Choose a lesson first" body="Open a course to see its practice checkpoints." action="Browse courses" onAction={()=>p.go("courses")}/>}</div></section><aside className="practice-aside flex flex-col gap-4"><Panel title="Recent evidence" icon="progress"><EvidenceList attempts={scopedAttempts.slice(0,6)}/></Panel><Panel title="More practice" icon="tutor"><div className="side-panel-copy flex flex-col gap-2 p-4"><p>Ask the tutor for a hint, a new quiz question, or feedback on your approach.</p><button className="text-button" onClick={()=>p.go("tutor")}>Open AI Tutor ↗</button></div></Panel></aside></div>;
 }
 
-function EvidenceList({attempts}){return attempts.length?<div className="evidence-list">{attempts.map((a,i)=><div className="evidence-item" key={a.id||i}><span className={`evidence-dot ${Number(a.score)>=70?"good":""}`}/><div><strong>{a.concept||"Practice attempt"}</strong><small>{a.score==null?"Response saved":Number(a.score)>=70?"Checkpoint passed":"Attempt saved"} · {prettyDate(a.created_at,{month:"short",day:"numeric"})}</small></div></div>)}</div>:<p className="muted-copy padded">Your checkpoint and practice evidence will appear here.</p>}
+function EvidenceList({
+  attempts = [],
+  pageSize = 0,
+  showControls = false,
+  emptyMessage = "Your checkpoint and practice evidence will appear here."
+}){
+  const [page,setPage]=useState(1);
+  const [statusFilter,setStatusFilter]=useState("all");
+  const [searchQuery,setSearchQuery]=useState("");
+
+  if(!attempts.length){
+    return <p className="muted-copy padded">{emptyMessage}</p>;
+  }
+
+  // If no pagination/controls requested (e.g. PracticePage aside panel), render plain list
+  if(!pageSize&&!showControls){
+    return (
+      <div className="evidence-list">
+        {attempts.map((a,i)=>(
+          <div className="evidence-item" key={a.id||i}>
+            <span className={`evidence-dot ${Number(a.score)>=70?"good":""}`}/>
+            <div>
+              <strong>{a.concept||"Practice attempt"}</strong>
+              <small>
+                {a.score==null?"Response saved":Number(a.score)>=70?"Checkpoint passed":"Attempt saved"} · {prettyDate(a.created_at,{month:"short",day:"numeric"})}
+              </small>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const passedCount=attempts.filter(a=>a.score!=null&&Number(a.score)>=70).length;
+  const reviewCount=attempts.filter(a=>a.score!=null&&Number(a.score)<70).length;
+
+  const filtered=attempts.filter(a=>{
+    if(statusFilter==="passed"){
+      if(a.score==null||Number(a.score)<70)return false;
+    }else if(statusFilter==="review"){
+      if(a.score==null||Number(a.score)>=70)return false;
+    }
+    if(searchQuery.trim()){
+      const q=searchQuery.toLowerCase();
+      const matchConcept=(a.concept||"").toLowerCase().includes(q);
+      const matchType=(a.result?.exerciseType||"").toLowerCase().includes(q);
+      if(!matchConcept&&!matchType)return false;
+    }
+    return true;
+  });
+
+  const actualPageSize=pageSize>0?pageSize:5;
+  const totalPages=Math.max(1,Math.ceil(filtered.length/actualPageSize));
+  const currentPage=Math.min(page,totalPages);
+  const startIdx=(currentPage-1)*actualPageSize;
+  const endIdx=Math.min(startIdx+actualPageSize,filtered.length);
+  const visible=filtered.slice(startIdx,endIdx);
+
+  const resetFilters=()=>{
+    setStatusFilter("all");
+    setSearchQuery("");
+    setPage(1);
+  };
+
+  return (
+    <div className="evidence-paginated-container flex flex-col gap-2.5">
+      <div className="evidence-toolbar flex flex-wrap items-center justify-between gap-2 px-1 pt-1">
+        <div className="evidence-filter-pills flex items-center gap-1.5 flex-wrap" role="tablist" aria-label="Filter activity status">
+          <button
+            type="button"
+            className={`evidence-filter-pill ${statusFilter==="all"?"active":""}`}
+            onClick={()=>{setStatusFilter("all");setPage(1);}}
+          >
+            All ({attempts.length})
+          </button>
+          <button
+            type="button"
+            className={`evidence-filter-pill ${statusFilter==="passed"?"active":""}`}
+            onClick={()=>{setStatusFilter("passed");setPage(1);}}
+          >
+            Passed ({passedCount})
+          </button>
+          <button
+            type="button"
+            className={`evidence-filter-pill ${statusFilter==="review"?"active":""}`}
+            onClick={()=>{setStatusFilter("review");setPage(1);}}
+          >
+            Needs review ({reviewCount})
+          </button>
+        </div>
+        <div className="evidence-search-wrap">
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={e=>{setSearchQuery(e.target.value);setPage(1);}}
+            placeholder="Filter concept…"
+            aria-label="Filter practice activity by concept"
+            className="evidence-search-input text-xs"
+          />
+        </div>
+      </div>
+
+      {visible.length>0?(
+        <div className="evidence-list paginated">
+          {visible.map((a,i)=>{
+            const isGood=a.score!=null&&Number(a.score)>=70;
+            const isReview=a.score!=null&&Number(a.score)<70;
+            const exType=a.result?.exerciseType;
+            const typeLabel=exType?exType.replace(/_/g," "):null;
+            return (
+              <div className="evidence-item flex items-center justify-between gap-3" key={a.id||`${startIdx+i}`}>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className={`evidence-dot ${isGood?"good":""}`} aria-hidden="true"/>
+                  <div className="min-w-0">
+                    <strong className="block truncate">{a.concept||"Practice attempt"}</strong>
+                    <small className="flex items-center gap-1.5 text-learnos-muted-2 flex-wrap">
+                      <span>{a.score==null?"Response saved":isGood?"Checkpoint passed":"Needs review"}</span>
+                      {typeLabel&&<span className="evidence-type-chip">{typeLabel}</span>}
+                      <span>· {prettyDate(a.created_at,{month:"short",day:"numeric"})}</span>
+                    </small>
+                  </div>
+                </div>
+                {a.score!=null&&(
+                  <span className={`evidence-score-pill ${isGood?"good":isReview?"review":""}`}>
+                    {a.score}%
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ):(
+        <div className="evidence-empty-filter p-4 text-center text-sm muted-copy flex flex-col items-center gap-2">
+          <span>No activity matched the selected filter.</span>
+          <button type="button" className="text-button text-xs" onClick={resetFilters}>
+            Reset filters
+          </button>
+        </div>
+      )}
+
+      {filtered.length>actualPageSize&&(
+        <div className="evidence-pagination flex items-center justify-between px-2 pt-2 border-t border-learnos-line/40 text-xs text-learnos-muted">
+          <span>
+            Showing {startIdx+1}–{endIdx} of {filtered.length} attempts
+          </span>
+          <div className="evidence-page-buttons flex items-center gap-2">
+            <button
+              type="button"
+              className="evidence-page-btn"
+              disabled={currentPage<=1}
+              onClick={()=>setPage(p=>Math.max(1,p-1))}
+              aria-label="Previous page of practice activity"
+            >
+              Previous
+            </button>
+            <span className="page-indicator">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              type="button"
+              className="evidence-page-btn"
+              disabled={currentPage>=totalPages}
+              onClick={()=>setPage(p=>Math.min(totalPages,p+1))}
+              aria-label="Next page of practice activity"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ProgressPage(p){
-  const done=p.data.tasks.filter(t=>t.status==="completed").length,total=p.data.tasks.length,passed=p.data.attempts.filter(a=>Number(a.score)>=70).length,concepts=[...new Set(p.data.attempts.filter(a=>Number(a.score)>=70).map(a=>a.concept))];
-  const byWeek=Array.from({length:6},(_,i)=>{const date=new Date();date.setDate(date.getDate()-((5-i)*7));const week=date.toLocaleDateString(undefined,{month:"short",day:"numeric"});const matches=p.data.tasks.filter(t=>{const d=new Date(t.scheduled_at||0);const diff=(date-d)/(1000*60*60*24);return diff>=0&&diff<7;});return {week,value:matches.filter(t=>t.status==="completed").length,total:matches.length};});
-  return <div className="progress-page-grid grid gap-4 items-start"><section className="panel progress-overview flex flex-col p-4 gap-4"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="progress"/>Study activity</div><span className="muted-copy text-sm">Based on sessions in your plan</span></div><div className="progress-hero flex items-center gap-4"><div className="progress-donut grid place-items-center" style={{"--progress":`${total?done/total*100:0}%`}}><strong>{total?Math.round(done/total*100):0}%</strong><span>complete</span></div><div><h2>{done} of {total} sessions done</h2><p>Task completion describes the work you finished. It is not a mastery score.</p></div></div><div className="progress-bars flex items-end justify-between gap-2 h-36 pt-4">{byWeek.map((item,i)=><div className="progress-bar-col flex flex-col items-center gap-1.5 flex-1" key={i}><div className="progress-bar-wrap w-full"><div className="progress-bar-fill" style={{height:`${item.total?Math.max(9,item.value/item.total*100):4}%`}} title={`${item.value} of ${item.total} sessions`}/></div><span>{item.week}</span></div>)}</div><div className="chart-legend flex items-center gap-4 text-sm"><span><i/>Completed sessions</span><span><i className="planned-dot"/>Planned sessions</span></div></section>
-    <section className="panel evidence-overview flex flex-col p-4 gap-4"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="check"/>Understanding evidence</div></div><div className="evidence-summary grid grid-cols-1 sm:grid-cols-3 gap-3"><div><strong>{passed}</strong><span>checkpoint passes</span></div><div><strong>{concepts.length}</strong><span>concepts with recent evidence</span></div><div><strong>{p.data.attempts.length}</strong><span>attempts kept</span></div></div><EvidenceList attempts={p.data.attempts}/></section>
-    <section className="panel course-progress-table flex flex-col p-4 gap-3"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="book"/>By course</div></div>{p.data.courses.map(c=>{const tasks=p.data.tasks.filter(t=>t.course_id===c.id),complete=tasks.filter(t=>t.status==="completed").length;return <div className="course-progress-line flex items-center justify-between gap-3 p-2" key={c.id}><div><strong>{c.title}</strong><small>{complete} completed of {tasks.length} scheduled tasks</small></div><div className="progress-track flex-1 overflow-hidden"><div className="progress-fill" style={{width:`${tasks.length?complete/tasks.length*100:0}%`}}/></div><span>{tasks.length?Math.round(complete/tasks.length*100):0}%</span></div>;})}{!p.data.courses.length&&<p className="muted-copy padded">Approve a plan to see course progress.</p>}</section>
+  const [courseFilter,setCourseFilter]=useState(()=>p.routeQuery?.get?.("course")||"all");
+  const allCourses=p.data?.courses||[];
+  const allLessons=useMemo(()=>p.allLessons?.length?p.allLessons:collectAllCourseLessons(allCourses,p.lessons,p.activeCourse),[p.allLessons,allCourses,p.lessons,p.activeCourse]);
+  const lessonCourseMap=useMemo(()=>{
+    const map=new Map();
+    allLessons.forEach(l=>{if(l.id&&l.courseId)map.set(l.id,l.courseId);});
+    return map;
+  },[allLessons]);
+  const scopedTasks=useMemo(()=>courseFilter==="all"?p.data.tasks:p.data.tasks.filter(t=>t.course_id===courseFilter),[p.data.tasks,courseFilter]);
+  const scopedAttempts=useMemo(()=>courseFilter==="all"?p.data.attempts:p.data.attempts.filter(a=>(a.course_id||lessonCourseMap.get(a.lesson_id))===courseFilter),[p.data.attempts,courseFilter,lessonCourseMap]);
+
+  const done=scopedTasks.filter(t=>t.status==="completed").length,total=scopedTasks.length,passed=scopedAttempts.filter(a=>Number(a.score)>=70).length,concepts=[...new Set(scopedAttempts.filter(a=>Number(a.score)>=70).map(a=>a.concept))];
+  const byWeek=Array.from({length:6},(_,i)=>{const date=new Date();date.setDate(date.getDate()-((5-i)*7));const week=date.toLocaleDateString(undefined,{month:"short",day:"numeric"});const matches=scopedTasks.filter(t=>{const d=new Date(t.scheduled_at||0);const diff=(date-d)/(1000*60*60*24);return diff>=0&&diff<7;});return {week,value:matches.filter(t=>t.status==="completed").length,total:matches.length};});
+
+  // Rich User Behavior & Learning Telemetry Metrics
+  const metrics=useMemo(()=>calculateLearnerMetrics(p.data,p.data?.settings||{}),[p.data]);
+
+  return <div className="progress-dashboard flex flex-col gap-5">
+    {/* Behavioral KPIs Overview */}
+    <div className="progress-kpi-grid grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* 1. Daily Active Streak */}
+      <div className="panel progress-kpi-card flex flex-col justify-between p-3.5 gap-2">
+        <div className="flex items-center justify-between">
+          <span className="quiet-label text-[11px]">DAILY STREAK</span>
+          <span className="kpi-icon-badge streak-badge" aria-hidden="true">🔥</span>
+        </div>
+        <div>
+          <div className="kpi-value text-2xl font-bold flex items-baseline gap-1.5">
+            <span>{metrics.streak.streakDays}</span>
+            <span className="text-sm font-normal text-learnos-muted">day{metrics.streak.streakDays===1?"":"s"}</span>
+          </div>
+          <p className="kpi-caption text-xs text-learnos-muted-2 mt-0.5">
+            {metrics.streak.activeToday?"Active today · Streak sustained":metrics.streak.streakDays>0?"Practice today to maintain streak":"Start your learning streak"}
+          </p>
+        </div>
+      </div>
+
+      {/* 2. Weekly Study Velocity */}
+      <div className="panel progress-kpi-card flex flex-col justify-between p-3.5 gap-2">
+        <div className="flex items-center justify-between">
+          <span className="quiet-label text-[11px]">WEEKLY COMMITMENT</span>
+          <span className="kpi-icon-badge target-badge" aria-hidden="true">⏱️</span>
+        </div>
+        <div>
+          <div className="kpi-value text-2xl font-bold flex items-baseline gap-1.5">
+            <span>{metrics.studyTime.weeklyMinutesSpent}</span>
+            <span className="text-sm font-normal text-learnos-muted">/ {metrics.studyTime.weeklyGoalMinutes}m</span>
+          </div>
+          <div className="kpi-bar-wrap w-full bg-learnos-line/30 h-1.5 rounded-full overflow-hidden mt-1.5">
+            <div className="kpi-bar-fill h-full transition-all" style={{width:`${metrics.studyTime.weeklyGoalPct}%`}}/>
+          </div>
+          <p className="kpi-caption text-xs text-learnos-muted-2 mt-1">
+            {metrics.studyTime.weeklyGoalPct}% achieved · {metrics.studyTime.remainingMinutes>0?`${metrics.studyTime.remainingMinutes}m remaining`:"Goal reached! 🎉"}
+          </p>
+        </div>
+      </div>
+
+      {/* 3. Spaced Retention Rate */}
+      <div className="panel progress-kpi-card flex flex-col justify-between p-3.5 gap-2">
+        <div className="flex items-center justify-between">
+          <span className="quiet-label text-[11px]">RETENTION RATE</span>
+          <span className="kpi-icon-badge retention-badge" aria-hidden="true">🧠</span>
+        </div>
+        <div>
+          <div className="kpi-value text-2xl font-bold flex items-baseline gap-1.5">
+            <span>{metrics.retention.retentionRate}%</span>
+            <span className="text-sm font-normal text-learnos-muted">recall score</span>
+          </div>
+          <p className="kpi-caption text-xs text-learnos-muted-2 mt-0.5">
+            {metrics.retention.masteredCards} cards mastered · {metrics.retention.totalCardReviews} reviews logged
+          </p>
+        </div>
+      </div>
+
+      {/* 4. Practice Accuracy */}
+      <div className="panel progress-kpi-card flex flex-col justify-between p-3.5 gap-2">
+        <div className="flex items-center justify-between">
+          <span className="quiet-label text-[11px]">PRACTICE ACCURACY</span>
+          <span className="kpi-icon-badge accuracy-badge" aria-hidden="true">🎯</span>
+        </div>
+        <div>
+          <div className="kpi-value text-2xl font-bold flex items-baseline gap-1.5">
+            <span>{metrics.practice.passRate}%</span>
+            <span className="text-sm font-normal text-learnos-muted">pass rate</span>
+          </div>
+          <p className="kpi-caption text-xs text-learnos-muted-2 mt-0.5">
+            {metrics.practice.passedAttempts} of {metrics.practice.totalAttempts} attempts passed (≥70%)
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {/* Main 2-Column Grid */}
+    <div className="progress-page-grid grid gap-4 items-start">
+      {/* Left Column: Study Activity & 7-Day Rhythm */}
+      <div className="flex flex-col gap-4">
+        <section className="panel progress-overview flex flex-col p-4 gap-4">
+          <div className="panel-head flex items-center justify-between gap-2 flex-wrap">
+            <div className="panel-title flex items-center gap-2.5">
+              <Icon name="progress"/>Study activity
+            </div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {allCourses.length>0?<select value={courseFilter} onChange={e=>setCourseFilter(e.target.value)} aria-label="Filter progress by course" className="tool-course-select text-xs rounded-lg px-2.5 py-1.5 bg-learnos-bg/70 border border-learnos-line text-learnos-text"><option value="all">All courses ({allCourses.length})</option>{allCourses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select>:<span className="muted-copy text-sm">Based on sessions in your plan</span>}
+            </div>
+          </div>
+          <div className="progress-hero flex items-center gap-4">
+            <div className="progress-donut grid place-items-center" style={{"--progress":`${total?done/total*100:0}%`}}>
+              <strong>{total?Math.round(done/total*100):0}%</strong>
+              <span>complete</span>
+            </div>
+            <div>
+              <h2>{done} of {total} sessions done</h2>
+              <p>Task completion describes the work you finished. It is not a mastery score.</p>
+            </div>
+          </div>
+          <div className="progress-bars flex items-end justify-between gap-2 h-36 pt-4">
+            {byWeek.map((item,i)=><div className="progress-bar-col flex flex-col items-center gap-1.5 flex-1" key={i}><div className="progress-bar-wrap w-full"><div className="progress-bar-fill" style={{height:`${item.total?Math.max(9,item.value/item.total*100):4}%`}} title={`${item.value} of ${item.total} sessions`}/></div><span>{item.week}</span></div>)}
+          </div>
+          <div className="chart-legend flex items-center gap-4 text-sm">
+            <span><i/>Completed sessions</span><span><i className="planned-dot"/>Planned sessions</span>
+          </div>
+        </section>
+
+        {/* 7-Day Learning Rhythm & Modality Breakdown */}
+        <section className="panel learning-rhythm-panel flex flex-col p-4 gap-3.5">
+          <div className="panel-head flex items-center justify-between">
+            <div className="panel-title flex items-center gap-2.5">
+              <Icon name="spark"/>7-Day Learning Rhythm
+            </div>
+            <span className="text-xs text-learnos-muted-2">Activity by day</span>
+          </div>
+          <div className="rhythm-bars flex items-end justify-between gap-2 h-20 pt-2">
+            {metrics.rhythm.map((d,i)=>(
+              <div key={i} className={`rhythm-bar-col flex flex-col items-center gap-1 flex-1 ${d.isToday?"is-today":""}`}>
+                <div className="rhythm-bar-wrap w-full flex items-end justify-center h-14 rounded overflow-hidden">
+                  <div
+                    className={`rhythm-bar-fill w-full rounded ${d.active?"active":""}`}
+                    style={{height:`${d.eventsCount?Math.max(14,Math.min(100,d.eventsCount*22)):6}%`}}
+                    title={`${d.dayName} (${d.label}): ${d.eventsCount} actions, ~${d.minutes}m`}
+                  />
+                </div>
+                <span className="rhythm-day-label text-[11px] text-learnos-muted-2">{d.dayName}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="modality-section pt-3 border-t border-learnos-line/30">
+            <div className="flex items-center justify-between text-xs text-learnos-muted mb-2">
+              <span>Learning Modality Distribution</span>
+              <span className="text-learnos-muted-2">Share of activity</span>
+            </div>
+            <div className="modality-pills flex flex-wrap gap-2 text-xs">
+              <span className="modality-pill">📚 Roadmap {metrics.modalityShares.roadmap}%</span>
+              <span className="modality-pill">⚡ Practice {metrics.modalityShares.practice}%</span>
+              <span className="modality-pill">🃏 Flashcards {metrics.modalityShares.flashcards}%</span>
+              <span className="modality-pill">🤖 AI Tutor {metrics.modalityShares.tutor}%</span>
+              <span className="modality-pill">📝 Notes {metrics.modalityShares.notes}%</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Memory & Practice Summary */}
+        <section className="panel retention-insights flex flex-col p-4 gap-3">
+          <div className="panel-head flex items-center justify-between">
+            <div className="panel-title flex items-center gap-2.5">
+              <Icon name="cards"/>Memory & Review Progress
+            </div>
+            <button type="button" className="text-button text-xs" onClick={()=>p.go("flashcards")}>Flashcards ↗</button>
+          </div>
+          <div className="grid grid-cols-3 gap-2.5 text-xs">
+            <div className="insight-box p-2.5 rounded-lg border border-learnos-line/40 bg-learnos-surface/40 flex flex-col gap-1">
+              <span className="text-learnos-muted-2 text-[11px]">Mastered</span>
+              <strong className="text-base text-learnos-text">{metrics.retention.masteredCards}</strong>
+            </div>
+            <div className="insight-box p-2.5 rounded-lg border border-learnos-line/40 bg-learnos-surface/40 flex flex-col gap-1">
+              <span className="text-learnos-muted-2 text-[11px]">Learning</span>
+              <strong className="text-base text-learnos-text">{metrics.retention.learningCards}</strong>
+            </div>
+            <div className="insight-box p-2.5 rounded-lg border border-learnos-line/40 bg-learnos-surface/40 flex flex-col gap-1">
+              <span className="text-learnos-muted-2 text-[11px]">Tutor Queries</span>
+              <strong className="text-base text-learnos-text">{metrics.tutor.totalInteractions}</strong>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Right Column: Renamed Card & By Course Table */}
+      <div className="flex flex-col gap-4">
+        {/* Renamed Card: Concept Mastery & Practice Activity */}
+        <section className="panel evidence-overview flex flex-col p-4 gap-4">
+          <div className="panel-head flex items-center justify-between">
+            <div className="panel-title flex items-center gap-2.5">
+              <Icon name="check"/>Concept Mastery & Practice Activity
+            </div>
+          </div>
+          <div className="evidence-summary grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div><strong>{passed}</strong><span>checkpoint passes</span></div>
+            <div><strong>{concepts.length}</strong><span>concepts mastered</span></div>
+            <div><strong>{scopedAttempts.length}</strong><span>attempts recorded</span></div>
+            <div><strong>{scopedAttempts.length?Math.round(passed/scopedAttempts.length*100):0}%</strong><span>mastery rate</span></div>
+          </div>
+          <EvidenceList attempts={scopedAttempts} pageSize={5} showControls={true}/>
+        </section>
+
+        {/* Course Progress Table */}
+        <section className="panel course-progress-table flex flex-col p-4 gap-3">
+          <div className="panel-head flex items-center justify-between">
+            <div className="panel-title flex items-center gap-2.5">
+              <Icon name="book"/>By course
+            </div>
+            {courseFilter!=="all"&&<button type="button" className="text-button text-xs" onClick={()=>setCourseFilter("all")}>Show all courses</button>}
+          </div>
+          {allCourses.map(c=>{
+            const tasks=p.data.tasks.filter(t=>t.course_id===c.id),complete=tasks.filter(t=>t.status==="completed").length;
+            const isSelected=courseFilter===c.id;
+            return <button type="button" className={`course-progress-line flex items-center justify-between gap-3 p-2 w-full text-left cursor-pointer ${isSelected?"selected":""}`} key={c.id} onClick={()=>setCourseFilter(isSelected?"all":c.id)} aria-pressed={isSelected}>
+              <div>
+                <strong>{c.title}</strong>
+                <small>{complete} completed of {tasks.length} scheduled tasks</small>
+              </div>
+              <div className="progress-track flex-1 overflow-hidden">
+                <div className="progress-fill" style={{width:`${tasks.length?complete/tasks.length*100:0}%`}}/>
+              </div>
+              <span>{tasks.length?Math.round(complete/tasks.length*100):0}%</span>
+            </button>;
+          })}
+          {!allCourses.length&&<p className="muted-copy padded">Approve a plan to see course progress.</p>}
+        </section>
+      </div>
+    </div>
   </div>;
 }
 
@@ -1793,9 +2797,31 @@ function ReviewMessageCard({structured,interaction,onUpdateInteraction}){
 }
 
 export function TutorPage(p){
+  const allCourses=useMemo(()=>(p.data?.courses||[]).filter(c=>c.modules?.some(m=>m.lessons?.length)||c.id),[p.data?.courses]);
+  const allLessons=useMemo(()=>p.allLessons?.length?p.allLessons:collectAllCourseLessons(allCourses,p.lessons,p.activeCourse),[p.allLessons,allCourses,p.lessons,p.activeCourse]);
+  const [selectedCourseId,setSelectedCourseId]=useState(()=>p.routeQuery?.get?.("course")||"all");
+  const [selectedLessonId,setSelectedLessonId]=useState(()=>{
+    const qCourse=p.routeQuery?.get?.("course");
+    if(qCourse){
+      return allLessons.find(l=>l.courseId===qCourse)?.id||"";
+    }
+    return p.activeLesson?.id||allLessons[0]?.id||"";
+  });
   const [mode,setMode]=useState("Explain"),[prompt,setPrompt]=useState(""),[attempt,setAttempt]=useState(""),[messages,setMessages]=useState([]),[sending,setSending]=useState(false),[expandedSources,setExpandedSources]=useState({}),[savedThreads,setSavedThreads]=useState([]);
   const loadedThreadRef=useRef(null);
-  const threadId=buildTutorThreadId(p.user?.id,p.activeLesson?.id);
+
+  const visibleLessons=useMemo(()=>selectedCourseId==="all"?allLessons:allLessons.filter(l=>l.courseId===selectedCourseId),[allLessons,selectedCourseId]);
+  const currentLesson=useMemo(()=>{
+    if(!selectedLessonId)return null;
+    return allLessons.find(l=>l.id===selectedLessonId)||(p.activeLesson?.id===selectedLessonId?p.activeLesson:null);
+  },[allLessons,selectedLessonId,p.activeLesson]);
+  const currentCourse=useMemo(()=>{
+    if(currentLesson?.courseId)return allCourses.find(c=>c.id===currentLesson.courseId)||null;
+    if(selectedCourseId!=="all")return allCourses.find(c=>c.id===selectedCourseId)||null;
+    return p.activeCourse||null;
+  },[allCourses,currentLesson?.courseId,selectedCourseId,p.activeCourse]);
+
+  const threadId=buildTutorThreadId(p.user?.id,currentLesson?.id);
   const initials=(p.user?.fullName||"You").split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase();
 
   useEffect(()=>{
@@ -1825,12 +2851,12 @@ export function TutorPage(p){
     if(!p.remote||loadedThreadRef.current!==threadId)return;
     let cancelled=false;
     (async()=>{
-      await saveTutorThread(threadId,messages,{lessonTitle:p.activeLesson?.title||"Workspace"});
+      await saveTutorThread(threadId,messages,{lessonTitle:currentLesson?.title||currentCourse?.title||"Workspace"});
       const threads=await listTutorThreads(p.user?.id);
       if(!cancelled)setSavedThreads(Array.isArray(threads)?threads:[]);
     })();
     return ()=>{cancelled=true;};
-  },[messages,p.remote,p.user?.id,p.activeLesson?.title,threadId]);
+  },[messages,p.remote,p.user?.id,currentLesson?.title,currentCourse?.title,threadId]);
 
   async function handleClearChat(){
     await clearTutorThread(threadId);
@@ -1853,7 +2879,7 @@ export function TutorPage(p){
       setPrompt("");
     }
     setSending(true);
-    const reply=await p.sendTutor({mode:requestMode,prompt:question,attempt:requestAttempt});
+    const reply=await p.sendTutor({mode:requestMode,prompt:question,attempt:requestAttempt,lessonId:currentLesson?.id??null});
     if(reply&&!reply.error){
       const structured=reply.structured||null;
       setMessages(m=>[...m,{
@@ -1906,16 +2932,35 @@ export function TutorPage(p){
     setExpandedSources(prev=>({...prev,[sourceKey]:!prev[sourceKey]}));
   }
 
-  const otherSavedThreads=savedThreads.filter(t=>t.threadId!==threadId&&t.messageCount>0&&(!t.lessonId||p.lessons?.some(l=>l.id===t.lessonId)));
+  const allLessonIds=useMemo(()=>new Set(allLessons.map(l=>l.id)),[allLessons]);
+  const otherSavedThreads=savedThreads.filter(t=>t.threadId!==threadId&&t.messageCount>0&&(!t.lessonId||allLessonIds.has(t.lessonId)));
+
+  const handleTutorCourseChange=(nextCourse)=>{
+    setSelectedCourseId(nextCourse);
+    const nextList=nextCourse==="all"?allLessons:allLessons.filter(l=>l.courseId===nextCourse);
+    if(!nextList.some(l=>l.id===selectedLessonId)){
+      const firstId=nextList[0]?.id||"";
+      setSelectedLessonId(firstId);
+      p.setActiveLessonId?.(firstId||null);
+    }
+  };
+  const handleTutorLessonChange=(nextLessonId)=>{
+    setSelectedLessonId(nextLessonId);
+    const meta=allLessons.find(l=>l.id===nextLessonId);
+    if(meta?.courseId&&selectedCourseId!=="all"&&selectedCourseId!==meta.courseId){
+      setSelectedCourseId(meta.courseId);
+    }
+    p.setActiveLessonId?.(nextLessonId||null);
+  };
 
   return <div className="tutor-layout grid gap-4 items-start">
     <section className="panel tutor-workspace flex flex-col p-4 gap-4">
       <div className="tutor-topline flex items-center justify-between gap-3">
-        <div>
-          <span className="eyebrow">{p.activeLesson?.title||"LEARNING COMPANION"}</span>
+        <div className="tutor-heading-block min-w-0 flex-1">
+          <span className="eyebrow tutor-eyebrow">{currentLesson?.courseTitle?`${currentLesson.courseTitle} · ${currentLesson.title}`:(currentLesson?.title||currentCourse?.title||"LEARNING COMPANION")}</span>
           <h2>Work through the idea together.</h2>
         </div>
-        <div className="tutor-toolbar-actions flex items-center gap-2.5">
+        <div className="tutor-toolbar-actions flex items-center gap-2.5 flex-shrink-0">
           {p.remote&&messages.length>0&&(
             <>
               <span className="tutor-saved-status">Saved locally</span>
@@ -1933,7 +2978,7 @@ export function TutorPage(p){
               key={t.threadId}
               type="button"
               className="tutor-thread-pill"
-              onClick={()=>p.setActiveLessonId?.(t.lessonId||null)}
+              onClick={()=>handleTutorLessonChange(t.lessonId||"")}
               title={`Switch to ${t.lessonTitle} (${t.messageCount} messages)`}
             >
               <span>{t.lessonTitle}</span>
@@ -2114,10 +3159,28 @@ export function TutorPage(p){
     </section>
     <aside className="tutor-context flex flex-col gap-4">
       <Panel title="Current context" icon="book">
-        <div className="side-panel-copy flex flex-col gap-2 p-4">
-          <strong>{p.activeLesson?.title||p.activeCourse?.title||"No lesson selected"}</strong>
-          <p>{p.activeLesson?.objective||p.activeCourse?.summary||"Open a lesson to give the tutor more context."}</p>
-          {p.activeLesson&&<button type="button" className="text-button" onClick={()=>p.go("lesson")}>Return to lesson ↗</button>}
+        <div className="side-panel-copy flex flex-col gap-3 p-4">
+          {allCourses.length>0&&(
+            <div className="tutor-context-selectors flex flex-col gap-2">
+              <label className="text-xs font-semibold text-learnos-muted flex flex-col gap-1">
+                <span>Course</span>
+                <select value={selectedCourseId} aria-label="Choose tutor course context" onChange={e=>handleTutorCourseChange(e.target.value)}>
+                  <option value="all">All courses ({allLessons.length} topics)</option>
+                  {allCourses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}
+                </select>
+              </label>
+              <label className="text-xs font-semibold text-learnos-muted flex flex-col gap-1">
+                <span>Topic / Lesson</span>
+                <select value={selectedLessonId} aria-label="Choose tutor lesson context" onChange={e=>handleTutorLessonChange(e.target.value)}>
+                  <option value="">General workspace / course chat</option>
+                  {visibleLessons.map(l=><option key={l.id} value={l.id}>{selectedCourseId==="all"&&allCourses.length>1&&l.courseTitle?`${l.courseTitle} — ${l.title}`:l.title}</option>)}
+                </select>
+              </label>
+            </div>
+          )}
+          <strong>{currentLesson?.title||currentCourse?.title||"General workspace"}</strong>
+          <p>{currentLesson?.objective||currentCourse?.summary||"Select any course or lesson above to focus the AI tutor."}</p>
+          {currentLesson?<button type="button" className="text-button" onClick={()=>p.openLesson?p.openLesson(currentLesson.id):p.go("lesson")}>Return to lesson ↗</button>:currentCourse&&<button type="button" className="text-button" onClick={()=>p.go("course",{params:{courseId:currentCourse.id}})}>View course roadmap ↗</button>}
         </div>
       </Panel>
       {p.remote&&(
@@ -2224,21 +3287,21 @@ function AiEngineRagPanel({remote,request,openAccount,flashToast}){
   return (
     <section className="panel flex flex-col ai-rag-panel">
       <div className="panel-head flex items-center justify-between gap-2">
-        <div className="panel-title flex items-center gap-2.5"><Icon name="spark"/>AI Engine &amp; RAG Knowledge Index</div>
+        <div className="panel-title flex items-center gap-2.5"><Icon name="spark"/>Tutor Knowledge Base</div>
         {statusBadge}
       </div>
       {!remote?(
         <div className="side-panel-copy flex flex-col gap-2.5 p-4">
-          <p>Sign in to inspect multi-model failover health and rebuild your hybrid RAG knowledge index.</p>
-          <button type="button" className="text-button" onClick={openAccount}>Sign in to inspect AI Engine ↗</button>
+          <p>Sign in to sync your study materials with your personal AI Tutor and keep answers tailored to your courses.</p>
+          <button type="button" className="text-button" onClick={openAccount}>Sign in to sync tutor memory ↗</button>
         </div>
       ):engineState==="loading"?(
         <div className="engine-state-box" role="status" aria-busy="true">
-          <p>Loading model pool health and knowledge index telemetry…</p>
+          <p>Checking your tutor's memory and learning materials…</p>
         </div>
       ):engineState==="error"?(
         <div className="engine-error-box" role="alert">
-          <p>{engineError||"AI Engine telemetry is currently unavailable."}</p>
+          <p>{engineError||"Tutor memory status is temporarily unavailable."}</p>
           <button type="button" className="secondary-btn compact" onClick={()=>setReloadTick(t=>t+1)}>Retry ↻</button>
         </div>
       ):(
@@ -2252,22 +3315,66 @@ function AiEngineRagPanel({remote,request,openAccount,flashToast}){
 
           <div className="engine-section">
             <div className="engine-section-head">
-              <strong>Active AI Model Pool</strong>
-              <button type="button" className="text-button" onClick={()=>setReloadTick(t=>t+1)} aria-label="Refresh AI model status">Refresh ↻</button>
+              <div>
+                <strong>Tutor Knowledge Base</strong>
+                <p className="engine-section-sub">Materials your AI Tutor reads to explain concepts and quote your lessons.</p>
+              </div>
+              <span className="rag-mode-pill">Auto-Synced</span>
+            </div>
+            {ragStatus?(
+              <>
+                <div className="rag-summary-bar">
+                  <span><strong>{Number(ragStatus.chunksCount??0)}</strong> searchable items</span>
+                  <small>{ragStatus.lastIndexedAt?`Updated ${prettyDate(ragStatus.lastIndexedAt,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}`:"Ready"}</small>
+                </div>
+                <div className="rag-type-grid" aria-label="Study materials in tutor memory">
+                  <div className="rag-type-cell"><strong>{ragCounts.notes}</strong><span>Notes</span></div>
+                  <div className="rag-type-cell"><strong>{ragCounts.lessons}</strong><span>Lessons</span></div>
+                  <div className="rag-type-cell"><strong>{ragCounts.flashcards}</strong><span>Flashcards</span></div>
+                  <div className="rag-type-cell"><strong>{ragCounts.practice}</strong><span>Practice</span></div>
+                </div>
+                <div className="rag-footer-row flex flex-col items-start gap-1.5">
+                  <button
+                    type="button"
+                    className="secondary-btn compact rag-reindex-btn"
+                    disabled={reindexing}
+                    aria-busy={reindexing}
+                    onClick={handleReindex}
+                  >
+                    {reindexing?"Refreshing memory…":"Refresh tutor memory ↻"}
+                  </button>
+                  <small className="muted-copy text-xs">Click only if the AI Tutor seems unaware of recent edits or new lessons.</small>
+                </div>
+              </>
+            ):(
+              <div className="engine-error-box compact" role="alert">
+                <span>Tutor knowledge base status unavailable.</span>
+                <button type="button" className="text-button" onClick={()=>setReloadTick(t=>t+1)}>Retry ↻</button>
+              </div>
+            )}
+          </div>
+
+          <div className="engine-section">
+            <div className="engine-section-head">
+              <div>
+                <strong>AI Reliability &amp; Models</strong>
+                <p className="engine-section-sub">Multi-model backup pool so course generation never stalls.</p>
+              </div>
+              <button type="button" className="text-button" onClick={()=>setReloadTick(t=>t+1)} aria-label="Refresh AI models">Check status ↻</button>
             </div>
             {aiStatus?(
               <>
                 <div className="engine-summary-grid">
                   <div className="engine-summary-stat">
-                    <span>Healthy</span>
+                    <span>Active</span>
                     <strong>{aiStatus.summary?.healthyModels??0}<small>/{aiStatus.summary?.totalModels??models.length}</small></strong>
                   </div>
                   <div className="engine-summary-stat">
-                    <span>Cooling</span>
+                    <span>Standby</span>
                     <strong>{aiStatus.summary?.coolingDownModels??0}</strong>
                   </div>
                   <div className="engine-summary-stat">
-                    <span>Switches</span>
+                    <span>Failovers</span>
                     <strong>{aiStatus.summary?.totalSwitches??0}</strong>
                   </div>
                 </div>
@@ -2278,10 +3385,10 @@ function AiEngineRagPanel({remote,request,openAccount,flashToast}){
                 )}
                 {models.length>0?(
                   <>
-                    <ul className="engine-model-list" aria-label="Model health list">
+                    <ul className="engine-model-list" aria-label="Model status list">
                       {visibleModels.map(m=>{
                         const state=m.status==="open"?"open":m.status==="half_open"?"half_open":"closed";
-                        const stateText=state==="open"?"Cooling":state==="half_open"?"Probing":"Healthy";
+                        const stateText=state==="open"?"Cooling":state==="half_open"?"Checking":"Active";
                         const latencyText=Number(m.avgLatencyMs)>0?`${Math.round(Number(m.avgLatencyMs))} ms`:"—";
                         return (
                           <li key={`${m.provider}:${m.model}`} className="engine-model-row">
@@ -2315,44 +3422,7 @@ function AiEngineRagPanel({remote,request,openAccount,flashToast}){
               </>
             ):(
               <div className="engine-error-box compact" role="alert">
-                <span>Model pool status unavailable.</span>
-                <button type="button" className="text-button" onClick={()=>setReloadTick(t=>t+1)}>Retry ↻</button>
-              </div>
-            )}
-          </div>
-
-          <div className="engine-section">
-            <div className="engine-section-head">
-              <strong>RAG Knowledge Index</strong>
-              {ragStatus?.embeddingMode&&<span className="rag-mode-pill">{ragStatus.embeddingMode}</span>}
-            </div>
-            {ragStatus?(
-              <>
-                <div className="rag-summary-bar">
-                  <span><strong>{Number(ragStatus.chunksCount??0)}</strong> indexed chunks</span>
-                  <small>{ragStatus.lastIndexedAt?`Indexed ${prettyDate(ragStatus.lastIndexedAt,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}`:"Not indexed yet"}</small>
-                </div>
-                <div className="rag-type-grid" aria-label="Indexed chunks by type">
-                  <div className="rag-type-cell"><strong>{ragCounts.notes}</strong><span>Notes</span></div>
-                  <div className="rag-type-cell"><strong>{ragCounts.lessons}</strong><span>Lessons</span></div>
-                  <div className="rag-type-cell"><strong>{ragCounts.flashcards}</strong><span>Flashcards</span></div>
-                  <div className="rag-type-cell"><strong>{ragCounts.practice}</strong><span>Practice</span></div>
-                </div>
-                <div className="rag-footer-row">
-                  <button
-                    type="button"
-                    className="secondary-btn compact rag-reindex-btn"
-                    disabled={reindexing}
-                    aria-busy={reindexing}
-                    onClick={handleReindex}
-                  >
-                    {reindexing?"Rebuilding index…":"Rebuild knowledge index ↻"}
-                  </button>
-                </div>
-              </>
-            ):(
-              <div className="engine-error-box compact" role="alert">
-                <span>Knowledge index status unavailable.</span>
+                <span>Model status unavailable.</span>
                 <button type="button" className="text-button" onClick={()=>setReloadTick(t=>t+1)}>Retry ↻</button>
               </div>
             )}
@@ -2362,6 +3432,69 @@ function AiEngineRagPanel({remote,request,openAccount,flashToast}){
     </section>
   );
 }
+
+const COMMON_TIMEZONES = [
+  "UTC",
+  "Africa/Cairo",
+  "Africa/Johannesburg",
+  "Africa/Lagos",
+  "America/Anchorage",
+  "America/Argentina/Buenos_Aires",
+  "America/Bogota",
+  "America/Chicago",
+  "America/Denver",
+  "America/Los_Angeles",
+  "America/Mexico_City",
+  "America/New_York",
+  "America/Phoenix",
+  "America/Santiago",
+  "America/Sao_Paulo",
+  "America/Toronto",
+  "America/Vancouver",
+  "Asia/Bangkok",
+  "Asia/Calcutta",
+  "Asia/Dubai",
+  "Asia/Hong_Kong",
+  "Asia/Jakarta",
+  "Asia/Jerusalem",
+  "Asia/Karachi",
+  "Asia/Kathmandu",
+  "Asia/Kolkata",
+  "Asia/Kuala_Lumpur",
+  "Asia/Manila",
+  "Asia/Riyadh",
+  "Asia/Seoul",
+  "Asia/Shanghai",
+  "Asia/Singapore",
+  "Asia/Taipei",
+  "Asia/Tokyo",
+  "Australia/Melbourne",
+  "Australia/Perth",
+  "Australia/Sydney",
+  "Europe/Amsterdam",
+  "Europe/Berlin",
+  "Europe/Dublin",
+  "Europe/Istanbul",
+  "Europe/London",
+  "Europe/Madrid",
+  "Europe/Paris",
+  "Europe/Rome",
+  "Europe/Zurich",
+  "Pacific/Auckland",
+  "Pacific/Honolulu"
+];
+
+function getAllTimezones() {
+  let list = [];
+  try {
+    if (typeof Intl !== "undefined" && typeof Intl.supportedValuesOf === "function") {
+      list = Intl.supportedValuesOf("timeZone");
+    }
+  } catch (_) {}
+  return Array.from(new Set(["UTC", "Asia/Kolkata", ...COMMON_TIMEZONES, ...list])).sort((a, b) => a.localeCompare(b));
+}
+
+const ALL_TIMEZONES = getAllTimezones();
 
 function SettingsPage(p){
   const [saved,setSaved]=useState(false),[name,setName]=useState(p.data.settings.fullName||p.user?.fullName||""),[timezone,setTimezone]=useState(p.data.settings.timezone||"UTC"),[weekly,setWeekly]=useState(p.data.settings.weeklyMinutes||360),[session,setSession]=useState(p.data.settings.sessionMinutes||120),[days,setDays]=useState(p.data.settings.preferredStudyDays||[]),[studyNotify,setStudyNotify]=useState(Boolean(p.data.settings.notificationPreferences?.study)),[reviewNotify,setReviewNotify]=useState(Boolean(p.data.settings.notificationPreferences?.review));
@@ -2395,7 +3528,12 @@ function SettingsPage(p){
       setDeletingAccount(false);
     }
   }
-  return <div className="settings-grid grid gap-4 items-start"><form className="panel settings-form flex flex-col p-4 gap-4" onSubmit={save}><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="tutor"/>Learner profile</div></div><div className="settings-body flex flex-col gap-4"><label>Display name<input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" minLength="2"/></label><label>Email address<input value={p.user?.email||""} placeholder="Sign in to attach an email" readOnly/></label><label>Time zone<input value={timezone} onChange={e=>setTimezone(e.target.value)}/></label><div className="form-section flex flex-col gap-3 pt-3 border-t border-learnos-line"><h3>Weekly study budget</h3><p>Plans are checked against the time you can actually set aside.</p><div className="form-grid-two grid grid-cols-1 sm:grid-cols-2 gap-3"><label>Minutes per week<input type="number" min="30" max="2400" step="30" value={weekly} onChange={e=>setWeekly(e.target.value)}/></label><label>Minutes per session<input type="number" min="15" max="240" step="5" value={session} onChange={e=>setSession(e.target.value)}/></label></div></div><div className="form-section flex flex-col gap-3 pt-3 border-t border-learnos-line"><h3>Preferred study days</h3><div className="day-picker flex flex-wrap gap-1.5">{["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((day,i)=><button key={day} type="button" className={`cursor-pointer ${days.includes(i)?"selected":""}`} onClick={()=>toggleDay(i)}>{day}</button>)}</div></div><div className="form-section flex flex-col gap-3 pt-3 border-t border-learnos-line"><h3>Notifications</h3><label className="toggle-row flex items-center justify-between gap-3 p-2"><span><strong>Study session reminders</strong><small>Before a planned session</small></span><input type="checkbox" checked={studyNotify} onChange={e=>setStudyNotify(e.target.checked)}/></label><label className="toggle-row flex items-center justify-between gap-3 p-2"><span><strong>Review reminders</strong><small>When flashcards are due</small></span><input type="checkbox" checked={reviewNotify} onChange={e=>setReviewNotify(e.target.checked)}/></label></div><div className="settings-submit pt-2"><button className="primary-btn" type="submit">{saved?"Saved ✓":"Save settings"}</button></div></div></form>
+  return <div className="settings-grid grid gap-4 items-start"><form className="panel settings-form flex flex-col p-4 gap-4" onSubmit={save}><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="tutor"/>Learner profile</div></div><div className="settings-body flex flex-col gap-4"><label>Display name<input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" minLength="2"/></label><label>Email address<input value={p.user?.email||""} placeholder="Sign in to attach an email" readOnly/></label>        <label>Time zone
+          <select value={timezone} onChange={e=>setTimezone(e.target.value)}>
+            {!ALL_TIMEZONES.includes(timezone)&&<option key={timezone} value={timezone}>{timezone}</option>}
+            {ALL_TIMEZONES.map(tz=><option key={tz} value={tz}>{tz.replace(/_/g," ")}</option>)}
+          </select>
+        </label><div className="form-section flex flex-col gap-3 pt-3 border-t border-learnos-line"><h3>Weekly study budget</h3><p>Plans are checked against the time you can actually set aside.</p><div className="form-grid-two grid grid-cols-1 sm:grid-cols-2 gap-3"><label>Minutes per week<input type="number" min="30" max="2400" step="30" value={weekly} onChange={e=>setWeekly(e.target.value)}/></label><label>Minutes per session<input type="number" min="15" max="240" step="5" value={session} onChange={e=>setSession(e.target.value)}/></label></div></div><div className="form-section flex flex-col gap-3 pt-3 border-t border-learnos-line"><h3>Preferred study days</h3><div className="day-picker flex flex-wrap gap-1.5">{["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((day,i)=><button key={day} type="button" className={`cursor-pointer ${days.includes(i)?"selected":""}`} onClick={()=>toggleDay(i)}>{day}</button>)}</div></div><div className="form-section flex flex-col gap-3 pt-3 border-t border-learnos-line"><h3>Notifications</h3><label className="toggle-row flex items-center justify-between gap-3 p-2"><span><strong>Study session reminders</strong><small>Before a planned session</small></span><input type="checkbox" checked={studyNotify} onChange={e=>setStudyNotify(e.target.checked)}/></label><label className="toggle-row flex items-center justify-between gap-3 p-2"><span><strong>Review reminders</strong><small>When flashcards are due</small></span><input type="checkbox" checked={reviewNotify} onChange={e=>setReviewNotify(e.target.checked)}/></label></div><div className="settings-submit pt-2"><button className="primary-btn" type="submit">{saved?"Saved ✓":"Save settings"}</button></div></div></form>
     <div className="settings-side flex flex-col gap-4"><Panel title="Account" icon="tutor"><div className="side-panel-copy flex flex-col gap-2 p-4"><strong>{p.user?.email||"Your account"}</strong><p>{p.remote?"Signed in to the Drizzlearn workspace.":"Sign in to sync your workspace across devices."}</p>{p.remote?<button type="button" className="text-button" onClick={p.logout}>Sign out ↗</button>:<button type="button" className="text-button" onClick={p.openAccount}>Sign in or create account ↗</button>}<div className="pt-3 border-t border-learnos-line mt-2 flex flex-col gap-1.5"><small className="text-sm text-learnos-muted">Permanently delete your account and all associated learning data.</small><button className="quiet-btn danger text-xs self-start" type="button" disabled={deletingAccount} onClick={deleteAccount}>{deletingAccount?<><span className="btn-spinner"/> Deleting…</>:"Delete account"}</button></div></div></Panel><Panel title="Your data" icon="notes"><div className="side-panel-copy flex flex-col gap-2 p-4"><p>Export saved notes, cards, study sessions and practice history.</p>{p.remote?<button type="button" className="text-button" onClick={async()=>{try{const result=await p.request("settings/export");const b=new Blob([JSON.stringify(result,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="drizzlearn-export.json";a.click();URL.revokeObjectURL(a.href);}catch(e){p.flashToast(e.message);}}}>Download data export ↗</button>:<button type="button" className="text-button" onClick={exportWorkspace}>Download workspace data ↗</button>}</div></Panel><AiEngineRagPanel remote={p.remote} request={p.request} openAccount={p.openAccount} flashToast={p.flashToast}/></div></div>;
 }
 
@@ -2553,47 +3691,128 @@ function CoursePage(p){
   async function toggleStatus(){const status=course.status==="paused"?"active":"paused";try{if(p.remote)await p.request(`courses/${course.id}`,{method:"PUT",body:JSON.stringify({title:course.title,summary:course.summary||course.desired_outcome,status})});p.updateData(d=>({...d,courses:d.courses.map(c=>c.id===course.id?{...c,status}:c)}));if(p.remote)await p.refreshRemote();p.flashToast(status==="paused"?"Course paused. Your notes and attempts are kept.":"Course resumed.");}catch(e){p.flashToast(e.message);}}
   return <div className="course-detail-layout grid gap-4 items-start"><div className="course-detail-main flex flex-col gap-4"><section className="panel course-detail-hero flex flex-col gap-4 p-4"><div className="course-art course-art-large"><span>YOUR LEARNING PATH</span></div><div className="course-detail-title flex flex-col gap-2"><div className="flex items-center gap-2 flex-wrap"><span className={`status-pill ${course.status}`}>{course.status}</span>{isGenerating&&<span className="materials-status-pill" role="status" aria-live="polite"><Icon name="spark" size={14}/> Generating study materials in background...</span>}</div><h2>{course.title}</h2><p>{course.summary||course.desired_outcome}</p><div className="course-facts flex flex-wrap gap-4"><span><Icon name="clock" size={15}/>{course.target_weeks||course.durationWeeks||8} weeks</span><span><Icon name="book" size={15}/>{total} lessons</span><span><Icon name="progress" size={15}/>{course.modules?.length||0} modules</span></div><div className="course-hero-actions flex flex-wrap items-center gap-3">{["active","paused"].includes(course.status)&&<button className="text-button course-pause-action" onClick={toggleStatus}>{course.status==="paused"?"Resume course ↗":"Pause course"}</button>}{p.confirmDeleteCourse&&<button type="button" className="quiet-btn danger course-delete-btn" disabled={p.deletingCourseId===course.id} onClick={()=>p.confirmDeleteCourse(course,"courses")}>Delete course</button>}</div></div></section>
     {isGenerating&&<div className="materials-status-banner flex items-center justify-between gap-3 p-3.5 rounded-xl" role="status" aria-live="polite"><div className="flex items-center gap-2.5 flex-wrap"><span className="materials-status-pill"><Icon name="spark" size={14}/> Generating study materials in background...</span><span className="text-sm text-learnos-muted">Creating study notes, review flashcards, and checkpoints.</span></div><span className="materials-pulse-dot" aria-hidden="true"/></div>}
-    <div className="course-roadmap-header flex items-center justify-between"><div><span className="eyebrow">COURSE ROADMAP</span><h2>Follow the sequence</h2></div><button className="text-button" onClick={()=>p.go("today")}>View study plan ↗</button></div><div className="detail-module-list flex flex-col gap-3">{course.modules?.map((mod,i)=><section className={`panel detail-module flex flex-col overflow-hidden ${expanded===i?"open":""}`} key={mod.id||i}><button className="detail-module-head flex items-center justify-between p-3.5 w-full text-left cursor-pointer" onClick={()=>setExpanded(expanded===i?-1:i)} aria-expanded={expanded===i}><span className={`module-number ${mod.status||"planned"}`}>{mod.status==="completed"?"✓":String(i+1).padStart(2,"0")}</span><span className="detail-module-title flex-1 min-w-0"><strong>{mod.title}</strong><small className="block text-sm text-learnos-muted">{mod.objective}</small></span><span className="module-count text-sm font-semibold text-learnos-muted">{mod.lessons?.length||0} lessons</span><span className="expand-icon" aria-hidden="true">{expanded===i?"−":"+"}</span></button>{expanded===i&&<div className="detail-lessons flex flex-col border-t border-learnos-line">{mod.lessons?.map((lesson,j)=>{const lessonTasks=p.data.tasks.filter(t=>t.lesson_id===lesson.id);const task=lessonTasks.find(t=>t.task_type!=="practice")||lessonTasks[0];const practiceTask=lessonTasks.find(t=>t.task_type==="practice");const isDone=task?.status==="completed"||lessonTasks.some(t=>t.status==="completed");return <div key={lesson.id||j} className="detail-lesson-row flex flex-col"><button className="detail-lesson flex items-center justify-between gap-3 p-3 text-left hover:bg-learnos-surface-hover transition-colors" onClick={()=>p.openLesson(lesson.id)} aria-label={`Open lesson: ${lesson.title}`}><span className={`lesson-state ${isDone?"complete":""}`}>{isDone?"✓":String(j+1).padStart(2,"0")}</span><span className="flex-1 min-w-0"><div className="flex items-center gap-2"><Icon name="book" size={14}/><strong>{lesson.title}</strong></div><small className="block text-sm text-learnos-muted">{lesson.objective}</small></span><span className="lesson-duration text-sm font-medium text-learnos-muted">{minuteLabel(lesson.estimated_minutes||25)}</span><span className="lesson-arrow" aria-hidden="true">↗</span></button>{practiceTask&&<div className="detail-practice-task flex items-center justify-between gap-3 px-4 py-2 text-sm"><span className="flex items-center gap-2 text-learnos-muted"><Icon name="practice" size={14}/><span>Practice: {practiceTask.title}</span><span className="task-type-badge practice">practice</span></span><button type="button" className="text-button text-sm" onClick={()=>{p.setActiveLessonId(lesson.id);p.go("practice");}}>{practiceTask.status==="completed"?"Review evidence ↗":"Start practice ↗"}</button></div>}</div>;})}</div>}</section>)}</div>
+    <div className="course-roadmap-header flex items-center justify-between"><div><span className="eyebrow">COURSE ROADMAP</span><h2>Follow the sequence</h2></div><button className="text-button" onClick={()=>p.go("today")}>View study plan ↗</button></div><div className="detail-module-list flex flex-col gap-3">{course.modules?.map((mod,i)=><section className={`panel detail-module flex flex-col overflow-hidden ${expanded===i?"open":""}`} key={mod.id||i}><button className="detail-module-head flex items-center justify-between p-3.5 w-full text-left cursor-pointer" onClick={()=>setExpanded(expanded===i?-1:i)} aria-expanded={expanded===i}><span className={`module-number ${mod.status||"planned"}`}>{mod.status==="completed"?"✓":String(i+1).padStart(2,"0")}</span><span className="detail-module-title flex-1 min-w-0"><strong>{mod.title}</strong><small className="block text-sm text-learnos-muted">{mod.objective}</small></span><span className="module-count text-sm font-semibold text-learnos-muted">{mod.lessons?.length||0} lessons</span><span className="expand-icon" aria-hidden="true">{expanded===i?"−":"+"}</span></button>{expanded===i&&<div className="detail-lessons flex flex-col border-t border-learnos-line">{mod.lessons?.map((lesson,j)=>{const lessonTasks=p.data.tasks.filter(t=>t.lesson_id===lesson.id);const task=lessonTasks.find(t=>t.task_type!=="practice")||lessonTasks[0];const practiceTask=lessonTasks.find(t=>t.task_type==="practice");const isDone=task?.status==="completed"||lessonTasks.some(t=>t.status==="completed");return <div key={lesson.id||j} className="detail-lesson-row flex flex-col"><button className="detail-lesson flex items-center justify-between gap-3 p-3 text-left hover:bg-learnos-surface-hover transition-colors" onClick={()=>p.openLesson(lesson.id)} aria-label={`Open lesson: ${lesson.title}`}><span className={`lesson-state ${isDone?"complete":""}`}>{isDone?"✓":String(j+1).padStart(2,"0")}</span><span className="flex-1 min-w-0"><div className="flex items-center gap-2"><Icon name="book" size={14}/><strong>{lesson.title}</strong></div><small className="block text-sm text-learnos-muted">{lesson.objective}</small></span><span className="lesson-duration text-sm font-medium text-learnos-muted">{minuteLabel(lesson.estimated_minutes||25)}</span><span className="lesson-arrow" aria-hidden="true">↗</span></button>{practiceTask&&<div className="detail-practice-task flex items-center justify-between gap-3 px-4 py-2 text-sm"><span className="flex items-center gap-2 text-learnos-muted"><Icon name="practice" size={14}/><span>Practice: {practiceTask.title}</span><span className="task-type-badge practice">practice</span></span><button type="button" className="text-button text-sm" onClick={()=>{p.setActiveLessonId(lesson.id);p.go("practice",{params:{lessonId:lesson.id}});}}>{practiceTask.status==="completed"?"Review evidence ↗":"Start practice ↗"}</button></div>}</div>;})}</div>}</section>)}</div>
     {courseTasks.filter(t=>t.task_type==="roadmap"||(t.task_type==="practice"&&!t.lesson_id)).length>0&&<section className="panel course-tasks-section flex flex-col p-4 gap-3"><div className="panel-title flex items-center gap-2"><Icon name="progress" size={16}/><span>Roadmap milestones & practice</span></div><div className="task-list flex flex-col gap-2">{courseTasks.filter(t=>t.task_type==="roadmap"||(t.task_type==="practice"&&!t.lesson_id)).map(t=><div key={t.id} className="task-row flex items-center gap-3 p-3"><Icon name={t.task_type==="practice"?"practice":"progress"} size={15}/><div className="task-main-copy flex flex-col flex-1 min-w-0"><strong>{t.title}</strong><span className="text-sm text-learnos-muted">{minuteLabel(t.estimated_minutes)}</span></div><span className={`task-status ${t.status}`}>{t.status.replace("_"," ")}</span><button className="continue-btn" onClick={()=>t.task_type==="practice"?p.go("practice"):p.go("today")}>{t.task_type==="practice"?"Practice ↗":"View in plan ↗"}</button></div>)}</div></section>}
   </div>
-    <aside className="course-detail-aside flex flex-col gap-4"><Panel title="Course progress" icon="progress"><div className="course-progress-aside flex flex-col items-center gap-3 p-4"><div className="progress-ring-small" style={{"--progress":`${p.progressPercent}%`}}><strong>{p.progressPercent}%</strong></div><p className="text-center text-sm">{p.data.tasks.filter(t=>t.status==="completed"&&t.course_id===course.id).length} of {p.data.tasks.filter(t=>t.course_id===course.id).length} study sessions complete</p><button className="text-button" onClick={()=>p.go("progress")}>View progress details ↗</button></div></Panel><Panel title="Course outcome" icon="check"><div className="side-panel-copy p-4 text-sm leading-relaxed"><p>{course.desired_outcome||course.summary}</p></div></Panel><Panel title="Quick tools" icon="spark"><div className="quick-tool-list flex flex-col gap-1.5 p-2"><button onClick={()=>p.go("notes")}><Icon name="notes"/>Course notes <span>↗</span></button><button onClick={()=>p.go("flashcards")}><Icon name="cards"/>Review flashcards <span>↗</span></button><button onClick={()=>p.go("practice")}><Icon name="practice"/>Practice checkpoints <span>↗</span></button><button onClick={()=>p.go("tutor")}><Icon name="tutor"/>Ask your tutor <span>↗</span></button></div></Panel></aside></div>;
+    <aside className="course-detail-aside flex flex-col gap-4"><Panel title="Course progress" icon="progress"><div className="course-progress-aside flex flex-col items-center gap-3 p-4"><div className="progress-ring-small" style={{"--progress":`${p.progressPercent}%`}}><strong>{p.progressPercent}%</strong></div><p className="text-center text-sm">{p.data.tasks.filter(t=>t.status==="completed"&&t.course_id===course.id).length} of {p.data.tasks.filter(t=>t.course_id===course.id).length} study sessions complete</p><button className="text-button" onClick={()=>p.go("progress",{query:{course:course.id}})}>View progress details ↗</button></div></Panel><Panel title="Course outcome" icon="check"><div className="side-panel-copy p-4 text-sm leading-relaxed"><p>{course.desired_outcome||course.summary}</p></div></Panel><Panel title="Quick tools" icon="spark"><div className="quick-tool-list flex flex-col gap-1.5 p-2"><button onClick={()=>p.go("notes",{query:{course:course.id}})}><Icon name="notes"/>Course notes <span>↗</span></button><button onClick={()=>p.go("flashcards",{query:{course:course.id}})}><Icon name="cards"/>Review flashcards <span>↗</span></button><button onClick={()=>p.go("practice",{query:{course:course.id}})}><Icon name="practice"/>Practice checkpoints <span>↗</span></button><button onClick={()=>p.go("tutor",{query:{course:course.id}})}><Icon name="tutor"/>Ask your tutor <span>↗</span></button></div></Panel></aside></div>;
 }
 const CourseDetailPage = CoursePage;
 
-function LessonPage(p){
+export const LESSON_DEPTH_STORAGE_KEY = "learnos.lesson_depth.v1";
+
+export function readStoredDepths(lessonId) {
+  if (!lessonId || typeof window === "undefined" || typeof localStorage === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(LESSON_DEPTH_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return (parsed && typeof parsed === "object" && parsed[lessonId]) || {};
+  } catch {
+    return {};
+  }
+}
+
+export function writeStoredDepth(lessonId, depthKey, content) {
+  if (!lessonId || !depthKey || typeof window === "undefined" || typeof localStorage === "undefined") return;
+  try {
+    const raw = localStorage.getItem(LESSON_DEPTH_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    if (!parsed[lessonId]) parsed[lessonId] = {};
+    parsed[lessonId][depthKey] = content;
+    localStorage.setItem(LESSON_DEPTH_STORAGE_KEY, JSON.stringify(parsed));
+  } catch {}
+}
+
+export function clearStoredDepth(lessonId, depthKey) {
+  if (!lessonId || !depthKey || typeof window === "undefined" || typeof localStorage === "undefined") return;
+  try {
+    const raw = localStorage.getItem(LESSON_DEPTH_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed[lessonId]) {
+      delete parsed[lessonId][depthKey];
+      localStorage.setItem(LESSON_DEPTH_STORAGE_KEY, JSON.stringify(parsed));
+    }
+  } catch {}
+}
+
+export function LessonPage(p){
   const lesson=p.activeLesson;
   const [selected,setSelected]=useState(null),[feedback,setFeedback]=useState(null),[saving,setSaving]=useState(false);
-  const [depth,setDepth]=useState("standard"),[tailored,setTailored]=useState({}),[loadingDepth,setLoadingDepth]=useState(false);
+  const [depth,setDepth]=useState("standard");
+  const [tailored,setTailored]=useState(()=>readStoredDepths(lesson?.id));
+  const [loadingDepth,setLoadingDepth]=useState(false);
 
-  useEffect(()=>{setSelected(null);setFeedback(null);setDepth("standard");setTailored({});setLoadingDepth(false);},[lesson?.id]);
+  useEffect(()=>{
+    setSelected(null);
+    setFeedback(null);
+    setDepth("standard");
+    setTailored(readStoredDepths(lesson?.id));
+    setLoadingDepth(false);
+  },[lesson?.id]);
+
   if(!lesson)return <EmptyState title="Choose a lesson to begin" body="Open a course roadmap or choose a task from today’s plan." action="View courses" onAction={()=>p.go("courses")}/>;
   const checkpoint=lesson.checkpoint||{};
   const paragraphs=String(lesson.content_markdown||lesson.content||"Start with the objective, then connect the key idea to a small example. Check your understanding before moving on.").split(/\n\n+/);
   const all=p.lessons;const at=all.findIndex(l=>l.id===lesson.id);const previous=all[at-1],next=all[at+1];
   const answer=async()=>{if(selected===null)return;p.setActiveLessonId(lesson.id);setSaving(true);const result=await p.submitCheckpoint(selected);setFeedback(result);setSaving(false);};
 
-  const handleDepthChange=async(newDepth)=>{
+  const handleDepthChange=async(newDepth,force=false)=>{
     setDepth(newDepth);
     if(newDepth==="standard")return;
-    if(tailored[newDepth])return;
+
+    const stored=readStoredDepths(lesson.id);
+    const existingContent=!force?(tailored[newDepth]||stored[newDepth]):null;
+    if(existingContent){
+      if(!tailored[newDepth]){
+        setTailored(prev=>({...prev,[newDepth]:existingContent}));
+      }
+      return;
+    }
+
+    if(force){
+      clearStoredDepth(lesson.id,newDepth);
+      setTailored(prev=>{
+        const next={...prev};
+        delete next[newDepth];
+        return next;
+      });
+    }
+
+    const courseTitle=p.activeCourse?.title||"";
     if(p.remote){
       setLoadingDepth(true);
       const promptText=newDepth==="simpler"
-        ?`Explain "${lesson.title}" (${lesson.objective}) in simpler terms using an intuitive everyday analogy. Break down the core intuition so it is easy to visualize and grasp immediately.`
-        :`Provide a deep-dive technical breakdown of "${lesson.title}" (${lesson.objective}), detailing underlying mechanisms, architectural principles, edge cases, and performance/system trade-offs.`;
-      const reply=await p.sendTutor({mode:"Explain",prompt:promptText});
-      const text=typeof reply==="string"?reply:reply?.text;
-      if(text)setTailored(prev=>({...prev,[newDepth]:text}));
-      setLoadingDepth(false);
+        ?`Explain "${lesson.title}" (${lesson.objective}) from the course "${courseTitle}" in simpler terms using a natural, human everyday analogy (such as everyday conversations, cooking, storytelling, or daily habits). Break down the core intuition so it is easy to visualize and grasp immediately. Match the natural communicative nature of ${courseTitle}, do NOT use mechanical, computer, or programming analogies, and do NOT include lesson IDs, topic IDs, or bracketed codes.`
+        :`Provide an in-depth, thorough breakdown of "${lesson.title}" (${lesson.objective}) from the course "${courseTitle}". Explore core concepts, subtle nuances, common misconceptions or pitfalls, and practical real-world applications. Ensure your explanation is fully completed, tailored to the subject domain of ${courseTitle}, contains zero computer/programming code or system architecture analogies, and does NOT include lesson IDs, topic IDs, or bracketed codes.`;
+
+      try{
+        const reply=await p.sendTutor({
+          mode:"Explain",
+          prompt:promptText,
+          lessonId:lesson.id,
+          courseId:p.activeCourse?.id,
+        });
+        const text=typeof reply==="string"?reply:reply?.text;
+        if(text){
+          setTailored(prev=>({...prev,[newDepth]:text}));
+          writeStoredDepth(lesson.id,newDepth,text);
+        }
+      }catch(err){
+        p.flashToast?.(err?.message||"Could not generate explanation.");
+      }finally{
+        setLoadingDepth(false);
+      }
     }else{
       const localAnalogy=newDepth==="simpler"
-        ?`Intuitive Analogy for ${lesson.title}:\nThink of this concept like an everyday routine: ${lesson.objective}. Before worrying about syntax or intricate details, imagine the big picture flow and why each step naturally follows the one before it.`
-        :`Deep Dive into ${lesson.title}:\nExploring ${lesson.objective}: Notice how the underlying components coordinate, what failure modes or edge cases arise in production, and how this links with adjacent patterns.`;
+        ?`Intuitive Analogy for ${lesson.title}:\nThink of this concept like an everyday routine within ${courseTitle}: ${lesson.objective}. Before worrying about intricate rules, imagine the natural flow and why each element connects logically to the next.`
+        :`Deep Dive into ${lesson.title}:\nExploring ${lesson.objective} in depth: Notice how the core principles coordinate, what edge cases or subtleties arise in real-world application, and how this bridges to advanced fluency in ${courseTitle}.`;
       setTailored(prev=>({...prev,[newDepth]:localAnalogy}));
+      writeStoredDepth(lesson.id,newDepth,localAnalogy);
     }
   };
 
-  return <div className="lesson-layout grid gap-4 items-start"><article className="lesson-reading panel flex flex-col"><div className="lesson-toolbar flex items-center justify-between p-3.5 border-b border-learnos-line"><button className="quiet-action" onClick={()=>p.go("course")}>← Course roadmap</button><span className="text-sm font-semibold text-learnos-muted uppercase tracking-wider">{lesson.moduleTitle}</span><button className="quiet-action" onClick={()=>p.go("tutor")}>Ask tutor ↗</button></div><div className="lesson-content flex flex-col p-6 gap-5"><div className="lesson-meta flex items-center justify-between text-sm text-learnos-muted"><span><Icon name="clock" size={14}/>{minuteLabel(lesson.estimated_minutes||25)}</span><span>Lesson {at+1} of {all.length}</span></div><h2>{lesson.title}</h2><div className="lesson-objective flex flex-col gap-1 p-3.5 rounded-lg bg-learnos-bg/60 border border-learnos-line"><span>LEARNING OBJECTIVE</span><p>{lesson.objective}</p></div><div className="explanation-depth-bar flex items-center justify-between gap-3 p-2.5 rounded-lg bg-learnos-surface border border-learnos-line"><div className="flex flex-wrap items-center gap-2"><span className="text-sm font-semibold text-learnos-muted uppercase tracking-wider">Depth:</span><div className="depth-selector flex flex-wrap items-center gap-1.5" role="group" aria-label="Explanation depth">{[["standard","Standard"],["simpler","Simpler (with analogy)"],["deep","Deep dive"]].map(([key,label])=><button key={key} type="button" className={`cursor-pointer text-sm px-2.5 py-1 rounded transition-colors ${depth===key?"selected font-bold text-learnos-purple bg-learnos-purple/15 border border-learnos-purple/40":"text-learnos-muted hover:text-learnos-text"}`} onClick={()=>handleDepthChange(key)}>{label}</button>)}</div></div>{depth!=="standard"&&p.remote&&<button type="button" className="text-button text-sm" disabled={loadingDepth} onClick={()=>{setTailored(prev=>{const n={...prev};delete n[depth];return n;});handleDepthChange(depth);}}>Regenerate ↻</button>}</div>{lesson.prerequisites?.length>0&&<div className="prereq-row flex flex-wrap items-center gap-2"><strong>Before you start</strong>{lesson.prerequisites.map((item,i)=><span key={i}>{item}</span>)}</div>}{depth==="simpler"?(loadingDepth?<div className="depth-loading p-4 rounded-xl border border-learnos-line flex items-center gap-2 text-sm text-learnos-muted"><Icon name="spark" size={16}/><span>Consulting AI tutor for an intuitive analogy and simpler breakdown…</span></div>:<section className="depth-explanation panel flex flex-col gap-3 p-4 rounded-xl border border-learnos-purple/30 bg-learnos-purple/5"><div className="flex items-center gap-2 text-learnos-purple font-semibold text-sm"><Icon name="spark" size={17}/><span>Simpler explanation (with analogy)</span></div><div className="reading-copy flex flex-col gap-3 text-sm leading-relaxed">{(tailored.simpler||"").split(/\n\n+/).map((para,i)=><p key={i}>{para}</p>)}</div></section>):depth==="deep"?(loadingDepth?<div className="depth-loading p-4 rounded-xl border border-learnos-line flex items-center gap-2 text-sm text-learnos-muted"><Icon name="spark" size={16}/><span>Consulting AI tutor for deep dive and edge cases…</span></div>:<section className="depth-explanation panel flex flex-col gap-3 p-4 rounded-xl border border-learnos-lime/30 bg-learnos-lime/5"><div className="flex items-center gap-2 text-learnos-lime font-semibold text-sm"><Icon name="spark" size={17}/><span>Deep dive breakdown & edge cases</span></div><div className="reading-copy flex flex-col gap-3 text-sm leading-relaxed">{(tailored.deep||"").split(/\n\n+/).map((para,i)=><p key={i}>{para}</p>)}</div></section>):(<div className="reading-copy flex flex-col gap-4 leading-relaxed">{paragraphs.map((text,i)=><p key={i}>{text}</p>)}</div>)}{(lesson.worked_example||lesson.workedExample)&&<section className="worked-example flex flex-col gap-2 p-4 rounded-xl border border-learnos-line"><div><Icon name="spark" size={17}/>Worked example</div><p>{lesson.worked_example||lesson.workedExample}</p></section>}<div className="lesson-checkpoint flex flex-col gap-3 p-5 rounded-xl border border-learnos-line"><span className="eyebrow">CHECK YOUR UNDERSTANDING</span><h3>{checkpoint.question||"Explain the main idea in your own words."}</h3>{checkpoint.options?.length?<div className="answer-options flex flex-col gap-2">{checkpoint.options.map((option,i)=><button key={i} className={`answer-option ${selected===i?"selected":""} ${feedback&&i===checkpoint.answerIndex?"answer-correct":""}`} onClick={()=>{setSelected(i);setFeedback(null);}}><span>{String.fromCharCode(65+i)}</span>{option}</button>)}</div>:<textarea className="free-answer" value={selected||""} onChange={e=>setSelected(e.target.value)} placeholder="Write your explanation…"/>}{feedback&&<div className={`feedback-box flex flex-col gap-1 p-3.5 rounded-lg ${feedback.correct?"correct":"incorrect"}`} role="status"><strong>{feedback.correct?"Checkpoint passed":"Try that idea again"}</strong><p>{feedback.explanation}</p></div>}<div className="checkpoint-actions flex items-center justify-between gap-3 mt-2"><p className="text-sm text-learnos-muted">Submitting records an attempt. The task is complete when the checkpoint is passed.</p><button className="primary-btn" disabled={selected===null||saving} onClick={answer}>{saving?<><span className="btn-spinner"/> Checking…</>:feedback?.correct?"Passed ✓":"Submit answer"}</button></div></div><div className="lesson-bottom-nav flex items-center justify-between pt-4 border-t border-learnos-line"><button className="quiet-action" disabled={!previous} onClick={()=>p.openLesson(previous.id)}>← {previous?.title||"Previous"}</button><button className="quiet-action" disabled={!next} onClick={()=>p.openLesson(next.id)}>{next?.title||"Next lesson"} →</button></div></div></article>
+  return <div className="lesson-layout grid gap-4 items-start"><article className="lesson-reading panel flex flex-col"><div className="lesson-toolbar flex items-center justify-between p-3.5 border-b border-learnos-line"><button className="quiet-action" onClick={()=>p.go("course")}>← Course roadmap</button><span className="text-sm font-semibold text-learnos-muted uppercase tracking-wider">{lesson.moduleTitle}</span><button className="quiet-action" onClick={()=>p.go("tutor")}>Ask tutor ↗</button></div><div className="lesson-content flex flex-col p-6 gap-5"><div className="lesson-meta flex items-center justify-between text-sm text-learnos-muted"><span><Icon name="clock" size={14}/>{minuteLabel(lesson.estimated_minutes||25)}</span><span>Lesson {at+1} of {all.length}</span></div><h2>{lesson.title}</h2><div className="lesson-objective flex flex-col gap-1 p-3.5 rounded-lg bg-learnos-bg/60 border border-learnos-line"><span>LEARNING OBJECTIVE</span><p>{lesson.objective}</p></div><div className="explanation-depth-bar flex items-center justify-between gap-3 p-2.5 rounded-lg bg-learnos-surface border border-learnos-line"><div className="flex flex-wrap items-center gap-2"><span className="text-sm font-semibold text-learnos-muted uppercase tracking-wider">Depth:</span><div className="depth-selector flex flex-wrap items-center gap-1.5" role="group" aria-label="Explanation depth">{[["standard","Standard"],["simpler","Simpler (with analogy)"],["deep","Deep dive"]].map(([key,label])=><button key={key} type="button" aria-pressed={depth===key} className={`cursor-pointer text-sm px-2.5 py-1 rounded transition-colors ${depth===key?"selected font-bold text-learnos-purple bg-learnos-purple/15 border border-learnos-purple/40":"text-learnos-muted hover:text-learnos-text"}`} onClick={()=>handleDepthChange(key)}>{label}</button>)}</div></div>{depth!=="standard"&&<button type="button" className="text-button text-sm" disabled={loadingDepth} onClick={()=>handleDepthChange(depth,true)}>Regenerate ↻</button>}</div>{lesson.prerequisites?.length>0&&<div className="prereq-row flex flex-wrap items-center gap-2"><strong>Before you start</strong>{lesson.prerequisites.map((item,i)=><span key={i}>{item}</span>)}</div>}{depth==="simpler"?(loadingDepth?<div className="depth-loading p-4 rounded-xl border border-learnos-line flex items-center gap-2 text-sm text-learnos-muted"><Icon name="spark" size={16}/><span>Consulting AI tutor for an intuitive analogy and simpler breakdown…</span></div>:<div className="reading-copy flex flex-col gap-3 text-sm leading-relaxed mt-2"><div className="flex items-center gap-2 text-learnos-purple font-semibold text-sm mb-1"><Icon name="spark" size={17}/><span>Simpler explanation (with analogy)</span></div><TutorMarkdown content={tailored.simpler||""}/></div>):depth==="deep"?(loadingDepth?<div className="depth-loading p-4 rounded-xl border border-learnos-line flex items-center gap-2 text-sm text-learnos-muted"><Icon name="spark" size={16}/><span>Consulting AI tutor for deep dive and edge cases…</span></div>:<div className="reading-copy flex flex-col gap-3 text-sm leading-relaxed mt-2"><div className="flex items-center gap-2 text-learnos-lime font-semibold text-sm mb-1"><Icon name="spark" size={17}/><span>Deep dive breakdown & edge cases</span></div><TutorMarkdown content={tailored.deep||""}/></div>):(<div className="reading-copy flex flex-col gap-4 leading-relaxed mt-2"><TutorMarkdown content={lesson.content_markdown||lesson.content||paragraphs.join("\n\n")}/></div>)}{(lesson.worked_example||lesson.workedExample)&&<section className="worked-example flex flex-col gap-2 p-4 rounded-xl border border-learnos-line"><div><Icon name="spark" size={17}/>Worked example</div><p>{lesson.worked_example||lesson.workedExample}</p></section>}<div className="lesson-checkpoint flex flex-col gap-3 p-5 rounded-xl border border-learnos-line"><span className="eyebrow">CHECK YOUR UNDERSTANDING</span><h3>{checkpoint.question||"Explain the main idea in your own words."}</h3>{checkpoint.options?.length?<div className="answer-options flex flex-col gap-2">{checkpoint.options.map((option,i)=><button key={i} className={`answer-option ${selected===i?"selected":""} ${feedback&&i===checkpoint.answerIndex?"answer-correct":""}`} onClick={()=>{setSelected(i);setFeedback(null);}}><span>{String.fromCharCode(65+i)}</span>{option}</button>)}</div>:<textarea className="free-answer" value={selected||""} onChange={e=>setSelected(e.target.value)} placeholder="Write your explanation…"/>}{feedback&&<div className={`feedback-box flex flex-col gap-1 p-3.5 rounded-lg ${feedback.correct?"correct":"incorrect"}`} role="status"><strong>{feedback.correct?"Checkpoint passed":"Try that idea again"}</strong><p>{feedback.explanation}</p></div>}<div className="checkpoint-actions flex items-center justify-between gap-3 mt-2"><p className="text-sm text-learnos-muted">Submitting records an attempt. The task is complete when the checkpoint is passed.</p><button className="primary-btn" disabled={selected===null||saving} onClick={answer}>{saving?<><span className="btn-spinner"/> Checking…</>:feedback?.correct?"Passed ✓":"Submit answer"}</button></div></div><div className="lesson-bottom-nav flex items-center justify-between pt-4 border-t border-learnos-line"><button className="quiet-action" disabled={!previous} onClick={()=>p.openLesson(previous.id)}>← {previous?.title||"Previous"}</button><button className="quiet-action" disabled={!next} onClick={()=>p.openLesson(next.id)}>{next?.title||"Next lesson"} →</button></div></div></article>
     <aside className="lesson-rail flex flex-col gap-4"><Panel title="Lesson tools" icon="spark"><div className="quick-tool-list flex flex-col gap-1.5 p-2"><button onClick={()=>p.draftNote(lesson.id)}><Icon name="notes"/>Draft lesson notes <span>↗</span></button><button onClick={()=>p.addFlashcard({front:`What is the key idea in “${lesson.title}”?`,back:lesson.objective,lessonId:lesson.id,courseId:p.activeCourse?.id})}><Icon name="cards"/>Make a flashcard <span>↗</span></button><button onClick={()=>p.go("tutor")}><Icon name="tutor"/>Ask the tutor <span>↗</span></button></div></Panel><Panel title="In this course" icon="book"><div className="lesson-course-nav flex flex-col gap-3 p-3">{p.activeCourse?.modules?.map((m,i)=><div key={m.id||i} className="flex flex-col gap-1"><strong>{m.title}</strong>{m.lessons?.map(l=><button className={`text-left text-sm p-1.5 rounded transition-colors ${l.id===lesson.id?"active font-bold text-learnos-purple bg-learnos-purple/10":"text-learnos-muted hover:text-learnos-text"}`} key={l.id} onClick={()=>p.openLesson(l.id)}>{l.title}</button>)}</div>)}</div></Panel><div className="lesson-evidence-note flex items-start gap-3 p-3.5 panel"><Icon name="check"/><div><strong>Progress tracks two things</strong><p className="text-sm text-learnos-muted">Finished sessions and submitted understanding evidence are kept separately.</p><button className="text-button" onClick={()=>p.go("progress")}>View your evidence ↗</button></div></div></aside></div>;
 }
 
@@ -2604,8 +3823,8 @@ export function LoginPage({loginMode,setLoginMode,authSubmit,authError,authMessa
     if(setLoginMode)setLoginMode(mode);
     if(setAuthError)setAuthError("");
     if(setAuthMessage)setAuthMessage("");
-    if(mode==="signup")location.hash="#/signup";
-    else if(mode==="login")location.hash="#/login";
+    if(mode==="signup")go("signup");
+    else if(mode==="login")go("login");
   };
   const backTarget=returnPage&&returnPage!=="login"&&returnPage!=="signup"&&returnPage!=="auth"?returnPage:"home";
   return <div className="login-fullpage">
@@ -2690,11 +3909,11 @@ export function Modal({modal,onClose,onApprove,onDeleteCourse,deletingCourse=fal
 
 function VerifyPage(p){
   const [state,setState]=useState("checking"),[message,setMessage]=useState("Checking your verification link…");
-  useEffect(()=>{const params=new URLSearchParams(location.hash.split("?")[1]||""),token=params.get("token");if(!token){setState("error");setMessage("This verification link is missing its token.");return;}p.request("auth/verify",{method:"POST",body:JSON.stringify({token})}).then(()=>{setState("success");setMessage("Your email is verified. Your account is ready.");}).catch(error=>{setState("error");setMessage(error.message);});},[]);
+  useEffect(()=>{const token=p.routeQuery?.get?.("token")||parseLocation(typeof window!=="undefined"?window.location:null).query.get("token");if(!token){setState("error");setMessage("This verification link is missing its token.");return;}p.request("auth/verify",{method:"POST",body:JSON.stringify({token})}).then(()=>{setState("success");setMessage("Your email is verified. Your account is ready.");}).catch(error=>{setState("error");setMessage(error.message);});},[]);
   return <div className="panel auth-result flex flex-col items-center justify-center p-8 gap-4 max-w-md mx-auto text-center"><span className={`empty-orb ${state}`}><Icon name={state==="success"?"check":"spark"}/></span><h2 className="text-xl font-bold">{state==="checking"?"Checking your link":state==="success"?"Email verified":"Could not verify email"}</h2><p className="text-learnos-muted text-sm">{message}</p><button className="primary-btn" onClick={()=>p.go("home")}>Return to Drizzlearn ↗</button></div>;
 }
 function ResetPasswordPage(p){
   const [password,setPassword]=useState(""),[confirmation,setConfirmation]=useState(""),[message,setMessage]=useState(""),[error,setError]=useState(""),[done,setDone]=useState(false);
-  async function submit(e){e.preventDefault();setError("");setMessage("");if(password!==confirmation){setError("The passwords do not match.");return;}const token=new URLSearchParams(location.hash.split("?")[1]||"").get("token");try{await p.request("auth/reset-password",{method:"POST",body:JSON.stringify({token,password})});setDone(true);setMessage("Your password was updated. You can sign in again.");}catch(e){setError(e.message);}}
+  async function submit(e){e.preventDefault();setError("");setMessage("");if(password!==confirmation){setError("The passwords do not match.");return;}const token=p.routeQuery?.get?.("token")||parseLocation(typeof window!=="undefined"?window.location:null).query.get("token");try{await p.request("auth/reset-password",{method:"POST",body:JSON.stringify({token,password})});setDone(true);setMessage("Your password was updated. You can sign in again.");}catch(e){setError(e.message);}}
   return <form className="panel reset-password-panel flex flex-col p-6 gap-4 max-w-md mx-auto" onSubmit={submit}><span className="eyebrow">ACCOUNT SECURITY</span><h2 className="text-xl font-bold">{done?"Password updated":"Choose a new password"}</h2><p className="text-sm text-learnos-muted">{message||"Choose a password with at least 10 characters."}</p>{!done&&<><label className="flex flex-col gap-1 text-sm font-semibold">New password<input type="password" minLength="10" required value={password} onChange={e=>setPassword(e.target.value)}/></label><label className="flex flex-col gap-1 text-sm font-semibold">Confirm password<input type="password" minLength="10" required value={confirmation} onChange={e=>setConfirmation(e.target.value)}/></label>{error&&<p className="form-error">{error}</p>}<button className="primary-btn" type="submit">Update password ↗</button></>}<button className="text-button self-start" type="button" onClick={p.openAccount}>Back to sign in</button></form>;
 }

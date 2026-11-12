@@ -24,13 +24,13 @@ export async function retrieveLearnerContext(userId, question, options = {}) {
   const count = Math.max(1, Math.min(Number(limit) || 10, 15));
   const [notes, lessons, attempts] = await Promise.all([
     queryFn(
-      `SELECT id,title,left(body,1800) excerpt,ts_rank(to_tsvector('simple',coalesce(title,'')||' '||coalesce(body,'')),to_tsquery('simple',$2)) rank
+      `SELECT id,course_id,title,left(body,1800) excerpt,ts_rank(to_tsvector('simple',coalesce(title,'')||' '||coalesce(body,'')),to_tsquery('simple',$2)) rank
       FROM notes WHERE user_id=$1 AND to_tsvector('simple',coalesce(title,'')||' '||coalesce(body,'')) @@ to_tsquery('simple',$2)
       ORDER BY rank DESC,updated_at DESC LIMIT 5`,
       [userId, tsQuery]
     ),
     queryFn(
-      `SELECT l.id,l.title,left(coalesce(l.objective,'')||E'\n'||coalesce(l.content_markdown,'')||E'\n'||coalesce(l.worked_example,''),1800) excerpt,c.title course_title,
+      `SELECT l.id,l.course_id,l.title,left(coalesce(l.objective,'')||E'\n'||coalesce(l.content_markdown,'')||E'\n'||coalesce(l.worked_example,''),1800) excerpt,c.title course_title,
         ts_rank(to_tsvector('simple',coalesce(l.title,'')||' '||coalesce(l.objective,'')||' '||coalesce(l.content_markdown,'')),to_tsquery('simple',$2)) rank
       FROM lessons l JOIN courses c ON c.id=l.course_id WHERE c.user_id=$1
         AND to_tsvector('simple',coalesce(l.title,'')||' '||coalesce(l.objective,'')||' '||coalesce(l.content_markdown,'')) @@ to_tsquery('simple',$2)
@@ -38,7 +38,7 @@ export async function retrieveLearnerContext(userId, question, options = {}) {
       [userId, tsQuery]
     ),
     queryFn(
-      `SELECT a.id,a.concept title,left(coalesce(a.prompt,'')||E'\n'||coalesce(a.submitted_answer,''),1200) excerpt,a.score,
+      `SELECT a.id,a.course_id,a.concept title,left(coalesce(a.prompt,'')||E'\n'||coalesce(a.submitted_answer,''),1200) excerpt,a.score,
         ts_rank(to_tsvector('simple',coalesce(a.concept,'')||' '||coalesce(a.prompt,'')||' '||coalesce(a.submitted_answer,'')),to_tsquery('simple',$2)) rank
       FROM practice_attempts a WHERE a.user_id=$1
         AND to_tsvector('simple',coalesce(a.concept,'')||' '||coalesce(a.prompt,'')||' '||coalesce(a.submitted_answer,'')) @@ to_tsquery('simple',$2)
@@ -47,14 +47,22 @@ export async function retrieveLearnerContext(userId, question, options = {}) {
     ),
   ]);
 
+  const targetCourseId = options.courseId || null;
   const combined = [
-    ...(notes.rows || []).map((row) => ({ id: `note:${row.id}`, type: "note", title: row.title, excerpt: row.excerpt })),
+    ...(notes.rows || []).map((row) => ({
+      id: `note:${row.id}`,
+      type: "note",
+      title: row.title,
+      excerpt: row.excerpt,
+      course_id: row.course_id || null,
+    })),
     ...(lessons.rows || []).map((row) => ({
       id: `lesson:${row.id}`,
       type: "lesson",
       title: row.title,
       courseTitle: row.course_title,
       excerpt: row.excerpt,
+      course_id: row.course_id || null,
     })),
     ...(attempts.rows || []).map((row) => ({
       id: `attempt:${row.id}`,
@@ -62,12 +70,17 @@ export async function retrieveLearnerContext(userId, question, options = {}) {
       title: row.title || "Practice attempt",
       score: row.score,
       excerpt: row.excerpt,
+      course_id: row.course_id || null,
     })),
   ];
 
-  return rankStandardRetrievalRows(combined, question, {
+  const filteredCombined = targetCourseId
+    ? combined.filter((item) => !item.course_id || item.course_id === targetCourseId)
+    : combined;
+
+  return rankStandardRetrievalRows(filteredCombined, question, {
     limit: count,
-    courseId: options.courseId || null,
+    courseId: targetCourseId,
     lessonId: options.lessonId || null,
   });
 }

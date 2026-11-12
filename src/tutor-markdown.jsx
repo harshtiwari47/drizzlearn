@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
+import { MathFormula } from "./math-formula.jsx";
 
 const SAFE_URL_RE = /^(?:https?:\/\/|mailto:)/i;
+const SAFE_IMAGE_URL_RE = /^(?:https?:\/\/|\/images\/)/i;
+const IMAGE_LINE_RE = /^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)\s*$/;
 const CITATION_RE = /^\[((?:note|lesson|attempt|flashcard):[^\]\n]{1,120})\]/i;
 const HEADING_RE = /^(#{1,4})\s+(.+?)\s*#*$/;
 const HR_RE = /^\s*(?:[-*_]\s*){3,}$/;
@@ -14,6 +17,81 @@ function isSafeLinkUrl(rawUrl) {
   const trimmed = rawUrl.trim();
   if (!trimmed || /[\u0000-\u001F\s]/.test(trimmed)) return false;
   return SAFE_URL_RE.test(trimmed);
+}
+
+function isSafeImageUrl(rawUrl) {
+  if (typeof rawUrl !== "string") return false;
+  const trimmed = rawUrl.trim();
+  if (!trimmed || /[\u0000-\u001F\s]/.test(trimmed)) return false;
+  return SAFE_IMAGE_URL_RE.test(trimmed);
+}
+
+function parseImageSpec(rawAlt) {
+  const parts = String(rawAlt || "").split("|");
+  const cleanAlt = (parts[0] || "").trim();
+  let widthHint;
+  let heightHint;
+  if (parts[1]) {
+    const dim = parts[1].trim().match(/^(\d{2,3})(?:x(\d{2,3}))?$/i);
+    if (dim) {
+      widthHint = Math.min(640, Math.max(48, Number(dim[1])));
+      if (dim[2]) heightHint = Math.min(420, Math.max(48, Number(dim[2])));
+    }
+  }
+  return { alt: cleanAlt, widthHint, heightHint };
+}
+
+function MarkdownImage({ rawAlt, rawSrc, title = "", inline = false }) {
+  const [failed, setFailed] = useState(false);
+  const safe = isSafeImageUrl(rawSrc);
+  const { alt, widthHint, heightHint } = parseImageSpec(rawAlt);
+  const label = alt || title || "Embedded visual";
+
+  if (!safe) {
+    return <span className="tutor-md-img-blocked">{label}</span>;
+  }
+
+  if (failed) {
+    return (
+      <span className="tutor-md-img-fallback" role="img" aria-label={label}>
+        <span>Image unavailable: {label}</span>
+      </span>
+    );
+  }
+
+  const sizeStyle = {};
+  if (widthHint) sizeStyle.maxWidth = `${widthHint}px`;
+  if (heightHint) sizeStyle.maxHeight = `${heightHint}px`;
+
+  if (inline) {
+    return (
+      <img
+        src={rawSrc.trim()}
+        alt={label}
+        title={title || label}
+        loading="lazy"
+        className="tutor-md-img tutor-md-img-inline"
+        style={Object.keys(sizeStyle).length ? sizeStyle : undefined}
+        onClick={(e) => e.stopPropagation()}
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+
+  return (
+    <figure className="tutor-md-figure" onClick={(e) => e.stopPropagation()}>
+      <img
+        src={rawSrc.trim()}
+        alt={label}
+        title={title || label}
+        loading="lazy"
+        className="tutor-md-img"
+        style={Object.keys(sizeStyle).length ? sizeStyle : undefined}
+        onError={() => setFailed(true)}
+      />
+      {alt && <figcaption className="tutor-md-figcaption">{alt}</figcaption>}
+    </figure>
+  );
 }
 
 function splitTableRow(line) {
@@ -101,11 +179,96 @@ function renderInline(text, keyPrefix = "in", depth = 0) {
   while (i < text.length) {
     const ch = text[i];
 
-    // Escaped punctuation
-    if (ch === "\\" && i + 1 < text.length && /[\\`*_{}[\]()#+\-.!~|]/.test(text[i + 1])) {
+    // Escaped punctuation (keep \$ literal)
+    if (ch === "\\" && i + 1 < text.length && /[\\`*_{}[\]()#+\-.!~|$]/.test(text[i + 1])) {
       buffer += text[i + 1];
       i += 2;
       continue;
+    }
+
+    // Inline \(...\) or \[...\] LaTeX math
+    if (text.startsWith("\\(", i) || text.startsWith("\\[", i)) {
+      const isDisplay = text.startsWith("\\[", i);
+      const closeTag = isDisplay ? "\\]" : "\\)";
+      const end = text.indexOf(closeTag, i + 2);
+      if (end > i + 2) {
+        flushBuffer();
+        nodes.push(
+          <MathFormula
+            key={`${keyPrefix}-math-${tokenIdx++}`}
+            expr={text.slice(i + 2, end)}
+            display={isDisplay}
+          />
+        );
+        i = end + 2;
+        continue;
+      }
+    }
+
+    // Inline $...$ or $$...$$ math (skip currency like "$50" or "$5 to $10")
+    if (ch === "$") {
+      const isDouble = text[i + 1] === "$";
+      const delim = isDouble ? "$$" : "$";
+      const start = i + delim.length;
+      if (start < text.length && (isDouble || !/\s/.test(text[start]))) {
+        let end = -1;
+        for (let j = start; j <= text.length - delim.length; j += 1) {
+          if (text[j] === "\\") {
+            j += 1;
+            continue;
+          }
+          if (text.startsWith(delim, j)) {
+            if (isDouble || (j > start && !/\s/.test(text[j - 1]) && !/[0-9]/.test(text[j + 1] || ""))) {
+              end = j;
+              break;
+            }
+          }
+        }
+        if (end > start) {
+          const expr = text.slice(start, end);
+          // Avoid false positives on two currency amounts "$10 ... $20"
+          const looksCurrency = !isDouble && /^\d+(?:[.,]\d+)?(?:\s|$)/.test(expr) && /\s/.test(expr);
+          if (!looksCurrency) {
+            flushBuffer();
+            nodes.push(
+              <MathFormula
+                key={`${keyPrefix}-math-${tokenIdx++}`}
+                expr={expr}
+                display={isDouble}
+              />
+            );
+            i = end + delim.length;
+            continue;
+          }
+        }
+      }
+    }
+
+    // Inline Markdown image: ![alt](url)
+    if (ch === "!" && text[i + 1] === "[") {
+      const closeBracket = text.indexOf("]", i + 2);
+      if (closeBracket >= i + 2 && text[closeBracket + 1] === "(") {
+        const closeParen = text.indexOf(")", closeBracket + 2);
+        if (closeParen > closeBracket + 2) {
+          const rawAlt = text.slice(i + 2, closeBracket);
+          const innerSpec = text.slice(closeBracket + 2, closeParen).trim();
+          const titleMatch = innerSpec.match(/^([^\s]+)(?:\s+"([^"]*)")?$/);
+          const rawSrc = titleMatch ? titleMatch[1] : innerSpec;
+          const imgTitle = titleMatch?.[2] || "";
+          flushBuffer();
+          nodes.push(
+            <MarkdownImage
+              key={`${keyPrefix}-img-${tokenIdx++}`}
+              rawAlt={rawAlt}
+              rawSrc={rawSrc}
+              title={imgTitle}
+              inline
+            />
+          );
+          i = closeParen + 1;
+          continue;
+        }
+      }
     }
 
     // Inline code
@@ -289,6 +452,8 @@ function isBlockStarter(lines, index) {
   const line = lines[index];
   if (!line || !line.trim()) return true;
   if (FENCE_RE.test(line)) return true;
+  if (/^\s*(?:\$\$|\\\[)/.test(line)) return true;
+  if (IMAGE_LINE_RE.test(line.trim())) return true;
   if (HEADING_RE.test(line)) return true;
   if (HR_RE.test(line)) return true;
   if (/^\s*>\s?/.test(line)) return true;
@@ -332,6 +497,50 @@ function parseBlocks(markdown) {
         i += 1;
       }
       blocks.push({ type: "code", language, code: codeLines.join("\n") });
+      continue;
+    }
+
+    // Display math block ($$ ... $$ or \[ ... \])
+    const trimmedLine = line.trim();
+    if (trimmedLine.startsWith("$$") || trimmedLine.startsWith("\\[")) {
+      const closeTag = trimmedLine.startsWith("$$") ? "$$" : "\\]";
+      const openLen = 2;
+      const singleLineEnd = trimmedLine.indexOf(closeTag, openLen);
+      if (singleLineEnd > openLen && singleLineEnd === trimmedLine.length - closeTag.length) {
+        blocks.push({ type: "math", expr: trimmedLine.slice(openLen, singleLineEnd).trim() });
+        i += 1;
+        continue;
+      }
+      const mathLines = [trimmedLine.slice(openLen)];
+      let foundClose = false;
+      i += 1;
+      while (i < lines.length) {
+        const curTrim = lines[i].trim();
+        const endPos = curTrim.indexOf(closeTag);
+        if (endPos >= 0) {
+          mathLines.push(curTrim.slice(0, endPos));
+          i += 1;
+          foundClose = true;
+          break;
+        }
+        mathLines.push(lines[i]);
+        i += 1;
+      }
+      blocks.push({ type: "math", expr: mathLines.join("\n").trim() });
+      if (!foundClose) continue;
+      continue;
+    }
+
+    // Standalone image figure (![alt](url))
+    const imageMatch = trimmedLine.match(IMAGE_LINE_RE);
+    if (imageMatch) {
+      blocks.push({
+        type: "image",
+        alt: imageMatch[1] || "",
+        src: imageMatch[2] || "",
+        title: imageMatch[3] || "",
+      });
+      i += 1;
       continue;
     }
 
@@ -432,6 +641,12 @@ export function TutorMarkdown({ content, className = "" }) {
         const key = `md-${idx}`;
         if (block.type === "code") {
           return <CodeBlock key={key} language={block.language} code={block.code} />;
+        }
+        if (block.type === "math") {
+          return <MathFormula key={key} expr={block.expr} display />;
+        }
+        if (block.type === "image") {
+          return <MarkdownImage key={key} rawAlt={block.alt} rawSrc={block.src} title={block.title} />;
         }
         if (block.type === "heading") {
           const Tag = `h${Math.min(4, Math.max(1, block.level))}`;

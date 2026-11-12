@@ -4,7 +4,8 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/handler.js" }
+    { "source": "/api/(.*)", "destination": "/api/handler.js" },
+    { "source": "/((?!api/|assets/|images/|favicon\\.ico|[^/]+\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/[...path].js": {

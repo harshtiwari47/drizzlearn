@@ -959,10 +959,15 @@ async function _executeMongoQueryInner(norm, sqlText, values, opts) {
     if (norm.includes("INSERT INTO flashcards")) {
       let id = uuid();
       let userId, courseId = null, lessonId = null, front = "", back = "";
+      let hint = "", cardType = "qa", origin = "learner";
       if (values.length === 5) {
         [userId, courseId, lessonId, front, back] = values;
-      } else if (values.length >= 6) {
+      } else if (values.length === 6) {
         [id, userId, courseId, lessonId, front, back] = values;
+      } else if (values.length === 8) {
+        [userId, courseId, lessonId, front, back, hint, cardType, origin] = values;
+      } else if (values.length >= 9) {
+        [id, userId, courseId, lessonId, front, back, hint, cardType, origin] = values;
       }
       const doc = {
         id: id || uuid(),
@@ -971,6 +976,12 @@ async function _executeMongoQueryInner(norm, sqlText, values, opts) {
         lesson_id: lessonId || null,
         front,
         back,
+        hint: hint || "",
+        card_type: cardType || "qa",
+        origin: origin || "learner",
+        state: "new",
+        lapses: 0,
+        last_reviewed_at: null,
         due_at: new Date().toISOString(),
         interval_days: 0,
         ease: 2.5,
@@ -996,6 +1007,11 @@ async function _executeMongoQueryInner(norm, sqlText, values, opts) {
         if (card.lesson_id) {
           const lesson = await db.collection("lessons").findOne({ id: card.lesson_id }, opts);
           card.lesson_title = lesson?.title || "";
+          if (!card.course_id && lesson?.course_id) card.course_id = lesson.course_id;
+        }
+        if (card.course_id) {
+          const crs = await db.collection("courses").findOne({ id: card.course_id }, opts);
+          card.course_title = crs?.title || "";
         }
       }
       return { rows: cards };
@@ -1006,15 +1022,56 @@ async function _executeMongoQueryInner(norm, sqlText, values, opts) {
       return { rows: card ? [card] : [] };
     }
 
+    if (norm.includes("UPDATE flashcards SET front=$1")) {
+      const [front, back, hint, cardType, courseId, lessonId, cardId, userId] = values;
+      const res = await db.collection("flashcards").findOneAndUpdate(
+        { id: cardId, user_id: userId },
+        {
+          $set: {
+            front,
+            back,
+            hint: hint || "",
+            card_type: cardType || "qa",
+            course_id: courseId || null,
+            lesson_id: lessonId || null,
+          },
+        },
+        { returnDocument: "after", ...opts }
+      );
+      const doc = safeDoc(res);
+      return { rows: doc ? [doc] : [] };
+    }
+
     if (norm.includes("UPDATE flashcards SET due_at=$1")) {
-      const [dueAt, intervalDays, easeDelta, cardId] = values;
+      const cardId = values[3];
       const card = await db.collection("flashcards").findOne({ id: cardId }, opts);
-      const currentEase = Number(card?.ease ?? 2.5);
-      const newEase = Math.max(1.3, Number((currentEase + Number(easeDelta)).toFixed(2)));
-      const newReps = (card?.repetitions || 0) + 1;
+      let updateFields;
+      if (values.length >= 6 && norm.includes("lapses=")) {
+        const [dueAt, intervalDays, newEase, _cid, newState, newLapses] = values;
+        updateFields = {
+          due_at: dueAt,
+          interval_days: intervalDays,
+          ease: Math.max(1.3, Number(newEase)),
+          repetitions: (card?.repetitions || 0) + 1,
+          state: newState || "review",
+          lapses: Number(newLapses) || 0,
+          last_reviewed_at: new Date().toISOString(),
+        };
+      } else {
+        const [dueAt, intervalDays, easeDelta] = values;
+        const currentEase = Number(card?.ease ?? 2.5);
+        const newEase = Math.max(1.3, Number((currentEase + Number(easeDelta)).toFixed(2)));
+        updateFields = {
+          due_at: dueAt,
+          interval_days: intervalDays,
+          ease: newEase,
+          repetitions: (card?.repetitions || 0) + 1,
+          last_reviewed_at: new Date().toISOString(),
+        };
+      }
       const res = await db.collection("flashcards").findOneAndUpdate(
         { id: cardId },
-        { $set: { due_at: dueAt, interval_days: intervalDays, ease: newEase, repetitions: newReps } },
+        { $set: updateFields },
         { returnDocument: "after", ...opts }
       );
       const doc = safeDoc(res);
@@ -1022,17 +1079,20 @@ async function _executeMongoQueryInner(norm, sqlText, values, opts) {
     }
 
     if (norm.includes("DELETE FROM flashcards WHERE id=$1 AND user_id=$2")) {
-      await db.collection("flashcards").deleteOne({ id: values[0], user_id: values[1] }, opts);
-      return { rows: [] };
+      const res = await db.collection("flashcards").deleteOne({ id: values[0], user_id: values[1] }, opts);
+      return { rows: res.deletedCount > 0 ? [{ id: values[0] }] : [] };
     }
 
     if (norm.includes("INSERT INTO review_events")) {
-      const [userId, cardId, rating, nextDue] = values;
+      const [userId, cardId, rating, nextDue, intervalBefore, intervalAfter, easeAfter] = values;
       await db.collection("review_events").insertOne({
         id: uuid(),
         user_id: userId,
         flashcard_id: cardId,
         rating,
+        interval_before: intervalBefore ?? null,
+        interval_after: intervalAfter ?? null,
+        ease_after: easeAfter ?? null,
         reviewed_at: new Date().toISOString(),
         next_due_at: nextDue,
       }, opts);

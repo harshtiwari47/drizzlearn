@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="6" y1="4" x2="58" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#9e76ff" />
+      <stop offset="52%" stop-color="#6c45d4" />
+      <stop offset="100%" stop-color="#19162c" />
+    </linearGradient>
+    <linearGradient id="rim" x1="6" y1="4" x2="58" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#d8c6ff" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#d4ff3a" stop-opacity="0.35" />
+    </linearGradient>
+    <linearGradient id="star-fill" x1="32" y1="14" x2="32" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="72%" stop-color="#efe8ff" />
+      <stop offset="100%" stop-color="#d8ff58" />
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="58" height="58" rx="16" fill="url(#bg)" stroke="url(#rim)" stroke-width="2" />
+  <circle cx="32" cy="32" r="14" fill="#c79fff" opacity="0.22" />
+  <path d="M 32 13 C 32.8 25.5 38.5 31.2 51 32 C 38.5 32.8 32.8 38.5 32 51 C 31.2 38.5 25.5 32.8 13 32 C 25.5 31.2 31.2 25.5 32 13 Z" fill="url(#star-fill)" />
+  <circle cx="48" cy="17" r="2.6" fill="#d8ff58" />
+</svg>

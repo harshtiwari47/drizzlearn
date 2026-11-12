@@ -8,7 +8,8 @@ import { sendEmail } from "../server/email.js";
 import { generateCourseProposal, improveCourseProposal, approveCourse } from "../server/plan-service.js";
 import { getCourseMaterialsStatus } from "../server/materials-generator.js";
 import { getModelPoolStatus } from "../server/model-manager.js";
-import { tutorReply, generatePracticeExercises } from "../server/ai.js";
+import { tutorReply, generatePracticeExercises, generateFlashcards } from "../server/ai.js";
+import { scheduleFlashcardReview } from "../src/srs.js";
 import { retrieveLearnerContext } from "../server/retrieval.js";
 import { indexUserSource, deleteUserSourceChunks, reindexUserCorpus, getRagStatus } from "../server/rag-service.js";
 
@@ -189,7 +190,7 @@ async function authRoutes(req,res,parts) {
   }
   if(action==="forgot-password"&&verb==="POST") {
     const email=normalizeEmail((await bodyOf(req)).email),result=await query("SELECT id FROM users WHERE email=$1",[email]);
-    if(result.rows[0]) { const token=crypto.randomBytes(32).toString("base64url"); await query("INSERT INTO auth_tokens(user_id,purpose,token_hash,expires_at) VALUES($1,'reset_password',$2,NOW()+INTERVAL '1 hour')",[result.rows[0].id,hashToken(token)]); const link=`${process.env.APP_URL||"http://localhost:3000"}/#/reset-password?token=${encodeURIComponent(token)}`; await sendEmail({to:email,subject:"Reset your Drizzlearn password",text:`Reset your password: ${link}`,html:`<p><a href="${link}">Reset your password</a></p>`}); }
+    if(result.rows[0]) { const token=crypto.randomBytes(32).toString("base64url"); await query("INSERT INTO auth_tokens(user_id,purpose,token_hash,expires_at) VALUES($1,'reset_password',$2,NOW()+INTERVAL '1 hour')",[result.rows[0].id,hashToken(token)]); const link=`${process.env.APP_URL||"http://localhost:3000"}/reset-password?token=${encodeURIComponent(token)}`; await sendEmail({to:email,subject:"Reset your Drizzlearn password",text:`Reset your password: ${link}`,html:`<p><a href="${link}">Reset your password</a></p>`}); }
     return sendJson(res,200,{ok:true,message:"If the account exists, a reset link has been sent."});
   }
   if(action==="reset-password"&&verb==="POST") {
@@ -445,7 +446,39 @@ async function route(req,res) {
 
   if(parts[0]==="notes") {
     if(parts.length===1&&methodName==="GET") { const r=await query(`SELECT n.*,c.title course_title,l.title lesson_title FROM notes n LEFT JOIN courses c ON c.id=n.course_id LEFT JOIN lessons l ON l.id=n.lesson_id WHERE n.user_id=$1 ORDER BY n.updated_at DESC`,[user.id]); return sendJson(res,200,{notes:r.rows}); }
-    if(parts.length===1&&methodName==="POST") { const b=await bodyOf(req); const title=String(b.title||"").trim().slice(0,160),body=String(b.body||"").slice(0,30000); if(!title)return sendError(res,400,"TITLE_REQUIRED","Give your note a title."); let courseId=b.courseId||null; if(courseId){const ownedCourse=await query("SELECT id FROM courses WHERE id=$1 AND user_id=$2",[courseId,user.id]);if(!ownedCourse.rows[0])return notFound(res,"Course");} if(b.lessonId){const ownedLesson=await query("SELECT l.id,l.course_id FROM lessons l JOIN courses c ON c.id=l.course_id WHERE l.id=$1 AND c.user_id=$2",[b.lessonId,user.id]); if(!ownedLesson.rows[0])return notFound(res,"Lesson"); if(courseId&&courseId!==ownedLesson.rows[0].course_id)return sendError(res,400,"COURSE_LESSON_MISMATCH","The selected lesson is not part of that course."); courseId=ownedLesson.rows[0].course_id;} const r=await query(`INSERT INTO notes(user_id,course_id,lesson_id,title,body,source_ref) VALUES($1,$2,$3,$4,$5,$6) RETURNING *`,[user.id,courseId,b.lessonId||null,title,body,String(b.sourceRef||"").slice(0,240)]); if(r.rows[0]){ const note=r.rows[0]; await safeRagSync(()=>indexUserSource(user.id,{sourceType:"note",sourceId:note.id,courseId:note.course_id,lessonId:note.lesson_id,title:note.title,body:note.body},{queryFn:query})); } return sendJson(res,201,{note:r.rows[0]}); }
+    if(parts.length===1&&methodName==="POST") {
+      const b=await bodyOf(req);
+      const title=String(b.title||"").trim().slice(0,160),body=String(b.body||"").slice(0,30000);
+      if(!title)return sendError(res,400,"TITLE_REQUIRED","Give your note a title.");
+      let courseId=b.courseId||null;
+      if(courseId){
+        const ownedCourse=await query("SELECT id FROM courses WHERE id=$1 AND user_id=$2",[courseId,user.id]);
+        if(!ownedCourse.rows[0])return notFound(res,"Course");
+      }
+      if(b.lessonId){
+        const ownedLesson=await query("SELECT l.id,l.course_id FROM lessons l JOIN courses c ON c.id=l.course_id WHERE l.id=$1 AND c.user_id=$2",[b.lessonId,user.id]);
+        if(!ownedLesson.rows[0])return notFound(res,"Lesson");
+        if(courseId&&courseId!==ownedLesson.rows[0].course_id)return sendError(res,400,"COURSE_LESSON_MISMATCH","The selected lesson is not part of that course.");
+        courseId=ownedLesson.rows[0].course_id;
+      }
+      const origin=b.origin==="ai_draft"?"ai_draft":b.origin==="imported_source"?"imported_source":"learner";
+      let r;
+      // If saving an ai_draft note for a lesson, ensure only 1 AI draft note exists for that lesson (idempotent upsert)
+      if(origin==="ai_draft"&&b.lessonId){
+        const existing=await query("SELECT id FROM notes WHERE user_id=$1 AND lesson_id=$2 AND origin='ai_draft' LIMIT 1",[user.id,b.lessonId]);
+        if(existing.rows[0]){
+          r=await query(`UPDATE notes SET title=$1,body=$2,source_ref=$3,course_id=$4,updated_at=NOW() WHERE id=$5 AND user_id=$6 RETURNING *`,[title,body,String(b.sourceRef||"").slice(0,240),courseId,existing.rows[0].id,user.id]);
+        }
+      }
+      if(!r){
+        r=await query(`INSERT INTO notes(user_id,course_id,lesson_id,title,body,source_ref,origin) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *`,[user.id,courseId,b.lessonId||null,title,body,String(b.sourceRef||"").slice(0,240),origin]);
+      }
+      if(r.rows[0]){
+        const note=r.rows[0];
+        await safeRagSync(()=>indexUserSource(user.id,{sourceType:"note",sourceId:note.id,courseId:note.course_id,lessonId:note.lesson_id,title:note.title,body:note.body},{queryFn:query}));
+      }
+      return sendJson(res,201,{note:r.rows[0]});
+    }
     if(parts.length===2) {
       if(!idPattern.test(parts[1])) return notFound(res,"Note");
       if(methodName==="GET") { const r=await query(`SELECT n.*,c.title course_title,l.title lesson_title FROM notes n LEFT JOIN courses c ON c.id=n.course_id LEFT JOIN lessons l ON l.id=n.lesson_id WHERE n.id=$1 AND n.user_id=$2`,[parts[1],user.id]); if(!r.rows[0])return notFound(res,"Note"); return sendJson(res,200,{note:r.rows[0]}); }
@@ -455,16 +488,195 @@ async function route(req,res) {
   }
 
   if(parts[0]==="flashcards") {
-    if(parts.length===1&&methodName==="GET") { const r=await query(`SELECT f.*,l.title lesson_title FROM flashcards f LEFT JOIN lessons l ON l.id=f.lesson_id WHERE f.user_id=$1 ORDER BY f.due_at,f.created_at`,[user.id]); return sendJson(res,200,{flashcards:r.rows}); }
-    if(parts.length===1&&methodName==="POST") { const b=await bodyOf(req),front=String(b.front||"").trim().slice(0,2000),back=String(b.back||"").trim().slice(0,4000); if(!front||!back)return sendError(res,400,"CARD_REQUIRED","Add both a prompt and an answer.");let courseId=b.courseId||null;if(courseId){const ownedCourse=await query("SELECT id FROM courses WHERE id=$1 AND user_id=$2",[courseId,user.id]);if(!ownedCourse.rows[0])return notFound(res,"Course");}if(b.lessonId){const ownedLesson=await query("SELECT l.id,l.course_id FROM lessons l JOIN courses c ON c.id=l.course_id WHERE l.id=$1 AND c.user_id=$2",[b.lessonId,user.id]);if(!ownedLesson.rows[0])return notFound(res,"Lesson");if(courseId&&courseId!==ownedLesson.rows[0].course_id)return sendError(res,400,"COURSE_LESSON_MISMATCH","The selected lesson is not part of that course.");courseId=ownedLesson.rows[0].course_id;} const r=await query("INSERT INTO flashcards(user_id,course_id,lesson_id,front,back) VALUES($1,$2,$3,$4,$5) RETURNING *",[user.id,courseId,b.lessonId||null,front,back]); if(r.rows[0]){ const card=r.rows[0]; await safeRagSync(()=>indexUserSource(user.id,{sourceType:"flashcard",sourceId:card.id,courseId:card.course_id,lessonId:card.lesson_id,title:card.front,body:`Front: ${card.front}\nBack: ${card.back}`},{queryFn:query})); } return sendJson(res,201,{flashcard:r.rows[0]}); }
+    const VALID_CARD_TYPES = new Set(["qa", "cloze", "formula", "application"]);
+    const ensureCardColumns = async (runner = query) => {
+      await runner("ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS hint TEXT NOT NULL DEFAULT ''");
+      await runner("ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS card_type TEXT NOT NULL DEFAULT 'qa'");
+      await runner("ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS origin TEXT NOT NULL DEFAULT 'learner'");
+      await runner("ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS state TEXT NOT NULL DEFAULT 'new'");
+      await runner("ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS lapses INTEGER NOT NULL DEFAULT 0");
+      await runner("ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS last_reviewed_at TIMESTAMPTZ");
+      await runner("ALTER TABLE review_events ADD COLUMN IF NOT EXISTS interval_before INTEGER");
+      await runner("ALTER TABLE review_events ADD COLUMN IF NOT EXISTS interval_after INTEGER");
+      await runner("ALTER TABLE review_events ADD COLUMN IF NOT EXISTS ease_after NUMERIC(4,2)");
+    };
+    const validateCardRefs = async (courseIdIn, lessonIdIn) => {
+      let resolvedCourseId = courseIdIn || null;
+      const resolvedLessonId = lessonIdIn || null;
+      if (resolvedCourseId) {
+        const ownedCourse = await query("SELECT id FROM courses WHERE id=$1 AND user_id=$2", [resolvedCourseId, user.id]);
+        if (!ownedCourse.rows[0]) return { error: () => notFound(res, "Course") };
+      }
+      if (resolvedLessonId) {
+        const ownedLesson = await query("SELECT l.id,l.course_id FROM lessons l JOIN courses c ON c.id=l.course_id WHERE l.id=$1 AND c.user_id=$2", [resolvedLessonId, user.id]);
+        if (!ownedLesson.rows[0]) return { error: () => notFound(res, "Lesson") };
+        if (resolvedCourseId && resolvedCourseId !== ownedLesson.rows[0].course_id) {
+          return { error: () => sendError(res, 400, "COURSE_LESSON_MISMATCH", "The selected lesson is not part of that course.") };
+        }
+        resolvedCourseId = ownedLesson.rows[0].course_id;
+      }
+      return { courseId: resolvedCourseId, lessonId: resolvedLessonId };
+    };
+
+    if(parts.length===1&&methodName==="GET") {
+      const r=await query(`SELECT f.*,l.title lesson_title FROM flashcards f LEFT JOIN lessons l ON l.id=f.lesson_id WHERE f.user_id=$1 ORDER BY f.due_at,f.created_at`,[user.id]);
+      return sendJson(res,200,{flashcards:r.rows});
+    }
+
+    if(parts.length===1&&methodName==="POST") {
+      const b=await bodyOf(req),front=String(b.front||"").trim().slice(0,2000),back=String(b.back||"").trim().slice(0,4000);
+      if(!front||!back)return sendError(res,400,"CARD_REQUIRED","Add both a question and an answer.");
+      const hint=String(b.hint||"").trim().slice(0,1000);
+      const rawType=String(b.cardType||b.card_type||"qa").trim().toLowerCase();
+      const cardType=VALID_CARD_TYPES.has(rawType)?rawType:"qa";
+      const origin=b.origin==="ai_generated"?"ai_generated":"learner";
+      const refs=await validateCardRefs(b.courseId||b.course_id,b.lessonId||b.lesson_id);
+      if(refs.error)return refs.error();
+      let r;
+      try{
+        r=await query("INSERT INTO flashcards(user_id,course_id,lesson_id,front,back,hint,card_type,origin) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",[user.id,refs.courseId,refs.lessonId,front,back,hint,cardType,origin]);
+      }catch(err){
+        if(err?.code==="42703"){await ensureCardColumns();r=await query("INSERT INTO flashcards(user_id,course_id,lesson_id,front,back,hint,card_type,origin) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",[user.id,refs.courseId,refs.lessonId,front,back,hint,cardType,origin]);}
+        else throw err;
+      }
+      if(r.rows[0]){
+        const card=r.rows[0];
+        await safeRagSync(()=>indexUserSource(user.id,{sourceType:"flashcard",sourceId:card.id,courseId:card.course_id,lessonId:card.lesson_id,title:card.front,body:`Question: ${card.front}\nAnswer: ${card.back}`},{queryFn:query}));
+      }
+      return sendJson(res,201,{flashcard:r.rows[0]});
+    }
+
+    if(parts.length===2&&parts[1]==="generate"&&methodName==="POST") {
+      const b=await bodyOf(req);
+      const topic=String(b.topic||"").trim().slice(0,300);
+      const sourceText=String(b.sourceText||"").trim().slice(0,3500);
+      const noteId=b.noteId?String(b.noteId).trim():"";
+      const courseIdIn=b.courseId?String(b.courseId).trim():"";
+      const lessonIdIn=b.lessonId?String(b.lessonId).trim():"";
+      if(!topic&&!sourceText&&!noteId&&!lessonIdIn&&!courseIdIn){
+        return sendError(res,400,"FLASHCARD_CONTEXT_REQUIRED","Enter a topic, paste study text, or select a note or lesson.");
+      }
+      const refs=await validateCardRefs(courseIdIn||null,lessonIdIn||null);
+      if(refs.error)return refs.error();
+
+      let note=null;
+      if(noteId){
+        if(!idPattern.test(noteId))return notFound(res,"Note");
+        const nr=await query("SELECT id,title,body,course_id,lesson_id FROM notes WHERE id=$1 AND user_id=$2",[noteId,user.id]);
+        if(!nr.rows[0])return notFound(res,"Note");
+        note=nr.rows[0];
+      }
+
+      let lesson=null,courseTitle="";
+      if(refs.lessonId){
+        const lr=await query("SELECT l.id,l.title,l.objective,l.content_markdown,l.worked_example,c.title course_title FROM lessons l JOIN courses c ON c.id=l.course_id WHERE l.id=$1 AND c.user_id=$2",[refs.lessonId,user.id]);
+        lesson=lr.rows[0]||null;
+        courseTitle=lesson?.course_title||"";
+      }else if(refs.courseId){
+        const cr=await query("SELECT title FROM courses WHERE id=$1 AND user_id=$2",[refs.courseId,user.id]);
+        courseTitle=cr.rows[0]?.title||"";
+      }
+
+      const existingRes=await query("SELECT front FROM flashcards WHERE user_id=$1",[user.id]);
+      const existingFronts=(existingRes.rows||[]).map(r=>r.front).filter(Boolean);
+
+      let memory=[];
+      try{
+        const retrieved=await retrieveLearnerContext(user.id,topic||lesson?.title||note?.title||courseTitle||"flashcards",{limit:5});
+        memory=retrieved.sources||[];
+      }catch{}
+
+      const generated=await generateFlashcards({
+        topic,
+        sourceText,
+        note,
+        lesson,
+        courseTitle,
+        existingFronts,
+        count:b.count,
+        includeMath:b.includeMath!==false,
+        cardStyle:b.cardStyle||"mixed",
+        focusHint:b.focusHint||"",
+        memory,
+      });
+
+      if(b.save===true){
+        const savedCards=[];
+        for(const item of generated.flashcards){
+          let ins;
+          try{
+            ins=await query("INSERT INTO flashcards(user_id,course_id,lesson_id,front,back,hint,card_type,origin) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",[user.id,refs.courseId,refs.lessonId,item.front,item.back,item.hint||"",item.cardType||"qa","ai_generated"]);
+          }catch(err){
+            if(err?.code==="42703"){await ensureCardColumns();ins=await query("INSERT INTO flashcards(user_id,course_id,lesson_id,front,back,hint,card_type,origin) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",[user.id,refs.courseId,refs.lessonId,item.front,item.back,item.hint||"",item.cardType||"qa","ai_generated"]);}
+            else throw err;
+          }
+          if(ins.rows[0]){
+            const card=ins.rows[0];
+            savedCards.push(card);
+            await safeRagSync(()=>indexUserSource(user.id,{sourceType:"flashcard",sourceId:card.id,courseId:card.course_id,lessonId:card.lesson_id,title:card.front,body:`Question: ${card.front}\nAnswer: ${card.back}`},{queryFn:query}));
+          }
+        }
+        return sendJson(res,201,{flashcards:savedCards,saved:true,model:generated.model,source:generated.source,failoverCount:generated.failoverCount});
+      }
+
+      return sendJson(res,200,{flashcards:generated.flashcards,saved:false,courseId:refs.courseId,lessonId:refs.lessonId,model:generated.model,source:generated.source,failoverCount:generated.failoverCount});
+    }
+
+    if(parts.length===2&&methodName==="PUT") {
+      if(!idPattern.test(parts[1]))return notFound(res,"Flashcard");
+      const b=await bodyOf(req),front=String(b.front||"").trim().slice(0,2000),back=String(b.back||"").trim().slice(0,4000);
+      if(!front||!back)return sendError(res,400,"CARD_REQUIRED","Add both a question and an answer.");
+      const hint=String(b.hint||"").trim().slice(0,1000);
+      const rawType=String(b.cardType||b.card_type||"qa").trim().toLowerCase();
+      const cardType=VALID_CARD_TYPES.has(rawType)?rawType:"qa";
+      const refs=await validateCardRefs(b.courseId??b.course_id??null,b.lessonId??b.lesson_id??null);
+      if(refs.error)return refs.error();
+      let updated;
+      try{
+        updated=await query("UPDATE flashcards SET front=$1,back=$2,hint=$3,card_type=$4,course_id=$5,lesson_id=$6 WHERE id=$7 AND user_id=$8 RETURNING *",[front,back,hint,cardType,refs.courseId,refs.lessonId,parts[1],user.id]);
+      }catch(err){
+        if(err?.code==="42703"){await ensureCardColumns();updated=await query("UPDATE flashcards SET front=$1,back=$2,hint=$3,card_type=$4,course_id=$5,lesson_id=$6 WHERE id=$7 AND user_id=$8 RETURNING *",[front,back,hint,cardType,refs.courseId,refs.lessonId,parts[1],user.id]);}
+        else throw err;
+      }
+      if(!updated.rows[0])return notFound(res,"Flashcard");
+      const card=updated.rows[0];
+      await safeRagSync(()=>indexUserSource(user.id,{sourceType:"flashcard",sourceId:card.id,courseId:card.course_id,lessonId:card.lesson_id,title:card.front,body:`Question: ${card.front}\nAnswer: ${card.back}`},{queryFn:query}));
+      return sendJson(res,200,{flashcard:card});
+    }
+
     if(parts.length===3&&parts[2]==="review"&&methodName==="POST") {
       if(!idPattern.test(parts[1])) return notFound(res,"Flashcard");
       const b=await bodyOf(req),rating=String(b.rating||"");
       if(!["Again","Hard","Good","Easy"].includes(rating))return sendError(res,400,"INVALID_RATING","Choose Again, Hard, Good, or Easy.");
-      const out=await withTransaction(async(client)=>{const found=await client.query("SELECT * FROM flashcards WHERE id=$1 AND user_id=$2 FOR UPDATE",[parts[1],user.id]); if(!found.rows[0])return null; const card=found.rows[0],days=rating==="Again"?0:rating==="Hard"?Math.max(1,Math.round((Number(card.interval_days)||1)*1.2)):rating==="Easy"?Math.max(3,Math.round((Number(card.interval_days)||1)*2.5)):Math.max(1,Math.round((Number(card.interval_days)||1)*2)); const due=days===0?new Date(Date.now()+10*60*1000):new Date(Date.now()+days*86400000); await client.query("INSERT INTO review_events(user_id,flashcard_id,rating,next_due_at) VALUES($1,$2,$3,$4)",[user.id,card.id,rating,due]); const updated=await client.query("UPDATE flashcards SET due_at=$1,interval_days=$2,repetitions=repetitions+1,ease=GREATEST(1.3,ease+$3) WHERE id=$4 RETURNING *",[due,days,rating==="Easy"?0.15:rating==="Again"?-0.2:0,card.id]); return updated.rows[0];});
+      const out=await withTransaction(async(client)=>{
+        const found=await client.query("SELECT * FROM flashcards WHERE id=$1 AND user_id=$2 FOR UPDATE",[parts[1],user.id]);
+        if(!found.rows[0])return null;
+        const card=found.rows[0];
+        const next=scheduleFlashcardReview(card,rating);
+        const due=new Date(next.due_at);
+        try{
+          await client.query("INSERT INTO review_events(user_id,flashcard_id,rating,next_due_at,interval_before,interval_after,ease_after) VALUES($1,$2,$3,$4,$5,$6,$7)",[user.id,card.id,rating,due,Number(card.interval_days)||0,next.interval_days,next.ease]);
+        }catch(err){
+          if(err?.code==="42703"){
+            await ensureCardColumns(client.query.bind(client));
+            await client.query("INSERT INTO review_events(user_id,flashcard_id,rating,next_due_at,interval_before,interval_after,ease_after) VALUES($1,$2,$3,$4,$5,$6,$7)",[user.id,card.id,rating,due,Number(card.interval_days)||0,next.interval_days,next.ease]);
+          }else{throw err;}
+        }
+        let updated;
+        try{
+          updated=await client.query("UPDATE flashcards SET due_at=$1,interval_days=$2,repetitions=repetitions+1,ease=$3,state=$5,lapses=$6,last_reviewed_at=NOW() WHERE id=$4 RETURNING *",[due,next.interval_days,next.ease,card.id,next.state,next.lapses]);
+        }catch(err){
+          if(err?.code==="42703"){
+            await ensureCardColumns(client.query.bind(client));
+            updated=await client.query("UPDATE flashcards SET due_at=$1,interval_days=$2,repetitions=repetitions+1,ease=$3,state=$5,lapses=$6,last_reviewed_at=NOW() WHERE id=$4 RETURNING *",[due,next.interval_days,next.ease,card.id,next.state,next.lapses]);
+          }else{throw err;}
+        }
+        return updated.rows[0];
+      });
       if(!out)return notFound(res,"Flashcard");
       return sendJson(res,200,{flashcard:out});
     }
+
     if(parts.length===2&&methodName==="DELETE") {
       if(!idPattern.test(parts[1])) return notFound(res,"Flashcard");
       const r=await query("DELETE FROM flashcards WHERE id=$1 AND user_id=$2 RETURNING id",[parts[1],user.id]);
@@ -620,8 +832,11 @@ async function route(req,res) {
       const l=await query("SELECT l.title,l.objective,l.content_markdown,l.worked_example,c.title course_title FROM lessons l JOIN courses c ON c.id=l.course_id WHERE l.id=$1 AND c.user_id=$2",[b.lessonId,user.id]);
       if(!l.rows[0])return notFound(res,"Lesson");
       b.context=l.rows[0];
+      if(!b.context.course_id && b.courseId) b.context.course_id = b.courseId;
+      if(!b.context.id) b.context.id = b.lessonId;
     }
-    const memory=await retrieveLearnerContext(user.id,[prompt,b.context?.title,b.context?.objective,String(b.attempt||"").slice(0,300)].filter(Boolean).join(" "),{limit:8,lessonId:b.lessonId||null,courseId:b.context?.course_id||null,mode,deepRag:true,queryFn:query});
+    const targetCourseId=b.context?.course_id||b.courseId||null;
+    const memory=await retrieveLearnerContext(user.id,[prompt,b.context?.title,b.context?.objective,String(b.attempt||"").slice(0,300)].filter(Boolean).join(" "),{limit:8,lessonId:b.lessonId||null,courseId:targetCourseId,mode,deepRag:true,queryFn:query});
     const reply=await tutorReply({context:b.context||"Learner workspace",mode,prompt,attempt:String(b.attempt||"").slice(0,5000),memory});
     const memoryById=new Map((Array.isArray(memory)?memory:[]).map(item=>[item.id,item]));
     const enrichedSources=(Array.isArray(reply.sources)?reply.sources:[]).map(src=>{

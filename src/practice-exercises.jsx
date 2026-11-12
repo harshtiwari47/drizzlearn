@@ -30,7 +30,36 @@ function rotateOrShuffleRack(items) {
  */
 export function FillBlankExercise({ exercise, initialState = null, onResult, onStateChange }) {
   const blanks = Array.isArray(exercise?.blanks) ? exercise.blanks : [];
-  const wordBank = Array.isArray(exercise?.wordBank) ? exercise.wordBank : [];
+  // Expand word bank so that duplicate answers have enough chips even if generated with unique set
+  const effectiveWordBank = useMemo(() => {
+    const rawBank = Array.isArray(exercise?.wordBank) ? [...exercise.wordBank] : [];
+    // Count occurrences needed by the blanks
+    const neededCounts = {};
+    for (const b of blanks) {
+      const text = String(b.answer || "").trim();
+      if (!text) continue;
+      const key = text.toLocaleLowerCase();
+      neededCounts[key] = (neededCounts[key] || 0) + 1;
+    }
+    // Count occurrences already in rawBank
+    const bankCounts = {};
+    for (const chip of rawBank) {
+      const key = String(chip || "").trim().toLocaleLowerCase();
+      bankCounts[key] = (bankCounts[key] || 0) + 1;
+    }
+    // Append missing duplicate instances of correct answers
+    const expanded = [...rawBank];
+    for (const b of blanks) {
+      const text = String(b.answer || "").trim();
+      if (!text) continue;
+      const key = text.toLocaleLowerCase();
+      if ((bankCounts[key] || 0) < neededCounts[key]) {
+        expanded.push(text);
+        bankCounts[key] = (bankCounts[key] || 0) + 1;
+      }
+    }
+    return expanded;
+  }, [exercise?.wordBank, blanks]);
   const segments = useMemo(() => String(exercise?.template || "").split("___"), [exercise?.template]);
 
   const buildInitialAnswers = useCallback(
@@ -268,7 +297,7 @@ export function FillBlankExercise({ exercise, initialState = null, onResult, onS
       )}
 
       <div className="practice-word-bank" role="group" aria-label="Word bank">
-        {wordBank.map((chip, chipIdx) => {
+        {effectiveWordBank.map((chip, chipIdx) => {
           const isUsed = slotChips.includes(chipIdx);
           return (
             <button
@@ -384,7 +413,7 @@ export function QuizExercise({ exercise, initialState = null, onResult, onStateC
       </div>
 
       {exercise?.codeSnippet && (
-        <pre className="practice-code-block">
+        <pre className="practice-code-snippet">
           <code>{exercise.codeSnippet}</code>
         </pre>
       )}
@@ -404,7 +433,7 @@ export function QuizExercise({ exercise, initialState = null, onResult, onStateC
             "answer-option flex items-center gap-3 p-3 text-left cursor-pointer",
             isSelected ? "selected" : "",
             optionCorrect ? "answer-correct is-correct" : "",
-            optionWrong ? "is-wrong" : "",
+            optionWrong ? "answer-wrong" : "",
           ]
             .filter(Boolean)
             .join(" ");
@@ -528,7 +557,7 @@ export function OrderExercise({ exercise, initialState = null, onResult, onState
           const cardState = checked ? (stepMatches[idx] ? "correct" : "wrong") : "";
           return (
             <li key={`${step}-${idx}`} className={`practice-order-card ${cardState}`.trim()}>
-              <span className="practice-order-index">{idx + 1}</span>
+              <span className="practice-order-num">{idx + 1}</span>
               <span className="practice-order-text">{step}</span>
               <div className="practice-order-move">
                 <button
@@ -948,7 +977,7 @@ export function PracticeStudioRunner({
             const dotClasses = [
               "practice-dot",
               idx === safeIndex ? "active" : "",
-              res ? (res.correct ? "correct" : "wrong") : "",
+              res ? (res.correct ? "done" : "wrong") : "",
             ]
               .filter(Boolean)
               .join(" ");

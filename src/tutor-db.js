@@ -66,13 +66,14 @@ function sanitizeMessages(messages) {
 function buildThreadRecord(threadId, messages, { lessonTitle = "" } = {}) {
   const { userId, lessonId } = parseThreadId(threadId);
   const cleanMessages = sanitizeMessages(messages);
+  const latestMsgTime = cleanMessages.reduce((max, m) => Math.max(max, Number(m.createdAt) || 0), 0);
   return {
     threadId: String(threadId),
     userId,
     lessonId,
     lessonTitle: typeof lessonTitle === "string" ? lessonTitle.trim().slice(0, 160) : "",
     messages: cleanMessages,
-    updatedAt: Date.now(),
+    updatedAt: latestMsgTime || Date.now(),
   };
 }
 
