@@ -12762,10 +12762,11 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 }
 
 /* Card Content Grid */
-.course-content-futuristic {
+.course-content-futuristic,
+.course-panel.glass-course-card .course-content {
   padding: 0 !important;
   display: grid !important;
-  grid-template-columns: 280px minmax(0, 1fr) !important;
+  grid-template-columns: 240px minmax(0, 1fr) !important;
   gap: 36px !important;
   align-items: center !important;
   background: transparent !important;
@@ -12773,10 +12774,10 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   box-shadow: none !important;
 }
 
-/* Sculpted Human Silhouette Container (Scaled Up) */
+/* Sculpted Human Silhouette Container */
 .human-progress-container {
   position: relative !important;
-  width: 280px !important;
+  width: 240px !important;
   min-height: auto !important;
   padding: 0 !important;
   border-radius: 0 !important;
@@ -12788,19 +12789,20 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  flex-shrink: 0 !important;
 }
 
 .course-panel:hover .human-progress-container {
   transform: translateY(-2px) scale(1.03) !important;
 }
 
-/* SVG Solid Silhouette Canvas (Scaled Up in Size) */
+/* SVG Solid Silhouette Canvas */
 .human-progress-svg {
   position: relative !important;
   z-index: 1 !important;
-  width: 280px !important;
-  max-width: 280px !important;
-  height: 310px !important;
+  width: 240px !important;
+  max-width: 240px !important;
+  height: 280px !important;
   display: block !important;
   margin: 0 auto !important;
   overflow: visible !important;
@@ -12880,7 +12882,8 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 }
 
 @media (max-width: 768px) {
-  .course-content-futuristic {
+  .course-content-futuristic,
+  .course-panel.glass-course-card .course-content {
     grid-template-columns: 1fr !important;
     gap: 20px !important;
   }

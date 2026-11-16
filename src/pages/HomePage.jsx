@@ -262,7 +262,7 @@ const Home = React.memo(function Home(p){
             <button className="quiet-btn grid place-items-center" aria-label="View courses" onClick={()=>go("courses")}>↗</button>
           </div>
           {activeCourse?(
-            <div className="course-content flex flex-col sm:flex-row items-center gap-6 p-6">
+            <div className="course-content course-content-futuristic p-6">
               <HumanProgressAvatar progress={progressPercent || 4} />
               <div className="course-info flex flex-col flex-1 min-w-0 gap-3">
                 <h2 className="text-xl font-bold leading-snug">{activeCourse.title}</h2>
@@ -271,18 +271,14 @@ const Home = React.memo(function Home(p){
                   <span>{lessons.length || 14} Lessons</span>
                   <span>{activeCourse.current_level||activeCourse.currentLevel||"Beginner"}</span>
                 </div>
-                <div className="course-progress-row flex items-center gap-3">
-                  <div className="progress-track flex-1 overflow-hidden" role="progressbar" aria-label="Completed study tasks" aria-valuenow={progressPercent} aria-valuemin="0" aria-valuemax="100">
-                    <div className="progress-fill" style={{width:`${progressPercent||4}%`}}/>
-                  </div>
-                  <span className="progress-number font-bold">{progressPercent || 4}%</span>
+                <div className="course-action-row flex items-center justify-between gap-4 mt-2">
+                  <p className="course-progress-note text-sm text-learnos-muted">
+                    {done || 1} of {stats.total || 26} planned sessions complete
+                  </p>
                   <button className="continue-btn" onClick={()=>nextTask?openLesson(nextTask.lesson_id):go("course")}>
-                    {nextTask?"Continue ↗":"Continue ↗"}
+                    Continue ↗
                   </button>
                 </div>
-                <p className="course-progress-note text-xs text-learnos-muted">
-                  {done || 1} of {stats.total || 26} planned sessions complete
-                </p>
               </div>
             </div>
           ):(
