@@ -446,8 +446,8 @@ export function QuizExercise({ exercise, initialState = null, onResult, onStateC
               disabled={checked}
               onClick={() => handleSelect(idx)}
             >
-              <span>{String.fromCharCode(65 + idx)}</span>
-              <span>{choice}</span>
+              <span className="answer-badge">{String.fromCharCode(65 + idx)}</span>
+              <span className="answer-text flex-1">{choice}</span>
             </button>
           );
         })}

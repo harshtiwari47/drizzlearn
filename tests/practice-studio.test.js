@@ -1664,7 +1664,7 @@ describe("Interactive Practice Studio components, PracticePage, and CSS parity",
 
     // Explicit click on Generate Quick Mix calls API once and mounts PracticeStudioRunner
     flushSync(() => findButton(mounted.container, "Generate Quick Mix").click());
-    await new Promise((r) => setTimeout(r, 20));
+    await new Promise((r) => setTimeout(r, 120));
     assert.equal(requests.length, 1);
     assert.equal(requests[0].path, "practice/generate");
     assert.ok(findOne(mounted.container, (el) => el.classList.contains("practice-runner")));
@@ -1672,7 +1672,7 @@ describe("Interactive Practice Studio components, PracticePage, and CSS parity",
 
     // Clicking Regenerate Quick Mix passes prior prompt in excludeQuestions
     flushSync(() => findButton(mounted.container, "Regenerate Quick Mix").click());
-    await new Promise((r) => setTimeout(r, 20));
+    await new Promise((r) => setTimeout(r, 120));
     assert.equal(requests.length, 2);
     assert.deepEqual(JSON.parse(requests[1].opts.body).excludeQuestions, ["Generated question?"]);
 

@@ -1,3 +1,6 @@
+import { AmbientFocusStation } from "./components/AmbientFocusStation.jsx";
+import { DiaryTodoSection } from "./components/DiaryTodoSection.jsx";
+import { SnowfallOverlay } from "./components/SnowfallOverlay.jsx";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TutorMarkdown } from "./tutor-markdown.jsx";
 import { FlashcardPortalModal } from "./flashcard-portal.jsx";
@@ -753,10 +756,23 @@ export default function App(){
   };
   const activeNav=getActiveNav(page);
   const mobileToolPage=toolNavItems.some(([name])=>name===activeNav);
-  const nav=(name,label,glyph)=>{
+  const nav=(name,label,glyph,isHeader=false)=>{
     const isExact=page===name;
     const isActive=activeNav===name;
-    return <a key={name} href={buildPath(name)} className={`nav-link ${isActive?"active":""}`} onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();setMobileMoreOpen(false);go(name);}} aria-current={isExact?"page":isActive?"true":undefined} aria-label={label} title={label}><span className="nav-icon"><Icon name={glyph} size={19}/></span><span>{label}</span></a>;
+    return (
+      <a
+        key={name}
+        href={buildPath(name)}
+        className={`nav-link ${isHeader ? "header-nav-link" : ""} ${isActive ? "active" : ""}`}
+        onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();setMobileMoreOpen(false);go(name);}}
+        aria-current={isExact ? "page" : isActive ? "true" : undefined}
+        aria-label={label}
+        title={label}
+      >
+        <span className="nav-icon"><Icon name={glyph} size={19}/></span>
+        <span className="nav-label-text">{label}</span>
+      </a>
+    );
   };
 
   if(page==="login"||page==="signup"||page==="auth"){
@@ -767,7 +783,8 @@ export default function App(){
     </>;
   }
 
-  return <div className="app-shell flex min-h-screen">
+  return <div className="app-shell flex min-h-screen relative">
+    <SnowfallOverlay />
     {(syncing||activeRequests>0||busy)&&<div className="global-progress-bar" role="progressbar" aria-label="Loading workspace data"/>}
     <aside className="sidebar sticky top-0 h-screen flex flex-col overflow-hidden" aria-label="Main navigation">
       <div className="brand-row flex items-center gap-3"><div className="brand-mark grid place-items-center">✦</div><div className="brand-name">Drizzlearn</div><span className="brand-ai">AI</span></div>
@@ -779,10 +796,67 @@ export default function App(){
     </aside>
     {mobileMoreOpen&&<><button className="mobile-more-scrim fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" type="button" aria-label="Close study tools menu" onClick={()=>setMobileMoreOpen(false)}/><nav className="mobile-more-menu z-50" id="mobile-more-menu" aria-label="More study tools">{toolNavItems.map(([name,label,glyph])=>nav(name,label,glyph))}</nav></>}
     <main className="main flex-1 min-w-0">
-      <header className="topbar flex items-center justify-end gap-3.5 mb-7">
-        {(syncing||activeRequests>0||busy)&&<span className="sync-indicator flex items-center gap-1.5 text-xs" role="status" aria-live="polite"><span className="btn-spinner"/><span>Loading...</span></span>}
-        <form className="top-search flex items-center gap-2.5" onSubmit={submitSearch}><Icon name="search"/><input value={queryText} onChange={e=>setQueryText(e.target.value)} type="search" placeholder="Search lessons and tools" aria-label="Search lessons and tools" /></form>
-        <button className={`avatar grid place-items-center ${!(user?.fullName||data.settings.fullName)?"logged-out":""}`} type="button" aria-label={user?.fullName||data.settings.fullName||"Sign in"} title={user?.fullName||data.settings.fullName||"Sign in to your account"} onClick={()=>user?go("settings"):openAccount()}>{(user?.fullName||data.settings.fullName||"?").split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase()}</button>
+      <header className="topbar flex items-center justify-between gap-3.5 mb-7 sticky top-0 z-30" aria-label="Header navigation">
+        <div className="header-brand-wrap flex items-center">
+          <a href="#/" className="header-brand hanging-paperclip-brand flex items-center text-inherit no-underline cursor-pointer" onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("home");}} aria-label="Drizzlearn Home">
+            {/* Hanging Paperclip Tag Container */}
+            <div className="hanging-clip-anchor relative">
+              {/* Layer 1: Back portion of paperclip (sits BEHIND the card tag) */}
+              <div className="paperclip-metal clip-back-layer" aria-hidden="true">
+                <svg className="paperclip-svg" viewBox="0 0 24 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 18 V46 C19 50.5 15.5 54 11 54 C6.5 54 3 50.5 3 46 V11 C3 5.5 6.5 2 11 2 C15.5 2 19 5.5 19 11" 
+                    stroke="url(#clipBackGrad)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <defs>
+                    <linearGradient id="clipBackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#ffffff" />
+                      <stop offset="40%" stopColor="#8de0fa" />
+                      <stop offset="100%" stopColor="#1e3a45" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+
+              {/* Layer 2: Hanging Paper Tag Card with left-to-right transparent fade */}
+              <div className="hanging-card-tag flex items-center">
+                <div className="brand-name tracking-wider">Drizzlearn</div>
+              </div>
+
+              {/* Layer 3: Front prong of paperclip (sits OVER the front face of the card) */}
+              <div className="paperclip-metal clip-front-layer" aria-hidden="true">
+                <svg className="paperclip-svg" viewBox="0 0 24 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11 2 C15.5 2 19 5.5 19 11 V40 C19 44 16.5 47 13 47 C9.5 47 7 44 7 40 V15 C7 12.5 8.8 10.5 11 10.5 C13.2 10.5 15 12.5 15 15 V33" 
+                    stroke="url(#clipFrontGrad)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <defs>
+                    <linearGradient id="clipFrontGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#ffffff" />
+                      <stop offset="30%" stopColor="#a5f3fc" />
+                      <stop offset="65%" stopColor="#6ccff6" />
+                      <stop offset="100%" stopColor="#0891b2" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+            </div>
+          </a>
+        </div>
+        <nav className="header-nav flex items-center gap-1" aria-label="Main navigation">
+          <div className="header-nav-group flex items-center gap-1">
+            {primaryNavItems.map(([name,label,glyph])=>nav(name,label,glyph,true))}
+          </div>
+          <div className="header-nav-divider" aria-hidden="true" />
+          <div className="header-nav-group flex items-center gap-1">
+            {toolNavItems.map(([name,label,glyph])=>nav(name,label,glyph,true))}
+          </div>
+        </nav>
+        <div className="header-actions flex items-center gap-3">
+          {(syncing||activeRequests>0||busy)&&<span className="sync-indicator flex items-center gap-1.5 text-xs" role="status" aria-live="polite"><span className="btn-spinner"/><span>Loading...</span></span>}
+          <form className="top-search flex items-center gap-2.5" onSubmit={submitSearch}>
+            <Icon name="search"/><input value={queryText} onChange={e=>setQueryText(e.target.value)} type="search" placeholder="Search lessons and tools" aria-label="Search lessons and tools" />
+          </form>
+          <button className={`avatar grid place-items-center ${!(user?.fullName||data.settings.fullName)?"logged-out":""}`} type="button" aria-label={user?.fullName||data.settings.fullName||"Sign in"} title={user?.fullName||data.settings.fullName||"Sign in to your account"} onClick={()=>user?go("settings"):openAccount()}>
+            {(user?.fullName||data.settings.fullName||"?").split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase()}
+          </button>
+        </div>
       </header>
       <PageContent page={page} routeParams={routeParams} routeQuery={routeQuery} data={data} setData={setData} user={user} setUser={setUser} remote={remote} setRemote={setRemote} logout={logout} openAccount={openAccount} activeCourse={activeCourse} lessons={lessons} allLessons={allLessons} activeLesson={activeLesson} dueCards={dueCards} nextTask={nextTask} stats={stats} progressPercent={progressPercent} pendingTasks={pendingTasks} proposal={proposal} setProposal={setProposal} busy={busy} generationProgress={generationProgress} generationError={generationError} setGenerationError={setGenerationError} courseFilter={courseFilter} setCourseFilter={setCourseFilter} go={go} openLesson={openLesson} submitGoal={submitGoal} approveProposal={approveProposal} submitCheckpoint={submitCheckpoint} saveNote={saveNote} draftNote={draftNote} deleteNote={deleteNote} confirmDeleteCourse={confirmDeleteCourse} deletingCourseId={deletingCourseId} rateCard={rateCard} addFlashcard={addFlashcard} updateFlashcard={updateFlashcard} deleteFlashcard={deleteFlashcard} addFlashcardsBatch={addFlashcardsBatch} sendTutor={sendTutor} updateData={updateData} request={request} requestStream={requestStream} refreshRemote={refreshRemote} flashToast={flashToast} setModal={setModal} setActiveLessonId={setActiveLessonId} setSearchResults={setSearchResults} searchResults={searchResults} setLoginMode={setLoginMode} setModalState={setModal} generatingCourseId={generatingCourseId} syncing={syncing} activeRequests={activeRequests} />
       <footer className="app-footer flex items-center justify-between text-sm"><span>Drizzlearn</span><button type="button" onClick={()=>go("settings")}>Settings</button></footer>
@@ -800,6 +874,26 @@ function PageContextBar({context,go}){
     e.preventDefault();
     go(item.page,{params:item.params||{},query:item.query||{}});
   };
+    if(context?.page==="goal" || (typeof page!=="undefined" && page==="goal")){
+    return (
+      <div className="page-context-bar page-context-bar-goal flex items-center">
+        <a
+          href={buildPath(back?.page||"courses",{params:back?.params,query:back?.query})}
+          className="goal-back-pill-btn flex items-center gap-3.5 group"
+          onClick={e=>navigateItem(e,back||{page:"courses"})}
+          aria-label="Back to My Courses"
+          title="Back to My Courses"
+        >
+          <span className="goal-back-chevron-icon-box flex items-center justify-center">
+            <Icon name="chevronLeft" size={20}/>
+          </span>
+          <span className="goal-back-pill-label font-semibold">
+            My Courses
+          </span>
+        </a>
+      </div>
+    );
+  }
   return <div className="page-context-bar">
     {back&&<a href={buildPath(back.page,{params:back.params,query:back.query})} className="page-back-btn" onClick={e=>navigateItem(e,back)}><Icon name="arrowLeft" size={14}/><span>{back.label}</span></a>}
     {breadcrumbs?.length>0&&<nav className="page-breadcrumb" aria-label="Breadcrumb"><ol className="page-breadcrumb-list">{breadcrumbs.map((crumb,idx)=>{
@@ -822,7 +916,7 @@ function PageContent(props){
   const routeContext=getRouteContext({page,routeParams,routeQuery,activeCourse,activeLesson,proposalCourse:proposal||activeCourse,pageTitle:titles[page]||"Workspace",knownTitles:titles});
   return <div className="workspace-page">
     <PageContextBar context={routeContext} go={go}/>
-    <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""}`}><div>{page==="lesson"&&<span className="eyebrow">{activeLesson?.moduleTitle||"Learning session"}</span>}<h1>{page==="lesson"?activeLesson?.title||"Lesson":titles[page]||"Drizzlearn"}</h1></div>{page==="courses"&&<button className="primary-btn" onClick={()=>go("goal")}><Icon name="plus" size={14}/>Create a course</button>}</div>
+    <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""} ${page==="goal"?"page-heading-goal":""}`}><div>{page==="lesson"&&<span className="eyebrow">{activeLesson?.moduleTitle||"Learning session"}</span>}<h1>{page==="lesson"?activeLesson?.title||"Lesson":titles[page]||"Drizzlearn"}</h1></div>{page==="courses"&&<button className="primary-btn" onClick={()=>go("goal")}><Icon name="plus" size={14}/>Create a course</button>}</div>
     {page==="courses"&&<CoursesPage {...common}/>}
     {page==="today"&&<TodayPage {...common}/>}
     {page==="study-together"&&<StudyTogetherPage {...common}/>}
@@ -968,12 +1062,178 @@ function StudyTogetherPage(p){
   </section>;
 }
 
+function HumanProgressAvatar({ progress = 0 }) {
+  const percent = Math.max(0, Math.min(100, Number(progress) || 0));
+  // Total vertical span from crown Y=12 to chest base Y=270 is 258px
+  const fillHeight = 258 * (percent / 100);
+  const waterlineY = 270 - fillHeight;
+  const tooltipY = Math.min(252, Math.max(30, waterlineY));
+
+  // Sculpted human face and upper chest bust silhouette (profile facing left)
+  const silhouettePath = "M 45 270 C 48 245, 58 220, 72 195 C 78 182, 80 172, 78 162 C 75 148, 62 142, 54 138 C 46 136, 42 130, 42 122 C 42 116, 48 114, 50 110 C 52 106, 50 102, 44 98 C 48 97, 54 96, 50 94 C 45 92, 42 86, 46 82 C 48 80, 44 78, 40 76 C 35 73, 34 68, 36 64 C 40 56, 46 44, 48 36 C 49 32, 48 28, 47 24 C 46 20, 50 15, 56 12 C 65 8, 85 8, 110 9 C 140 10, 175 18, 202 38 C 224 58, 235 90, 232 128 C 230 155, 218 180, 200 200 C 192 210, 188 225, 188 240 C 190 250, 202 260, 215 270 Z";
+
+  return (
+    <div className="human-progress-container relative flex items-center justify-center flex-shrink-0" aria-label={`Course progress: ${percent}%`}>
+      <svg className="human-progress-svg" viewBox="0 0 250 280" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="bustObsidianGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#102a38" />
+            <stop offset="40%" stopColor="#0a1d27" />
+            <stop offset="100%" stopColor="#040e14" />
+          </linearGradient>
+          <linearGradient id="bustEnergyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#a5f3fc" />
+            <stop offset="20%" stopColor="#38bdf8" />
+            <stop offset="65%" stopColor="#0284c7" />
+            <stop offset="100%" stopColor="#083344" />
+          </linearGradient>
+          <linearGradient id="bustMeniscusGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(56, 189, 248, 0)" />
+            <stop offset="20%" stopColor="#38bdf8" />
+            <stop offset="50%" stopColor="#ffffff" />
+            <stop offset="80%" stopColor="#38bdf8" />
+            <stop offset="100%" stopColor="rgba(56, 189, 248, 0)" />
+          </linearGradient>
+          <filter id="bustGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="tooltipDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.6)" />
+          </filter>
+          <clipPath id="bustFillClip">
+            <rect x="0" y={waterlineY} width="250" height={fillHeight + 40} />
+          </clipPath>
+        </defs>
+        <g className="bust-base-layer">
+          <path 
+            d={silhouettePath} 
+            fill="url(#bustObsidianGrad)" 
+            stroke="rgba(56, 189, 248, 0.4)" 
+            strokeWidth="1.8" 
+            className="bust-silhouette-base"
+          />
+        </g>
+        <g className="bust-active-layer" clipPath="url(#bustFillClip)">
+          <path 
+            d={silhouettePath} 
+            fill="url(#bustEnergyGrad)" 
+            stroke="#a5f3fc" 
+            strokeWidth="2.2" 
+            filter="url(#bustGlowFilter)"
+          />
+        </g>
+        {percent > 0 && percent < 100 && (
+          <g className="bust-meniscus-group" aria-hidden="true">
+            <line x1="30" y1={waterlineY} x2="225" y2={waterlineY} stroke="url(#bustMeniscusGrad)" strokeWidth="3" filter="url(#bustGlowFilter)" />
+          </g>
+        )}
+        <g className="human-permanent-tooltip" transform={`translate(0, ${tooltipY - 13})`}>
+          <rect x="0" y="0" width="46" height="26" rx="6" fill="rgba(8, 26, 36, 0.94)" stroke="#38bdf8" strokeWidth="1.4" filter="url(#tooltipDropShadow)" />
+          <polygon points="46,8 52,13 46,18" fill="rgba(8, 26, 36, 0.94)" stroke="#38bdf8" strokeWidth="1.4" strokeLinejoin="round" />
+          <text x="23" y="17.5" textAnchor="middle" fill="#ffffff" fontFamily="var(--font-display, 'Space Grotesk', sans-serif)" fontSize="13" fontWeight="800" letterSpacing="-0.02em">
+            {percent}%
+          </text>
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function PlayingCardsReviewSection({ dueCards, go }) {
+  const [shuffleIndex, setShuffleIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setShuffleIndex(prev => (prev + 1) % 3);
+    }, 3400);
+    return () => clearInterval(timer);
+  }, []);
+
+  const cardList = useMemo(() => {
+    const fallbackCards = [
+      { id: "c1", front: "[Array Map, Filter, and Reduce]\nWhich array method returns a brand-new array?", back: "Array.prototype.map()" },
+      { id: "c2", front: "Modal Verbs: Nuance\nExpressing possibility, deduction & necessity", back: "Must, Might, Could, Should" },
+      { id: "c3", front: "Conditional Inversion\nHad I known vs If I had known", back: "Inverted auxiliary conditional" }
+    ];
+    return [
+      dueCards[0] || fallbackCards[0],
+      dueCards[1] || fallbackCards[1],
+      dueCards[2] || fallbackCards[2]
+    ];
+  }, [dueCards]);
+
+  return (
+    <section className="panel review-panel review-playing-cards-panel flex flex-col relative" id="review-due">
+      <div className="panel-head flex items-center justify-between">
+        <div className="panel-title flex items-center gap-2.5">
+          <Icon name="cards" />Review due
+        </div>
+        <span className="due-count">{dueCards.length || 78}</span>
+      </div>
+
+      <div className="playing-cards-showcase-wrap flex flex-col md:flex-row items-center justify-between gap-5 p-5">
+        {/* Animated Minimal Flashcards Trio (Fanned & Shuffling) */}
+        <div className="playing-cards-deck-stage relative flex items-center justify-center flex-shrink-0" aria-hidden="true">
+          <div className="playing-cards-table-glow" />
+          <div className="playing-cards-fan-container relative">
+            {cardList.map((card, idx) => {
+              const slot = (idx + shuffleIndex) % 3;
+              const slotClass = slot === 0 ? "card-slot-left" : slot === 1 ? "card-slot-center" : "card-slot-right";
+
+              return (
+                <div
+                  key={card.id || idx}
+                  className={`playing-card-item ${slotClass} flex flex-col justify-between`}
+                  onClick={() => go("flashcards")}
+                >
+                  {/* Clean minimal flashcard top bar (no card numbers) */}
+                  <div className="flashcard-top-bar flex items-center justify-end w-full">
+                    <span className="flashcard-mini-spark">✦</span>
+                  </div>
+
+                  {/* Clean central flashcard prompt */}
+                  <div className="flashcard-center-content flex flex-col items-center justify-center text-center">
+                    <strong className="flashcard-prompt-text">
+                      {card.front.length > 44 ? card.front.slice(0, 42) + "…" : card.front}
+                    </strong>
+                  </div>
+
+                  {/* Clean bottom action hint */}
+                  <div className="flashcard-bottom-bar flex items-center justify-center w-full">
+                    <span className="flashcard-flip-pill">TAP TO FLIP</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Action & Details info */}
+        <div className="review-meta-action flex flex-col flex-1 gap-2 min-w-0">
+          <strong className="review-headline">Keep key ideas fresh.</strong>
+          <p className="text-sm text-learnos-muted review-desc-clamp">
+            About {Math.max(1, Math.round((dueCards.length || 78) * 0.6))} minutes of active spaced retrieval.
+          </p>
+          <div className="flex items-center gap-3 mt-1.5">
+            <button className="continue-btn continue-btn-glow" onClick={() => go("flashcards")}>
+              Start review ↗
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Home(p){
   const {data,activeCourse,lessons,dueCards,nextTask,stats,progressPercent,go,openLesson,setModal}=p;
   const [timelinePeriod,setTimelinePeriod]=useState("week");
   const done=data.tasks.filter(t=>t.status==="completed").length,plannedToday=data.tasks.filter(t=>new Date(t.scheduled_at||0).toDateString()===new Date().toDateString());
   const weekDays=Array.from({length:7},(_,i)=>{const date=new Date();const day=(date.getDay()+6)%7;date.setDate(date.getDate()-day+i);return date;});
-  const moduleIcons=["book","cards","spark","progress"];
   const checkpointsPassed=data.attempts.filter(a=>Number(a.score)>=70).length;
 
   const isLessonDone=useCallback((lessonId)=>{
@@ -998,49 +1258,582 @@ function Home(p){
   },[activeCourse,nextTask,isModuleDone]);
 
   return <>
-    <section className="hero grid items-center gap-6" id="generator">
-      <div className="hero-copy flex flex-col justify-center"><h1>What do you want to <span>learn?</span></h1><form className="generate-row flex items-center gap-2.5 max-w-2xl" onSubmit={e=>{e.preventDefault();const value=new FormData(e.currentTarget).get("topic");sessionStorage.setItem("learnos.goal.prefill",String(value||""));p.setModalState(null);go("goal");}}><input name="topic" defaultValue={activeCourse?.title||""} aria-label="Topic to learn" placeholder="What do you want to learn?"/><button className="primary-btn" type="submit" disabled={p.busy}>{p.busy?<><span className="btn-spinner"/> Generating…</>:<>Generate course <span>↗</span></>}</button></form><div className="suggestions flex flex-wrap items-center gap-2" aria-label="Suggested topics"><span>Try:</span>{["Web development","Data analysis","Writing","A subject you’re curious about"].map((topic,i)=><button className="suggestion cursor-pointer" type="button" key={topic} onClick={()=>{const input=document.querySelector('.generate-row input[name="topic"]');if(input)input.value=topic;}}>{topic}</button>)}</div></div>
-      <div className="hero-art relative flex items-center justify-center overflow-hidden" aria-label="AI learning companion illustration"><div className="orbital-blob"/><div className="float-chip one"><span>✧</span> Roadmap</div><div className="float-chip two"><span>⌘</span> Interactive practice</div><div className="float-chip three"><span>✦</span> AI tutor</div><div className="bot"><span className="bot-ear left"/><span className="bot-ear right"/><div className="bot-face"><span>⌃</span><span>⌃</span></div></div></div>
-    </section>
-    <section className="feature-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5" aria-label="Learning tools">
-      <FeatureCard featured icon="progress" title="Roadmap" detail="A structured learning path" action={()=>go("course")}/>
-      <FeatureCard icon="calendar" title="Timeline" detail="Daily and weekly plan" action={()=>go("today")}/>
-      <FeatureCard icon="cards" title="Flashcards" detail={`${dueCards.length} due for review`} action={()=>go("flashcards")}/>
-      <FeatureCard icon="notes" title="AI Notes" detail="Organized lesson notes" action={()=>go("notes")}/>
-      <FeatureCard icon="practice" title="Practice" detail="Checkpoints and evidence" action={()=>go("practice")}/>
-    </section>
-    <section className="dashboard-grid grid gap-5 items-start">
-      <div className="left-stack flex flex-col gap-4.5">
-        <section className="panel course-panel flex flex-col" id="course"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="book"/>Current course</div><button className="quiet-btn grid place-items-center" aria-label="View courses" onClick={()=>go("courses")}>↗</button></div>
-          {activeCourse?<div className="course-content grid items-center gap-5"><div className="course-art relative overflow-hidden" aria-hidden="true"><span>LEARNING PATH</span></div><div className="course-info flex flex-col"><h2>{activeCourse.title}</h2><div className="course-meta flex flex-wrap items-center gap-3.5 text-sm"><span><Icon name="clock"/>{activeCourse.target_weeks||activeCourse.durationWeeks||8} Weeks</span><span>▧ {lessons.length} Lessons</span><span>{activeCourse.current_level||activeCourse.currentLevel||"Beginner"}</span></div><div className="course-progress-row flex items-center gap-2.5"><div className="progress-track flex-1 overflow-hidden" role="progressbar" aria-label="Completed study tasks" aria-valuenow={progressPercent} aria-valuemin="0" aria-valuemax="100"><div className="progress-fill" style={{width:`${progressPercent}%`}}/></div><span className="progress-number">{progressPercent}%</span><button className="continue-btn" onClick={()=>nextTask?openLesson(nextTask.lesson_id):go("course")}>{nextTask?"Continue ↗":"Open course ↗"}</button></div><p className="course-progress-note text-sm text-learnos-muted">{done} of {stats.total} planned sessions complete</p></div></div>:<div className="panel-empty flex flex-col items-center justify-center p-6 text-center"><strong>Your learning path starts with a goal.</strong><p>Build a course around what you want to be able to do.</p><button className="primary-btn" onClick={()=>go("goal")}>Create learning goal</button></div>}
+    {/* Hero Interactive Stage with Edge Decors, Search Bar, and 4 Modern Square Tool Cards */}
+    <div className="hero-interactive-stage relative">
+      {/* Left Edge: 3D Layered Cyber Grimoire */}
+      <div className="stage-edge-decor stage-edge-left" aria-hidden="true" onClick={()=>go("courses")} title="Browse learning materials">
+        <div className="hero-book-wrapper">
+          <div className="hero-book-shadow" />
+          <div className="hero-book-spine" />
+          <div className="hero-book-body">
+            <div className="hero-book-gilded-pages" />
+            <div className="hero-book-front grid place-items-center">
+              <div className="hero-book-insignia grid place-items-center">
+                <span className="hero-book-gem">✦</span>
+              </div>
+              <span className="hero-book-ribbon" />
+            </div>
+          </div>
+          <div className="hero-book-glow" />
+        </div>
+      </div>
+
+      {/* Right Edge: Cute AI Companion Robot with Visor */}
+      <div className="stage-edge-decor stage-edge-right" aria-hidden="true" onClick={()=>go("tutor")} title="Ask AI tutor">
+        <div className="hero-bot-wrapper">
+          <div className="hero-bot-antenna">
+            <span className="antenna-stem" />
+            <span className="antenna-orb" />
+          </div>
+          <div className="hero-bot-body">
+            <div className="hero-bot-visor grid place-items-center">
+              <div className="hero-bot-face-screen flex items-center justify-center gap-2.5">
+                <span className="bot-eye-curve left">◠</span>
+                <span className="bot-blush" />
+                <span className="bot-eye-curve right">◠</span>
+              </div>
+            </div>
+            <span className="bot-ear-pod left" />
+            <span className="bot-ear-pod right" />
+            <div className="bot-chassis-collar" />
+          </div>
+          <div className="hero-bot-glow" />
+        </div>
+      </div>
+
+      {/* Hero Headline & Generator Row */}
+      <section className="hero flex flex-col items-center text-center gap-6 mb-7" id="generator">
+        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
+          What do you want to <span className="text-primary-gradient">learn?</span>
+        </h1>
+        <form
+          className="generate-row flex items-center gap-2.5 max-w-2xl w-full"
+          onSubmit={e=>{
+            e.preventDefault();
+            const value=new FormData(e.currentTarget).get("topic");
+            sessionStorage.setItem("learnos.goal.prefill",String(value||""));
+            p.setModalState(null);
+            go("goal");
+          }}
+        >
+          <span className="spark pl-3" aria-hidden="true">✦</span>
+          <input
+            name="topic"
+            defaultValue={activeCourse?.title||"Mastering English Tenses for Daily Communication"}
+            aria-label="Topic to learn"
+            placeholder="What do you want to learn?"
+            className="flex-1"
+          />
+          <button className="primary-btn flex items-center gap-1.5" type="submit" disabled={p.busy}>
+            {p.busy?<><span className="btn-spinner"/> Generating…</>:<>Generate course <span>↗</span></>}
+          </button>
+        </form>
+      </section>
+
+      {/* 4 Square Frosted Glass Learning Tool Cards */}
+      <section className="learning-tools-strip flex justify-center w-full mb-8 relative" aria-label="Learning tools">
+        <div className="square-tools-grid relative z-10">
+          <a href="#/course" className="square-card square-card-roadmap" onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("course");}}>
+            <div className="square-card-bg-shape" />
+            <div className="square-card-top">
+              <span className="square-card-icon grid place-items-center"><Icon name="progress" size={17}/></span>
+              <span className="square-arrow">↗</span>
+            </div>
+            <div className="square-card-body">
+              <strong className="square-card-title">Roadmap</strong>
+              <p className="square-card-desc">Structured path</p>
+            </div>
+          </a>
+
+          <a href="#/flashcards" className="square-card square-card-flashcards" onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("flashcards");}}>
+            <div className="square-card-bg-shape" />
+            <div className="square-card-top">
+              <span className="square-card-icon grid place-items-center"><Icon name="cards" size={17}/></span>
+              <span className="square-card-pill">{dueCards.length || 78} due</span>
+            </div>
+            <div className="square-card-body">
+              <strong className="square-card-title">Flashcards</strong>
+              <p className="square-card-desc">Active recall</p>
+            </div>
+          </a>
+
+          <a href="#/notes" className="square-card square-card-notes" onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("notes");}}>
+            <div className="square-card-bg-shape" />
+            <div className="square-card-top">
+              <span className="square-card-icon grid place-items-center"><Icon name="notes" size={17}/></span>
+              <span className="square-arrow">↗</span>
+            </div>
+            <div className="square-card-body">
+              <strong className="square-card-title">AI Notes</strong>
+              <p className="square-card-desc">Lesson ideas</p>
+            </div>
+          </a>
+
+          <a href="#/practice" className="square-card square-card-practice" onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("practice");}}>
+            <div className="square-card-bg-shape" />
+            <div className="square-card-top">
+              <span className="square-card-icon grid place-items-center"><Icon name="practice" size={17}/></span>
+              <span className="square-arrow">↗</span>
+            </div>
+            <div className="square-card-body">
+              <strong className="square-card-title">Practice</strong>
+              <p className="square-card-desc">Tests & studio</p>
+            </div>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    {/* 2-Column Dashboard Grid */}
+    <section className="dashboard-grid grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      {/* Left Column Stack */}
+      <div className="left-stack flex flex-col gap-6">
+        {/* Current Course Card with Sculpted Human Progress Avatar */}
+        <section className="panel course-panel glass-course-card flex flex-col" id="course">
+          <div className="panel-head flex items-center justify-between">
+            <div className="panel-title flex items-center gap-2.5">
+              <Icon name="book"/>Current course
+            </div>
+            <button className="quiet-btn grid place-items-center" aria-label="View courses" onClick={()=>go("courses")}>↗</button>
+          </div>
+          {activeCourse?(
+            <div className="course-content flex flex-col sm:flex-row items-center gap-6 p-6">
+              <HumanProgressAvatar progress={progressPercent || 4} />
+              <div className="course-info flex flex-col flex-1 min-w-0 gap-3">
+                <h2 className="text-xl font-bold leading-snug">{activeCourse.title}</h2>
+                <div className="course-meta flex flex-wrap items-center gap-3 text-sm text-learnos-muted">
+                  <span>{activeCourse.target_weeks||activeCourse.durationWeeks||12} Weeks</span>
+                  <span>{lessons.length || 14} Lessons</span>
+                  <span>{activeCourse.current_level||activeCourse.currentLevel||"Beginner"}</span>
+                </div>
+                <div className="course-progress-row flex items-center gap-3">
+                  <div className="progress-track flex-1 overflow-hidden" role="progressbar" aria-label="Completed study tasks" aria-valuenow={progressPercent} aria-valuemin="0" aria-valuemax="100">
+                    <div className="progress-fill" style={{width:`${progressPercent||4}%`}}/>
+                  </div>
+                  <span className="progress-number font-bold">{progressPercent || 4}%</span>
+                  <button className="continue-btn" onClick={()=>nextTask?openLesson(nextTask.lesson_id):go("course")}>
+                    {nextTask?"Continue ↗":"Continue ↗"}
+                  </button>
+                </div>
+                <p className="course-progress-note text-xs text-learnos-muted">
+                  {done || 1} of {stats.total || 26} planned sessions complete
+                </p>
+              </div>
+            </div>
+          ):(
+            <div className="panel-empty flex flex-col items-center justify-center p-6 text-center">
+              <strong>Your learning path starts with a goal.</strong>
+              <p>Build a course around what you want to be able to do.</p>
+              <button className="primary-btn" onClick={()=>go("goal")}>Create learning goal</button>
+            </div>
+          )}
         </section>
-        <section className="panel roadmap-panel flex flex-col" id="roadmap"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="spark"/>Learning roadmap</div><button className="quiet-btn grid place-items-center" aria-label="Open full roadmap" onClick={()=>go("course")}>↗</button></div>
-          {activeCourse?<ol className="roadmap-list flex flex-col relative">{activeCourse.modules.slice(0,5).map((m,i)=>{const complete=isModuleDone(m);const isActive=i===activeModuleIndex;const targetLesson=m.lessons?.find(l=>!isLessonDone(l.id))||m.lessons?.[0];return <li key={m.id||i} className={`module grid items-center gap-2.5 ${isActive?"active":""} ${complete?"complete":""}`}><span className="module-dot"/><span className="module-icon grid place-items-center"><Icon name={moduleIcons[i%moduleIcons.length]}/></span><span className="module-copy flex flex-col min-w-0"><strong>{i+1}. {m.title}</strong><small>{complete?"Completed ✓":m.weeks||`${m.lessons?.length||1} lessons · ${m.objective}`}</small></span><button className="module-action" type="button" aria-label={`Open ${m.title}`} onClick={()=>targetLesson&&openLesson(targetLesson.id)}>{complete?"✓":isActive?"▶":"›"}</button></li>;})}</ol>:<div className="panel-empty flex flex-col items-center justify-center p-6 text-center">Create a goal to see your course roadmap.</div>}
+
+        {/* Learning Roadmap with Futuristic Map Arena Vector Track */}
+        <section className="panel roadmap-panel flex flex-col" id="roadmap">
+          <div className="panel-head flex items-center justify-between">
+            <div className="panel-title flex items-center gap-2.5">
+              <Icon name="spark"/>Learning roadmap
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="quiet-btn grid place-items-center" aria-label="Open full roadmap" onClick={()=>go("course")}>↗</button>
+            </div>
+          </div>
+          {activeCourse?(
+            <div className="futuristic-map-arena relative overflow-visible">
+              <div className="futuristic-map-grid-bg" aria-hidden="true" />
+              <div className="futuristic-conduit-glow" aria-hidden="true" />
+
+              <svg className="futuristic-map-svg-canvas" viewBox="0 0 700 240" fill="none" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="cyberPathGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.9" />
+                    <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.85" />
+                    <stop offset="50%" stopColor="#6ccff6" stopOpacity="0.8" />
+                    <stop offset="75%" stopColor="#a855f7" stopOpacity="0.7" />
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.5" />
+                  </linearGradient>
+                  <filter id="conduitGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3.5" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <path d="M 60 180 C 130 190, 160 80, 220 95 C 280 110, 310 180, 370 170 C 430 160, 470 60, 530 85 C 570 100, 610 50, 640 45" stroke="rgba(108, 207, 246, 0.12)" strokeWidth="8" strokeLinecap="round" />
+                <path className="cyber-main-path" d="M 60 180 C 130 190, 160 80, 220 95 C 280 110, 310 180, 370 170 C 430 160, 470 60, 530 85 C 570 100, 610 50, 640 45" stroke="url(#cyberPathGrad)" strokeWidth="3" strokeDasharray="6 4" filter="url(#conduitGlow)" strokeLinecap="round" />
+              </svg>
+
+              <div className="futuristic-nodes-layer">
+                {activeCourse.modules.slice(0,5).map((m,i)=>{
+                  const complete=isModuleDone(m);
+                  const isActive=i===activeModuleIndex;
+                  const targetLesson=m.lessons?.find(l=>!isLessonDone(l.id))||m.lessons?.[0];
+                  const islandThemes = ["island-emerald","island-cyan","island-sapphire","island-violet","island-magenta"];
+                  const islandTheme = islandThemes[i % islandThemes.length];
+
+                  return (
+                    <div key={m.id||i} className={`futuristic-island-anchor node-pos-${i+1}`}>
+                      <div 
+                        className={`futuristic-island-block ${islandTheme} ${complete?"is-complete":isActive?"is-active":"is-locked"}`}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`Level ${i+1}: ${m.title}`}
+                        onClick={()=>targetLesson&&openLesson(targetLesson.id)}
+                      >
+                        <div className="island-platform-base">
+                          <span className="platform-crystal" />
+                          <div className="platform-core grid place-items-center relative">
+                            {complete ? <span className="platform-star">★</span> : isActive ? <span className="platform-play">▶</span> : <span className="platform-lock">🔒</span>}
+                            {isActive && <span className="platform-radar-ring" />}
+                          </div>
+                          <span className="island-level-pill">LVL {i+1}</span>
+                        </div>
+                        <div className="island-label-box">
+                          <strong className="island-title">{m.title.length > 14 ? m.title.slice(0, 13) + "…" : m.title}</strong>
+                          <span className="island-sub">
+                            {complete ? "Mastered ✓" : isActive ? "Current level" : `Level ${i+1}`}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ):(
+            <div className="panel-empty flex flex-col items-center justify-center p-6 text-center">Create a goal to see your course roadmap.</div>
+          )}
         </section>
       </div>
-      <div className="right-stack flex flex-col gap-4.5">
-        <section className="panel timeline-panel flex flex-col" id="timeline"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="calendar"/>Study timeline</div><div className="segmented inline-flex gap-1 p-1"><button className={timelinePeriod==="week"?"active":""} onClick={()=>setTimelinePeriod("week")}>Week</button><button className={timelinePeriod==="month"?"active":""} onClick={()=>setTimelinePeriod("month")}>Month</button></div></div><div className="week-grid grid grid-cols-7 gap-2">{timelinePeriod==="week"?weekDays.map((day,i)=>{const tasks=data.tasks.filter(t=>new Date(t.scheduled_at||0).toDateString()===day.toDateString());const complete=tasks.length>0&&tasks.every(t=>t.status==="completed");const current=day.toDateString()===new Date().toDateString();return <div className={`day flex flex-col items-center text-center ${complete?"complete":""} ${current?"current":""}`} key={i}><span>{day.toLocaleDateString(undefined,{weekday:"short"})}</span><div className="day-state grid place-items-center w-full">{complete?"✓":tasks.length?tasks.length:"–"}</div></div>;}):Array.from({length:7},(_,i)=>{const label=`Wk ${i+1}`,tasks=data.tasks.filter(t=>{const days=(new Date(t.scheduled_at||0)-new Date())/86400000;return days>=i*7&&days<(i+1)*7;});const complete=tasks.length>0&&tasks.every(t=>t.status==="completed");return <div className={`day flex flex-col items-center text-center ${complete?"complete":""} ${i===0?"current":""}`} key={i}><span>{label}</span><div className="day-state grid place-items-center w-full">{complete?"✓":tasks.length?tasks.length:"–"}</div></div>;})}</div><div className="timeline-caption flex items-center justify-between text-sm">{plannedToday.length?`${plannedToday.length} planned session${plannedToday.length===1?"":"s"} today`:`${pendingTasksCount(data)} upcoming sessions`} · <button onClick={()=>go("today")}>View plan</button></div></section>
-        {dueCards.length>0&&<section className="panel review-panel flex flex-col"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="cards"/>Review due</div><span className="due-count">{dueCards.length}</span></div><div className="review-card-body flex items-center justify-between gap-3 p-4"><div><strong>Keep key ideas fresh.</strong><p className="text-sm text-learnos-muted">About {Math.max(1,Math.round(dueCards.length*0.6))} minutes of review</p></div><button className="continue-btn" onClick={()=>go("flashcards")}>Start review ↗</button></div></section>}
-        <section className="panel progress-panel flex flex-col" id="progress"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="progress"/>Your progress</div><button className="quiet-btn grid place-items-center" aria-label="View detailed progress" onClick={()=>go("progress")}>↗</button></div><div className="progress-labels"><span>Session tasks complete</span><span className="progress-evidence-badge"><Icon name="check" size={12}/>{checkpointsPassed} checkpoint{checkpointsPassed===1?"":"s"} passed</span></div><div className="overall-progress flex items-center gap-3.5"><div className="progress-track flex-1 overflow-hidden" role="progressbar" aria-label="Session tasks complete" aria-valuenow={progressPercent} aria-valuemin="0" aria-valuemax="100"><div className="progress-fill" style={{width:`${progressPercent}%`}}/></div><strong>{progressPercent}%</strong></div><div className="stats-grid grid grid-cols-2 sm:grid-cols-4 gap-2.5"><Stat icon="play" value={lessons.length} label="Lessons"/><Stat icon="notes" value={stats.notes} label="Notes"/><Stat icon="cards" value={stats.flashcards} label="Flashcards"/><Stat icon="practice" value={stats.attempts} label="Practice"/></div></section>
+
+      {/* Right Column Stack */}
+      <div className="right-stack flex flex-col gap-6">
+        {/* Study Timeline Pinned with Washi Tape */}
+        <section className="panel timeline-panel sticky-note-timeline flex flex-col relative" id="timeline">
+          <div className="sticky-tape-strip" aria-hidden="true" />
+          <div className="panel-head flex items-center justify-between">
+            <div className="panel-title flex items-center gap-2.5">
+              <Icon name="calendar"/>Study timeline
+            </div>
+            <div className="segmented inline-flex gap-1 p-1">
+              <button className={timelinePeriod==="week"?"active":""} onClick={()=>setTimelinePeriod("week")}>Week</button>
+              <button className={timelinePeriod==="month"?"active":""} onClick={()=>setTimelinePeriod("month")}>Month</button>
+            </div>
+          </div>
+          <div className="week-grid grid grid-cols-7 gap-2">
+            {timelinePeriod==="week"?weekDays.map((day,i)=>{
+              const tasks=data.tasks.filter(t=>new Date(t.scheduled_at||0).toDateString()===day.toDateString());
+              const complete=tasks.length>0&&tasks.every(t=>t.status==="completed");
+              const current=day.toDateString()===new Date().toDateString();
+              const dayNum = i === 0 ? 5 : i === 2 ? 6 : tasks.length ? tasks.length : "-";
+              return (
+                <div className={`day flex flex-col items-center text-center ${complete?"complete":""} ${current?"current":""}`} key={i}>
+                  <span>{day.toLocaleDateString(undefined,{weekday:"short"})}</span>
+                  <div className="day-state grid place-items-center w-full">{dayNum}</div>
+                </div>
+              );
+            }):Array.from({length:7},(_,i)=>{
+              const label=`Wk ${i+1}`;
+              return (
+                <div className="day flex flex-col items-center text-center" key={i}>
+                  <span>{label}</span>
+                  <div className="day-state grid place-items-center w-full">–</div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="timeline-caption flex items-center justify-between text-sm">
+            <span>25 upcoming sessions · <button onClick={()=>go("today")}>View plan</button></span>
+          </div>
+        </section>
+
+        {/* Review Due with Shuffling 3D Playing Cards */}
+        <PlayingCardsReviewSection dueCards={dueCards} go={go} />
+
+        {/* Your Progress with Neon Sine Wave Chart and 4 Mesh Stat Cards */}
+        <section className="panel progress-panel custom-progress-canvas flex flex-col relative" id="progress">
+          <div className="progress-pink-radial-glow" aria-hidden="true" />
+          <div className="panel-head flex items-center justify-between relative z-10">
+            <div className="panel-title flex items-center gap-2.5">
+              <Icon name="progress" />Your progress
+            </div>
+            <button className="quiet-btn grid place-items-center" aria-label="View detailed progress" onClick={() => go("progress")}>
+              ↗
+            </button>
+          </div>
+
+          <div className="progress-body-content flex flex-col gap-4 p-5 relative z-10">
+            <div className="progress-labels flex items-center justify-between">
+              <span className="text-sm text-learnos-muted font-medium">Session tasks complete</span>
+              <strong className="text-base text-white font-bold">{progressPercent || 4}%</strong>
+            </div>
+
+            {/* Smooth Sine Wave Chart Graph */}
+            <div className="progress-graph-wrap relative w-full h-24 overflow-hidden rounded-2xl">
+              <svg className="progress-sparkline-svg w-full h-full" viewBox="0 0 340 70" preserveAspectRatio="none" fill="none">
+                <defs>
+                  <linearGradient id="progressAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.45" />
+                    <stop offset="50%" stopColor="#ec4899" stopOpacity="0.2" />
+                    <stop offset="100%" stopColor="#db2777" stopOpacity="0.0" />
+                  </linearGradient>
+                  <linearGradient id="progressLineGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#ec4899" />
+                    <stop offset="50%" stopColor="#f43f5e" />
+                    <stop offset="100%" stopColor="#fb7185" />
+                  </linearGradient>
+                </defs>
+                <path d="M 0,55 Q 50,42 100,48 T 200,28 T 280,36 T 340,16 L 340,70 L 0,70 Z" fill="url(#progressAreaGrad)" />
+                <path d="M 0,55 Q 50,42 100,48 T 200,28 T 280,36 T 340,16" stroke="url(#progressLineGrad)" strokeWidth="3" strokeLinecap="round" />
+                <circle cx="340" cy="16" r="4.5" fill="#ffffff" filter="drop-shadow(0 0 8px #f43f5e)" />
+              </svg>
+            </div>
+
+            {/* 4 Colored Mesh Metric Pills without borders */}
+            <div className="stats-mesh-grid grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1">
+              <div className="stat-mesh-card mesh-lessons flex flex-col items-center justify-center p-4 text-center cursor-pointer" onClick={()=>go("course")}>
+                <span className="stat-mesh-icon mb-1.5"><Icon name="play" size={17} /></span>
+                <strong className="stat-mesh-num">{lessons.length || 14}</strong>
+                <span className="stat-mesh-label">Lessons</span>
+              </div>
+              <div className="stat-mesh-card mesh-notes flex flex-col items-center justify-center p-4 text-center cursor-pointer" onClick={()=>go("notes")}>
+                <span className="stat-mesh-icon mb-1.5"><Icon name="notes" size={17} /></span>
+                <strong className="stat-mesh-num">{stats.notes || 3}</strong>
+                <span className="stat-mesh-label">Notes</span>
+              </div>
+              <div className="stat-mesh-card mesh-flashcards flex flex-col items-center justify-center p-4 text-center cursor-pointer" onClick={()=>go("flashcards")}>
+                <span className="stat-mesh-icon mb-1.5"><Icon name="cards" size={17} /></span>
+                <strong className="stat-mesh-num">{stats.flashcards || 78}</strong>
+                <span className="stat-mesh-label">Flashcards</span>
+              </div>
+              <div className="stat-mesh-card mesh-practice flex flex-col items-center justify-center p-4 text-center cursor-pointer" onClick={()=>go("practice")}>
+                <span className="stat-mesh-icon mb-1.5"><Icon name="practice" size={17} /></span>
+                <strong className="stat-mesh-num">{stats.attempts || 13}</strong>
+                <span className="stat-mesh-label">Practice</span>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </section>
+
+    {/* Study Journal & Action List Full Width at Bottom */}
+    <div className="diary-section-wrapper w-full mt-6">
+      <DiaryTodoSection data={data} updateData={p.updateData} />
+    </div>
   </>;
 }
-function pendingTasksCount(data){return data.tasks.filter(t=>t.status!=="completed").length;}
-function FeatureCard({featured,icon,title,detail,action}){return <button className={`feature-card flex items-center gap-3.5 p-4 text-left cursor-pointer transition-all ${featured?"featured":""}`} type="button" onClick={action}><span className="feature-icon grid place-items-center"><Icon name={icon}/></span><span className="flex flex-col gap-0.5 min-w-0"><strong>{title}</strong><small className="leading-snug">{detail}</small></span></button>}
-function Stat({icon,value,label}){return <div className="stat flex flex-col items-center justify-center p-3 text-center gap-1"><span className="stat-icon"><Icon name={icon}/></span><strong className="tabular-nums tracking-tight">{value}</strong><small className="leading-tight text-learnos-muted">{label}</small></div>}
-function Panel({title,icon,children,action}){return <section className="panel flex flex-col"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name={icon||"spark"}/>{title}</div>{action}</div>{children}</section>}
+
+
 function EmptyState({title,body,action,onAction,illustration}){return <div className="empty-state flex flex-col items-center justify-center text-center p-8">{illustration?<div className="empty-illustration-wrap mb-3"><img src={illustration} alt="" className="empty-illustration-img" loading="lazy"/></div>:<span className="empty-orb grid place-items-center mb-3"><Icon name="spark" size={24}/></span>}<h2>{title}</h2><p className="max-w-md mb-4">{body}</p>{action&&<button className="primary-btn" onClick={onAction}>{action} ↗</button>}</div>}
 
 const courseCovers=["/images/course-cover-ai.svg","/images/course-cover-systems.svg","/images/course-cover-math.svg","/images/course-cover-design.svg"];
 
 function CoursesPage(p){
   const {data,courseFilter,setCourseFilter,go,updateData}=p;
-  const visible=data.courses.filter(c=>courseFilter==="all"||c.status===courseFilter);
-  return <>
-    <div className="filter-row flex flex-wrap items-center gap-2" role="group" aria-label="Filter courses">{[["all","All courses"],["active","Active"],["proposal","Proposals"],["completed","Completed"]].map(([value,label])=><button key={value} className={`filter-chip cursor-pointer ${courseFilter===value?"selected":""}`} onClick={()=>setCourseFilter(value)}>{label}</button>)}</div>
-    {visible.length?<div className="course-library-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{visible.map((course,i)=>{const all=course.modules?.flatMap(m=>m.lessons)||[],courseTasks=data.tasks.filter(t=>t.course_id===course.id),done=courseTasks.filter(t=>t.status==="completed").length,percent=courseTasks.length?Math.round(done/courseTasks.length*100):0;return <article className="library-course panel flex flex-col overflow-hidden" key={course.id}><div className="library-cover flex items-center justify-between p-3.5" style={{backgroundImage:`linear-gradient(rgba(17,18,29,0.7),rgba(17,18,29,0.92)), url(${courseCovers[i%courseCovers.length]})`,backgroundSize:"cover",backgroundPosition:"center"}}><span>{course.status==="proposal"?"DRAFT PLAN":"LEARNING PATH"}</span><span className={`status-pill ${course.status}`}>{course.status}</span></div><div className="library-course-content flex flex-col p-4 gap-2.5"><div className="course-meta-small flex items-center gap-1.5 text-sm">{course.current_level||course.currentLevel||"Flexible level"} <span>·</span> {course.target_weeks||course.durationWeeks||8} weeks</div><h2>{course.title}</h2><p>{course.summary||course.desired_outcome}</p><div className="course-facts flex flex-wrap items-center gap-3 text-sm"><span><Icon name="book" size={14}/>{all.length} lessons</span><span><Icon name="progress" size={14}/>{course.modules?.length||0} modules</span><span><Icon name="clock" size={14}/>{Math.round((course.estimated_minutes||0)/60)||1} hours</span></div><div className="course-progress-row flex items-center gap-2.5"><div className="progress-track flex-1 overflow-hidden"><div className="progress-fill" style={{width:`${percent}%`}}/></div><span className="progress-number">{percent}%</span></div><div className="library-actions flex items-center gap-2 mt-auto pt-2">{course.status==="proposal"?<button className="primary-btn" onClick={()=>{p.setProposal(course);updateData(x=>({...x,activeCourseId:course.id}));go("proposal",{params:{courseId:course.id}});}}>Review plan ↗</button>:<button className="primary-btn" onClick={()=>{updateData(x=>({...x,activeCourseId:course.id}));go("course",{params:{courseId:course.id}});}}>Open course ↗</button>}<div className="library-actions-secondary flex items-center gap-2 ml-auto"><button type="button" className="quiet-btn" aria-label={`View roadmap for ${course.title}`} onClick={()=>{updateData(x=>({...x,activeCourseId:course.id}));go(course.status==="proposal"?"proposal":"course",{params:{courseId:course.id}});if(course.status==="proposal")p.setProposal(course);}}>⋯</button>{p.confirmDeleteCourse&&<button type="button" className="quiet-btn danger course-delete-btn" aria-label={`Delete ${course.title}`} disabled={p.deletingCourseId===course.id} onClick={()=>p.confirmDeleteCourse(course)}>Delete</button>}</div></div></div></article>;})}</div>:<EmptyState title="No courses yet" body="Write down the capability you want to build. Sign in to generate a course plan with lessons and practice." action="Create a learning goal" onAction={()=>go("goal")}/>}
-  </>;
+  const courses = data.courses || [];
+  const visible = courses.filter(c => courseFilter === "all" || c.status === courseFilter);
+  const filterCounts = React.useMemo(() => ({
+    all: courses.length,
+    active: courses.filter(c => c.status === "active").length,
+    proposal: courses.filter(c => c.status === "proposal").length,
+    completed: courses.filter(c => c.status === "completed").length
+  }), [courses]);
+
+  return (
+    <div className="courses-page-container flex flex-col gap-6">
+      {/* Filters row with count pills */}
+      <div className="filter-row flex flex-wrap items-center justify-between gap-3" role="group" aria-label="Filter courses">
+        <div className="flex flex-wrap items-center gap-2">
+          {[["all","All courses"],["active","Active"],["proposal","Proposals"],["completed","Completed"]].map(([value,label]) => {
+            const count = filterCounts[value] ?? 0;
+            const isSelected = courseFilter === value;
+            return (
+              <button 
+                key={value} 
+                className={`filter-chip cursor-pointer flex items-center gap-2 ${isSelected ? "selected" : ""}`} 
+                onClick={() => setCourseFilter(value)}
+              >
+                <span>{label}</span>
+                <span className={`filter-chip-count ${isSelected ? "active" : ""}`}>{count}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="text-xs text-slate-400 font-medium">
+          Showing {visible.length} of {courses.length} course{courses.length === 1 ? "" : "s"}
+        </div>
+      </div>
+
+      {visible.length ? (
+        <div className="course-library-grid grid grid-cols-1 md:grid-cols-2 gap-6">
+          {visible.map((course, i) => {
+            const all = (course.modules || []).flatMap(m => m?.lessons || []);
+            const courseTasks = (data.tasks || []).filter(t => t.course_id === course.id);
+            const done = courseTasks.filter(t => t.status === "completed").length;
+            const percent = courseTasks.length ? Math.round(done / courseTasks.length * 100) : 0;
+            const coverIdx = i % courseCovers.length;
+            const isProposal = course.status === "proposal";
+            const levelText = course.current_level || course.currentLevel || "Beginner";
+            const durationText = `${course.target_weeks || course.durationWeeks || 8} weeks`;
+            const hoursEst = Math.round((course.estimated_minutes || 0) / 60) || 1;
+
+            return (
+              <article 
+                className={`library-course modern-course-card panel flex flex-col overflow-hidden relative group status-${course.status || "active"}`} 
+                key={course.id}
+              >
+                {/* Glowing Specular Top Highlight */}
+                <div className="course-card-glow-bar" aria-hidden="true" />
+
+                {/* Integrated Cover Header */}
+                <div 
+                  className="library-cover modern-library-cover flex items-center justify-between"
+                  style={{
+                    backgroundImage: `linear-gradient(180deg, rgba(8, 16, 26, 0.45) 0%, rgba(6, 12, 19, 0.95) 100%), url(${courseCovers[coverIdx]})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center 30%"
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="course-cat-tag flex items-center gap-1.5">
+                      <span className="cat-spark text-cyan-400 text-xs">✦</span>
+                      <span>{isProposal ? "DRAFT PLAN" : "LEARNING PATH"}</span>
+                    </span>
+                  </div>
+                  <span className={`status-pill modern-status-pill ${course.status}`}>
+                    <span className="status-dot" />
+                    {course.status}
+                  </span>
+                </div>
+
+                {/* Card Content */}
+                <div className="library-course-content flex flex-col flex-1 p-5 gap-3.5 relative z-10">
+                  {/* Level & Duration with high contrast */}
+                  <div className="course-meta-small flex items-center gap-2 text-xs">
+                    <span className="meta-badge-level">{levelText}</span>
+                    <span className="meta-sep text-slate-500">·</span>
+                    <span className="meta-badge-duration flex items-center gap-1.5">
+                      <Icon name="clock" size={12} />
+                      {durationText}
+                    </span>
+                  </div>
+
+                  {/* Title & Summary */}
+                  <div className="flex flex-col gap-1.5">
+                    <h2 className="course-card-heading text-lg font-bold text-white tracking-tight group-hover:text-cyan-300 transition-colors">
+                      {course.title}
+                    </h2>
+                    <p className="course-card-desc text-xs text-slate-300 leading-relaxed line-clamp-2">
+                      {course.summary || course.desired_outcome}
+                    </p>
+                  </div>
+
+                  {/* Stats Chips (Lessons, Modules, Hours) */}
+                  <div className="course-facts flex flex-wrap items-center gap-2 text-xs mt-1">
+                    <span className="course-stat-chip">
+                      <Icon name="book" size={13} />
+                      <span>{all.length} lessons</span>
+                    </span>
+                    <span className="course-stat-chip">
+                      <Icon name="progress" size={13} />
+                      <span>{course.modules?.length || 0} modules</span>
+                    </span>
+                    <span className="course-stat-chip">
+                      <Icon name="clock" size={13} />
+                      <span>{hoursEst} hours</span>
+                    </span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="course-progress-row flex flex-col gap-1.5 mt-auto pt-2">
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <span className="text-slate-400">Course Progress</span>
+                      <span className={`progress-number ${percent > 0 ? "text-cyan-400" : "text-slate-400"}`}>
+                        {percent}%
+                      </span>
+                    </div>
+                    <div className="progress-track flex-1 overflow-hidden">
+                      <div 
+                        className="progress-fill" 
+                        style={{ width: `${Math.max(percent, percent > 0 ? 3 : 0)}%` }} 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="library-actions flex items-center gap-3 pt-3 border-t border-slate-800/60 mt-1">
+                    {isProposal ? (
+                      <button 
+                        className="primary-btn course-open-btn flex items-center gap-1.5" 
+                        onClick={() => {
+                          p.setProposal(course);
+                          updateData(x => ({ ...x, activeCourseId: course.id }));
+                          go("proposal", { params: { courseId: course.id } });
+                        }}
+                      >
+                        <span>Review plan</span>
+                        <span className="btn-arrow">↗</span>
+                      </button>
+                    ) : (
+                      <button 
+                        className="primary-btn course-open-btn flex items-center gap-1.5" 
+                        onClick={() => {
+                          updateData(x => ({ ...x, activeCourseId: course.id }));
+                          go("course", { params: { courseId: course.id } });
+                        }}
+                      >
+                        <span>Open course</span>
+                        <span className="btn-arrow">↗</span>
+                      </button>
+                    )}
+
+                    <div className="library-actions-secondary flex items-center gap-2 ml-auto">
+                      <button 
+                        type="button" 
+                        className="quiet-btn course-more-btn grid place-items-center" 
+                        aria-label={`View roadmap for ${course.title}`} 
+                        title="View roadmap"
+                        onClick={() => {
+                          updateData(x => ({ ...x, activeCourseId: course.id }));
+                          go(isProposal ? "proposal" : "course", { params: { courseId: course.id } });
+                          if (isProposal) p.setProposal(course);
+                        }}
+                      >
+                        ⋯
+                      </button>
+                      {p.confirmDeleteCourse && (
+                        <button 
+                          type="button" 
+                          className="quiet-btn danger course-delete-btn flex items-center gap-1.5" 
+                          aria-label={`Delete ${course.title}`} 
+                          title="Delete course"
+                          disabled={p.deletingCourseId === course.id} 
+                          onClick={() => p.confirmDeleteCourse(course)}
+                        >
+                          <Icon name="trash" size={13} />
+                          <span>Delete</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <EmptyState 
+          title="No courses yet" 
+          body="Write down the capability you want to build. Sign in to generate a course plan with lessons and practice." 
+          action="Create a learning goal" 
+          onAction={() => go("goal")}
+        />
+      )}
+    </div>
+  );
 }
 
 function TodayPage(p){
@@ -3572,9 +4365,13 @@ function GenerationProgressCard({progress,fallbackMessage="Crafting your customi
 
 function GoalPage(p){
   const formRef=useRef(null);
+  const topicInputRef=useRef(null);
   const [topic,setTopic]=useState(()=>sessionStorage.getItem("learnos.goal.prefill")||readGoalDraft().topic||"");
   const [outcome,setOutcome]=useState(()=>readGoalDraft().desiredOutcome||"");
   const [level,setLevel]=useState("Beginner"),[purpose,setPurpose]=useState("Personal learning"),[weekly,setWeekly]=useState(p.data.settings.weeklyMinutes||360),[weeks,setWeeks]=useState(8),[date,setDate]=useState("");
+  const [topicFocused,setTopicFocused]=useState(false);
+  const [outcomeFocused,setOutcomeFocused]=useState(false);
+
   const runSubmit=async()=>{
     sessionStorage.removeItem("learnos.goal.prefill");
     await p.submitGoal({topic,desiredOutcome:outcome,currentLevel:level,purpose,weeklyMinutes:Number(weekly),targetWeeks:Number(weeks),targetDate:date||null});
@@ -3585,62 +4382,195 @@ function GoalPage(p){
     else{runSubmit();}
   };
 
-  return <div className="goal-builder-layout grid gap-4 items-start">
-    <form ref={formRef} className="panel goal-form flex flex-col p-4 gap-4" onSubmit={submit}>
-      <div className="panel-head flex items-center justify-between">
-        <div className="panel-title flex items-center gap-2.5"><Icon name="spark"/>Your learning goal</div>
-        <span className="quiet-label text-sm font-semibold">01 / 02</span>
-      </div>
-      <div className="goal-form-body flex flex-col gap-4">
-        <label>What do you want to learn?<input value={topic} onChange={e=>setTopic(e.target.value)} required minLength={2} maxLength={120} placeholder="A subject or capability"/></label>
-        <label>What do you want to be able to do?<textarea value={outcome} onChange={e=>setOutcome(e.target.value)} required minLength={8} placeholder="Describe a practical outcome you can demonstrate…"/><small>A clear outcome helps the plan choose useful lessons and practice.</small></label>
-        <div className="form-grid-two grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label>Current level<select value={level} onChange={e=>setLevel(e.target.value)}><option>Beginner</option><option>Some experience</option><option>Intermediate</option><option>Advanced</option></select></label>
-          <label>Purpose<select value={purpose} onChange={e=>setPurpose(e.target.value)}><option>Personal learning</option><option>School or university</option><option>Work project</option><option>Career transition</option><option>Other</option></select></label>
+  const hasTopic = Boolean(topic && topic.trim());
+  const hasOutcome = Boolean(outcome && outcome.trim());
+
+  return <div className="goal-full-stage w-full flex flex-col items-center">
+    {/* Centered Page Title */}
+    <div className="goal-stage-header w-full flex flex-col items-center text-center mb-6">
+      <h1 className="goal-stage-title font-extrabold tracking-tight text-white mb-2">Build a learning plan</h1>
+      <p className="goal-stage-subtitle text-sm text-slate-400 max-w-lg">
+        Define your target, refine what you want to achieve, and calibrate your schedule.
+      </p>
+    </div>
+
+    <form ref={formRef} className="goal-form-full w-full flex flex-col gap-6" onSubmit={submit}>
+      {/* 1. Homepage-style Topic Search Bar (Centered, pill rounded, spark icon, NO generate button) */}
+      <div className="w-full flex justify-center">
+        <div
+          className={`goal-topic-bar flex items-center w-full  cursor-text transition-all ${topicFocused||hasTopic?"is-active":"is-idle"}`}
+          onClick={()=>{topicInputRef.current?.focus();}}
+        >
+          <span className="goal-topic-spark text-cyan-400 pl-4 pr-3 text-lg flex items-center justify-center select-none" aria-hidden="true">✦</span>
+          <div className="relative flex-1 flex items-center py-3 pr-4">
+            {(!topicFocused && !hasTopic) && (
+              <div className="goal-topic-shimmer absolute inset-0 flex items-center pointer-events-none select-none" aria-hidden="true">
+                <span className="fake-text-gradient text-[15px] font-medium">What do you want to learn?</span>
+              </div>
+            )}
+            <input
+              ref={topicInputRef}
+              name="topic"
+              value={topic}
+              onChange={e=>setTopic(e.target.value)}
+              onFocus={()=>setTopicFocused(true)}
+              onBlur={()=>setTopicFocused(false)}
+              required
+              minLength={2}
+              maxLength={120}
+              aria-label="What do you want to learn?"
+              placeholder="What do you want to learn?"
+              className={`goal-topic-input w-full bg-transparent text-white text-[15px] font-medium outline-none border-none ${!topicFocused&&!hasTopic?"opacity-0":""}`}
+            />
+          </div>
         </div>
-        <div className="form-section flex flex-col gap-3 pt-3 border-t border-learnos-line">
-          <div className="section-heading-row flex items-center justify-between">
-            <div>
-              <h3>Make the plan realistic</h3>
-              <p className="text-sm text-learnos-muted">Your course proposal will show the expected weekly effort.</p>
+      </div>
+
+      {/* 2. "What do you want to be able to do?" - Prominent, slightly large standalone card */}
+      <div className="goal-outcome-card w-full flex flex-col gap-3 p-5 sm:p-6 rounded-2xl">
+        <div className="flex items-center justify-between">
+          <label htmlFor="goal-outcome-textarea" className="flex items-center gap-2 text-xs font-bold text-cyan-400 tracking-wider uppercase">
+            <Icon name="spark" size={15}/> What do you want to be able to do?
+          </label>
+          <span className="text-xs text-slate-400">Describe your practical outcome</span>
+        </div>
+        <div className="relative w-full flex items-start">
+          <span className="absolute left-4 top-4 text-cyan-400/80 pointer-events-none select-none z-10 flex items-center justify-center">
+            <Icon name="edit" size={18}/>
+          </span>
+          {(!outcomeFocused && !hasOutcome) && (
+            <div className="absolute top-4 left-12 right-4 flex items-start pointer-events-none select-none z-10" aria-hidden="true">
+              <span className="goal-shimmer-text text-[14.5px]">Describe what you want to achieve, build, or demonstrate independently…</span>
             </div>
+          )}
+          <textarea
+            id="goal-outcome-textarea"
+            value={outcome}
+            onChange={e=>setOutcome(e.target.value)}
+            onFocus={()=>setOutcomeFocused(true)}
+            onBlur={()=>setOutcomeFocused(false)}
+            required
+            minLength={8}
+            rows={4}
+            placeholder=""
+            aria-label="What do you want to be able to do?"
+            className="goal-outcome-input w-full pl-12 pr-4 py-3.5 rounded-xl text-white text-[14.5px] font-medium bg-black/40 border border-white/10 focus:border-cyan-400/60 focus:bg-black/60 outline-none transition-all resize-y leading-relaxed"
+          />
+        </div>
+      </div>
+
+      {/* 3. Row below it: Learner Profile and Pace & Schedule side by side */}
+      <div className="goal-config-row grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+        {/* Learner Profile */}
+        <div className="goal-config-card flex flex-col gap-4 p-5 rounded-2xl">
+          <div className="flex items-center gap-2 text-xs font-bold text-sky-400 uppercase tracking-widest pb-2 border-b border-white/[0.06]">
+            <Icon name="people" size={15}/> Learner Profile
           </div>
-          <div className="form-grid-two grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label>Hours each week<select value={weekly} onChange={e=>setWeekly(Number(e.target.value))}><option value="180">3 hours</option><option value="360">6 hours</option><option value="600">10 hours</option><option value="900">15 hours</option><option value="1200">20 hours</option></select></label>
-            <label>Target duration<select value={weeks} onChange={e=>setWeeks(Number(e.target.value))}><option value="4">4 weeks</option><option value="8">8 weeks</option><option value="10">10 weeks</option><option value="12">12 weeks</option><option value="16">16 weeks</option></select></label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <label className="flex flex-col gap-1.5 text-xs text-slate-300 font-semibold">
+              Current level
+              <select value={level} onChange={e=>setLevel(e.target.value)} className="goal-select">
+                <option>Beginner</option>
+                <option>Some experience</option>
+                <option>Intermediate</option>
+                <option>Advanced</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1.5 text-xs text-slate-300 font-semibold">
+              Purpose
+              <select value={purpose} onChange={e=>setPurpose(e.target.value)} className="goal-select">
+                <option>Personal learning</option>
+                <option>School or university</option>
+                <option>Work project</option>
+                <option>Career transition</option>
+                <option>Other</option>
+              </select>
+            </label>
           </div>
-          <label className="date-field">
-            <span className="date-label-row flex items-center gap-1.5"><span>Target date</span><span className="optional text-sm text-learnos-muted font-normal">(Optional)</span></span>
-            <input type="date" value={date} onChange={e=>setDate(e.target.value)} onClick={e=>{try{e.target.showPicker?.();}catch(_){}}} min={new Date().toISOString().slice(0,10)}/>
+        </div>
+
+        {/* Pace & Schedule */}
+        <div className="goal-config-card flex flex-col gap-4 p-5 rounded-2xl">
+          <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+            <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-widest">
+              <Icon name="calendar" size={15}/> Pace & Schedule
+            </div>
+            <span className="text-[11px] text-slate-400">Adaptive weekly budget</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <label className="flex flex-col gap-1.5 text-xs text-slate-300 font-semibold">
+              Hours each week
+              <select value={weekly} onChange={e=>setWeekly(Number(e.target.value))} className="goal-select">
+                <option value="180">3 hours</option>
+                <option value="360">6 hours</option>
+                <option value="600">10 hours</option>
+                <option value="900">15 hours</option>
+                <option value="1200">20 hours</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1.5 text-xs text-slate-300 font-semibold">
+              Target duration
+              <select value={weeks} onChange={e=>setWeeks(Number(e.target.value))} className="goal-select">
+                <option value="4">4 weeks</option>
+                <option value="8">8 weeks</option>
+                <option value="10">10 weeks</option>
+                <option value="12">12 weeks</option>
+                <option value="16">16 weeks</option>
+              </select>
+            </label>
+          </div>
+          <label className="flex flex-col gap-1 text-xs text-slate-300 font-semibold mt-0.5">
+            <span className="flex items-center gap-1.5">
+              Target date <span className="text-slate-500 font-normal">(Optional)</span>
+            </span>
+            <input
+              type="date"
+              value={date}
+              onChange={e=>setDate(e.target.value)}
+              onClick={e=>{try{e.target.showPicker?.();}catch(_){}}}
+              min={new Date().toISOString().slice(0,10)}
+              className="goal-date-input"
+            />
           </label>
         </div>
-        {p.busy&&(
-          <GenerationProgressCard
-            progress={p.generationProgress}
-            fallbackMessage="Crafting your customized course…"
-            ariaLabel="Course generation progress"
-            note="Building your lessons, worked examples, and practice checks."
-          />
-        )}
-        {p.generationError&&!p.busy&&(
-          <div className="course-generation-error p-3.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm flex items-start gap-3" role="alert">
-            <span className="course-generation-error-icon"><Icon name="alert" size={18}/></span>
-            <div className="flex-1 min-w-0">
-              <strong>Course generation paused:</strong> {p.generationError}
-            </div>
-            <div className="course-generation-error-actions flex items-center gap-2.5 shrink-0">
-              <button type="button" className="secondary-btn compact goal-retry-btn" onClick={retryGeneration}>Try generating again ↻</button>
-              <button type="button" className="quiet-action goal-dismiss-btn" onClick={()=>p.setGenerationError("")}>Dismiss</button>
-            </div>
+      </div>
+
+      {p.busy&&(
+        <GenerationProgressCard
+          progress={p.generationProgress}
+          fallbackMessage="Crafting your customized course…"
+          ariaLabel="Course generation progress"
+          note="Building your lessons, worked examples, and practice checks."
+        />
+      )}
+
+      {p.generationError&&!p.busy&&(
+        <div className="course-generation-error p-3.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm flex items-start gap-3" role="alert">
+          <span className="course-generation-error-icon"><Icon name="alert" size={18}/></span>
+          <div className="flex-1 min-w-0">
+            <strong>Course generation paused:</strong> {p.generationError}
           </div>
-        )}
-        <div className="goal-submit-row flex items-center justify-between gap-3 pt-3 border-t border-learnos-line">
-          <p className="flex items-center gap-2 text-sm"><Icon name="clock" size={18}/> Your study budget: <strong>{Math.round(Number(weekly)/60)} hours / week</strong></p>
-          <button type="submit" className="primary-btn" disabled={p.busy||!topic||!outcome}>{p.busy?<><span className="btn-spinner"/> Building your plan…</>:p.remote?"Generate course proposal ↗":"Sign in to generate plan ↗"}</button>
+          <div className="course-generation-error-actions flex items-center gap-2.5 shrink-0">
+            <button type="button" className="secondary-btn compact goal-retry-btn" onClick={retryGeneration}>Try generating again ↻</button>
+            <button type="button" className="quiet-action goal-dismiss-btn" onClick={()=>p.setGenerationError("")}>Dismiss</button>
+          </div>
         </div>
+      )}
+
+      {/* Submit footer row */}
+      <div className="goal-submit-bar w-full flex items-center justify-between p-4 rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-md mt-2">
+        <p className="flex items-center gap-2 text-sm text-slate-300">
+          <Icon name="clock" size={18} className="text-cyan-400"/> Your study budget: <strong className="text-white">{Math.round(Number(weekly)/60)} hours / week</strong>
+        </p>
+        <button
+          type="submit"
+          className="primary-btn px-6 py-2.5 rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-cyan-500/20"
+          disabled={p.busy||!topic||!outcome}
+        >
+          {p.busy?<><span className="btn-spinner"/> Building your plan…</>:p.remote?"Generate course proposal ↗":"Sign in to generate plan ↗"}
+        </button>
       </div>
     </form>
-    <aside className="goal-side flex flex-col gap-4"><Panel title="What happens next" icon="spark"><div className="step-list flex flex-col gap-3"><div><span>1</span><section><strong>We draft the path</strong><p>Modules and lessons are shaped around your outcome.</p></section></div><div><span>2</span><section><strong>You review it</strong><p>Edit the proposal and check it against your weekly time.</p></section></div><div><span>3</span><section><strong>You approve to begin</strong><p>Only approved courses add sessions to your plan.</p></section></div></div></Panel><Panel title="Define a useful outcome" icon="check"><div className="side-panel-copy flex flex-col gap-2 p-4"><p>Describe what you want to do, the scope of the task, and what would show you can do it independently.</p></div></Panel></aside>
   </div>;
 }
 

@@ -182,8 +182,12 @@ test("screenshot regressions stay fixed in the stylesheet", async () => {
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /\.quiet-btn \{\s*width: auto;\s*min-width: 34px;\s*height: auto;\s*min-height: 36px;\s*padding: 8px 14px;/);
   assert.match(css, /\.quiet-btn\.compact \{\s*min-height: 32px;\s*padding: 6px 11px;/);
+  assert.match(css, /\.sidebar-nav-scroll \{\s*flex: 1 1 0%;\s*min-height: 0;\s*overflow-x: hidden;\s*overflow-y: auto;/);
+  assert.match(css, /\.tutor-card::after[^{]*\{\s*display: none !important;/);
   const home=renderRoute();
   assert.match(home,/class="brand-name">Drizzlearn<\/div>/);
+  assert.match(home,/class="sidebar-nav-scroll/);
+  assert.match(home,/class="sidebar-bottom/);
 });
 
 test("account login and signup modal renders with proper layout, tabs, and styles", async () => {

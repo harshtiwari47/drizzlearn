@@ -3,10 +3,10 @@ import { createPortal } from "react-dom";
 import { TutorMarkdown } from "./tutor-markdown.jsx";
 
 const CARD_TYPES = [
-  { id: "qa", label: "Concept Q&A", icon: "💡", desc: "Atomic question & crisp factual explanation" },
-  { id: "formula", label: "Formula / Math", icon: "📐", desc: "Mathematical derivation, theorem, or equation" },
-  { id: "application", label: "Applied Scenario", icon: "⚡", desc: "Real-world trade-off, edge case, or debugging scenario" },
-  { id: "cloze", label: "Recall Cloze", icon: "🧩", desc: "Fill-in-the-blank or missing key phrase" },
+  { id: "qa", label: "Concept Q&A", icon: "💡", desc: "Core facts" },
+  { id: "formula", label: "Formula / Math", icon: "📐", desc: "Equations & proofs" },
+  { id: "application", label: "Applied Scenario", icon: "⚡", desc: "Edge cases & trades" },
+  { id: "cloze", label: "Recall Cloze", icon: "🧩", desc: "Fill in blanks" },
 ];
 
 const DECK_PAGE_SIZE = 40;
@@ -116,6 +116,31 @@ export function FcIcon({ name, size = 15, className = "" }) {
         <line x1="5" y1="12" x2="19" y2="12" />
       </>
     ),
+    arrowLeft: (
+      <>
+        <line x1="19" y1="12" x2="5" y2="12" />
+        <polyline points="12 19 5 12 12 5" />
+      </>
+    ),
+    course: (
+      <>
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+        <path d="M6 12v5c3 3 9 3 12 0v-5" />
+      </>
+    ),
+    topic: (
+      <>
+        <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
+      </>
+    ),
+    lesson: (
+      <>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+      </>
+    ),
   };
   return (
     <svg
@@ -132,6 +157,30 @@ export function FcIcon({ name, size = 15, className = "" }) {
     >
       {p[name] || p.spark}
     </svg>
+  );
+}
+
+/**
+ * Unified Hierarchy Tag Component
+ * Displays a fixed icon and distinct border/color scheme across the entire site:
+ * - course: Violet + Academic cap icon
+ * - topic:  Sky/Cyan + Folder icon
+ * - lesson: Lime + Document/Lesson icon
+ */
+export function HierarchyTag({ type, title, className = "", onClick }) {
+  if (!title) return null;
+  const isButton = typeof onClick === "function";
+  const Comp = isButton ? "button" : "span";
+  return (
+    <Comp
+      type={isButton ? "button" : undefined}
+      className={`hierarchy-tag ${type} ${className}`}
+      onClick={onClick}
+      title={`${type.charAt(0).toUpperCase() + type.slice(1)}: ${title}`}
+    >
+      <FcIcon name={type} size={11} />
+      <span>{title}</span>
+    </Comp>
   );
 }
 
@@ -330,11 +379,14 @@ function ImageInserterModal({ open, onClose, onInsert }) {
 }
 
 /**
- * Full modal portal for creating, editing, previewing (Markdown/Math/Images),
- * AI-generating personal or course-linked flashcards, and managing large decks cleanly.
+ * FlashcardStudio: Core Flashcard workspace component for:
+ * - Standalone full-page workspace view (no modal, no backdrop)
+ * - Modal portal view when embedded in a dialog
  */
-export function FlashcardPortalModal({
-  open,
+export function FlashcardStudio({
+  standalone = false,
+  isModal = false,
+  hideTabs = standalone,
   initialMode = "manual",
   editingCard = null,
   currentCard = null,
@@ -347,6 +399,8 @@ export function FlashcardPortalModal({
   remote = false,
   request,
   onClose,
+  onBackToReview,
+  onTabChange,
   onSaveCard,
   onSaveGeneratedBatch,
   onDeleteCard,
@@ -362,13 +416,11 @@ export function FlashcardPortalModal({
   const [simulatorFlipped, setSimulatorFlipped] = useState(false);
   const [simulatorShowHint, setSimulatorShowHint] = useState(false);
 
-  // Synchronize tab and active card synchronously whenever the modal opens or initialMode changes
-  const prevOpenRef = useRef(open);
+  // Synchronize tab and active card synchronously whenever editingCard or initialMode changes
   const prevModeRef = useRef(initialMode);
   const prevEditingCardRef = useRef(editingCard);
 
-  if (open && (!prevOpenRef.current || prevModeRef.current !== initialMode || prevEditingCardRef.current !== editingCard)) {
-    prevOpenRef.current = true;
+  if (prevModeRef.current !== initialMode || prevEditingCardRef.current !== editingCard) {
     prevModeRef.current = initialMode;
     prevEditingCardRef.current = editingCard;
     const targetTab = editingCard?.id ? "manual" : (initialMode || "manual");
@@ -378,8 +430,6 @@ export function FlashcardPortalModal({
     if (activeEditingCard !== (editingCard || null)) {
       setActiveEditingCard(editingCard || null);
     }
-  } else if (!open && prevOpenRef.current) {
-    prevOpenRef.current = false;
   }
 
   // Manual / Edit fields
@@ -393,8 +443,8 @@ export function FlashcardPortalModal({
   const [formError, setFormError] = useState("");
 
   // Visual dialogs & palettes
-  const [imageModalTarget, setImageModalTarget] = useState(null); // 'front' | 'back' | null
-  const [showFormulaPalette, setShowFormulaPalette] = useState(null); // 'front' | 'back' | null
+  const [imageModalTarget, setImageModalTarget] = useState(null);
+  const [showFormulaPalette, setShowFormulaPalette] = useState(null);
 
   // AI generator fields
   const [aiScope, setAiScope] = useState("personal");
@@ -429,7 +479,6 @@ export function FlashcardPortalModal({
   const backRef = useRef(null);
 
   useEffect(() => {
-    if (!open) return;
     setFormError("");
     setAiError("");
     setPreviewMode(false);
@@ -472,21 +521,23 @@ export function FlashcardPortalModal({
       setDeckSort("due");
       setVisibleLimit(DECK_PAGE_SIZE);
     }
-  }, [open, editingCard, initialMode, initialCourseId, initialCourseFilter, allCourses, allLessons]);
+  }, [editingCard, initialMode, initialCourseId, initialCourseFilter, allCourses, allLessons]);
 
   useEffect(() => {
     setVisibleLimit(DECK_PAGE_SIZE);
   }, [deckSearch, deckCourseFilter, deckStatusFilter, deckOriginFilter, deckTypeFilter, deckSort]);
 
   useEffect(() => {
-    if (!open || typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
     const onKey = (e) => {
       if (e.key === "Escape" && !saving && !aiGenerating && !savingBatch) {
         if (imageModalTarget) {
           setImageModalTarget(null);
           return;
         }
-        onClose?.();
+        if (isModal) {
+          onClose?.();
+        }
       }
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && tab === "manual") {
         e.preventDefault();
@@ -495,7 +546,12 @@ export function FlashcardPortalModal({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, saving, aiGenerating, savingBatch, imageModalTarget, tab, front, back, onClose]);
+  }, [saving, aiGenerating, savingBatch, imageModalTarget, tab, front, back, isModal, onClose]);
+
+  function switchTab(newTab) {
+    setTab(newTab);
+    onTabChange?.(newTab);
+  }
 
   const allLessonsMap = useMemo(() => {
     const map = new Map();
@@ -587,8 +643,6 @@ export function FlashcardPortalModal({
   );
   const remainingDeckCards = Math.max(0, filteredDeckCards.length - pagedDeckCards.length);
 
-  if (!open) return null;
-
   function beginEditFromDeck(card) {
     setFormError("");
     setPreviewMode(false);
@@ -602,7 +656,7 @@ export function FlashcardPortalModal({
     const matchedLesson = card.lesson_id ? allLessonsMap.get(card.lesson_id) : null;
     setCourseId(card.course_id || matchedLesson?.courseId || "");
     setLessonId(card.lesson_id || "");
-    setTab("manual");
+    switchTab("manual");
   }
 
   async function handleSaveManual(e) {
@@ -624,10 +678,14 @@ export function FlashcardPortalModal({
         lessonId: lessonId || null,
         origin: activeEditingCard?.origin || "learner",
       });
+      flashToast?.(isEditing ? "Updated flashcard." : "Saved new flashcard to your deck.");
       if (openedEditFromDeck) {
         setActiveEditingCard(null);
         setOpenedEditFromDeck(false);
-        setTab("deck");
+        switchTab("deck");
+      } else if (standalone && onBackToReview) {
+        setActiveEditingCard(null);
+        onBackToReview();
       } else {
         onClose?.();
       }
@@ -644,6 +702,7 @@ export function FlashcardPortalModal({
     try {
       await onDeleteCard?.(id);
       setConfirmDeleteId(null);
+      flashToast?.("Deleted flashcard.");
     } finally {
       setDeletingId(null);
     }
@@ -656,8 +715,8 @@ export function FlashcardPortalModal({
       setAiError("Sign in to generate AI flashcards.");
       return;
     }
-    if (aiScope === "personal" && !aiTopic.trim() && !aiSourceText.trim() && !aiNoteId) {
-      setAiError("Enter a personal topic, paste notes, or choose a saved note.");
+    if (aiScope === "personal" && !aiTopic.trim() && !aiSourceText.trim()) {
+      setAiError("Enter a topic or paste reference material.");
       return;
     }
     if (aiScope === "course" && !aiCourseId && !aiLessonId) {
@@ -731,7 +790,11 @@ export function FlashcardPortalModal({
         }))
       );
       flashToast?.(`Added ${chosen.length} AI flashcard${chosen.length === 1 ? "" : "s"} to your deck.`);
-      onClose?.();
+      if (standalone && onBackToReview) {
+        onBackToReview();
+      } else {
+        onClose?.();
+      }
     } catch (err) {
       setAiError(err?.message || "Could not save generated flashcards.");
     } finally {
@@ -739,11 +802,1041 @@ export function FlashcardPortalModal({
     }
   }
 
+  const headerTitle = isEditing
+    ? "Update flashcard"
+    : standalone
+      ? tab === "ai"
+        ? "Generate flashcards with AI"
+        : tab === "deck"
+          ? "Manage flashcard deck"
+          : "Write flashcard"
+      : "Create or generate flashcards";
+
+  const headerIcon = isEditing
+    ? "edit"
+    : standalone
+      ? tab === "ai"
+        ? "spark"
+        : tab === "deck"
+          ? "cards"
+          : "edit"
+      : "cards";
+
+  const headerDescription = isEditing
+    ? ""
+    : tab === "ai"
+      ? ""
+      : tab === "deck"
+        ? ""
+        : "";
+
+  return (
+    <div className={`fc-studio-root ${standalone ? "fc-standalone-studio w-full" : "w-full"}`}>
+      {/* Studio Header */}
+      <div className={`${standalone ? "fc-standalone-header flex items-center justify-between gap-4 pb-4 border-b border-learnos-line" : "modal-head fc-portal-head flex items-center justify-between gap-3"}`}>
+        <div className="flex items-center gap-3">
+          <div className="fc-head-icon-box">
+            <FcIcon name={headerIcon} size={20} />
+          </div>
+          <div>
+            <h2 id="fc-portal-title" className="text-xl font-bold tracking-tight">
+              {headerTitle}
+            </h2>
+            {standalone && headerDescription && (
+              <p className="text-xs text-learnos-muted mt-0.5">
+                {headerDescription}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {standalone && onBackToReview && !hideTabs && (
+            <button
+              type="button"
+              className="secondary-btn compact flex items-center gap-1.5"
+              onClick={onBackToReview}
+              title="Return to Spaced Review"
+            >
+              <FcIcon name="play" size={13} />
+              <span>Back to Review</span>
+            </button>
+          )}
+          {isModal && (
+            <button
+              type="button"
+              className="modal-close grid place-items-center"
+              onClick={onClose}
+              disabled={saving || aiGenerating || savingBatch}
+              aria-label="Close flashcard portal"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className={`${standalone ? "fc-standalone-body flex flex-col gap-5 pt-4" : "modal-body fc-portal-body flex flex-col gap-4"}`}>
+        {!isEditing && !hideTabs && (
+          <div className="fc-portal-tabs fc-portal-tabs-3" role="tablist" aria-label="Flashcard studio tabs">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "manual"}
+              className={`fc-portal-tab ${tab === "manual" ? "active" : ""}`}
+              onClick={() => switchTab("manual")}
+            >
+              <FcIcon name="edit" size={14} />
+              <span>Write manually</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "ai"}
+              className={`fc-portal-tab ${tab === "ai" ? "active" : ""}`}
+              onClick={() => switchTab("ai")}
+            >
+              <FcIcon name="spark" size={14} />
+              <span>Generate with AI</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "deck"}
+              className={`fc-portal-tab ${tab === "deck" ? "active" : ""}`}
+              onClick={() => switchTab("deck")}
+            >
+              <FcIcon name="cards" size={14} />
+              <span>Manage deck</span>
+            </button>
+          </div>
+        )}
+        {isEditing && openedEditFromDeck && (
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              className="quiet-action flex items-center gap-1.5"
+              onClick={() => {
+                setActiveEditingCard(null);
+                setOpenedEditFromDeck(false);
+                switchTab("deck");
+              }}
+            >
+              ← Back to deck
+            </button>
+          </div>
+        )}
+
+        {tab === "manual" ? (
+          <form className="fc-portal-form flex flex-col gap-4" onSubmit={handleSaveManual}>
+            {/* Studio Mode Toolbar */}
+            <div className="fc-portal-mode-bar flex items-center justify-between gap-3 flex-wrap">
+              <div className="fc-view-toggle note-view-toggle" role="group" aria-label="Editor view mode">
+                <button
+                  type="button"
+                  className={`fc-view-toggle-btn note-toggle-btn ${!previewMode ? "active" : ""}`}
+                  onClick={() => setPreviewMode(false)}
+                >
+                  <FcIcon name="edit" size={13} />
+                  <span>Write</span>
+                </button>
+                <button
+                  type="button"
+                  className={`fc-view-toggle-btn note-toggle-btn ${previewMode ? "active" : ""}`}
+                  onClick={() => setPreviewMode(true)}
+                >
+                  <FcIcon name="flip" size={13} />
+                  <span>Preview Card</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  type="button"
+                  className="secondary-btn compact"
+                  onClick={() => {
+                    if (openedEditFromDeck) {
+                      setActiveEditingCard(null);
+                      setOpenedEditFromDeck(false);
+                      switchTab("deck");
+                    } else if (standalone && onBackToReview) {
+                      onBackToReview();
+                    } else {
+                      onClose?.();
+                    }
+                  }}
+                  disabled={saving}
+                >
+                  {openedEditFromDeck ? "Back to deck" : "Cancel"}
+                </button>
+                <button
+                  type="submit"
+                  className="primary-btn compact"
+                  disabled={saving}
+                  title="Tip: Press Ctrl + Enter to save immediately"
+                >
+                  {saving ? (
+                    <>
+                      <span className="btn-spinner" /> Saving…
+                    </>
+                  ) : (
+                    <>
+                      <FcIcon name="check" size={14} />
+                      <span>{isEditing ? "Save changes" : "Save card"}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {previewMode ? (
+              /* Interactive 3D Card Simulator */
+              <div className="fc-card-simulator-container">
+                <div className="fc-simulator-controls flex items-center justify-between gap-2 pb-2">
+                  <span className="text-xs text-learnos-muted flex items-center gap-1.5">
+                    <FcIcon name="flip" size={14} />
+                    Click card or use the button below to test flip & hint interactivity
+                  </span>
+                  <button
+                    type="button"
+                    className="secondary-btn compact flex items-center gap-1"
+                    onClick={() => setSimulatorFlipped((s) => !s)}
+                  >
+                    <FcIcon name="flip" size={13} />
+                    <span>{simulatorFlipped ? "Flip to Question (Front)" : "Flip to Answer (Back)"}</span>
+                  </button>
+                </div>
+
+                <div
+                  className={`fc-live-card-3d ${simulatorFlipped ? "is-flipped" : ""}`}
+                  onClick={() => setSimulatorFlipped((s) => !s)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Click to flip simulated flashcard"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSimulatorFlipped((s) => !s);
+                    }
+                  }}
+                >
+                  {/* Front Face */}
+                  <div className="fc-live-card-face fc-live-card-front">
+                    <div className="fc-live-face-header flex items-center justify-between">
+                      <span className="fc-face-tag front">QUESTION (FRONT)</span>
+                      <span className="fc-face-chip">{CARD_TYPES.find((t) => t.id === cardType)?.label || "Concept Q&A"}</span>
+                    </div>
+                    <div className="fc-live-face-body">
+                      {front.trim() ? (
+                        <TutorMarkdown content={front} />
+                      ) : (
+                        <p className="text-learnos-muted italic">Type your question on the Front face…</p>
+                      )}
+                    </div>
+                    {hint.trim() && (
+                      <div
+                        className="fc-live-face-hint-container"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSimulatorShowHint((s) => !s);
+                        }}
+                      >
+                        <button type="button" className="text-button text-xs flex items-center gap-1">
+                          <FcIcon name="lightbulb" size={13} />
+                          <span>{simulatorShowHint ? "Hide hint" : "Show hint"}</span>
+                        </button>
+                        {simulatorShowHint && (
+                          <div className="fc-live-face-hint-box">
+                            <TutorMarkdown content={hint} />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="fc-live-face-footer">
+                      <span>Click card to reveal Answer</span>
+                    </div>
+                  </div>
+
+                  {/* Back Face */}
+                  <div className="fc-live-card-face fc-live-card-back">
+                    <div className="fc-live-face-header flex items-center justify-between">
+                      <span className="fc-face-tag back">ANSWER (BACK)</span>
+                      <span className="fc-face-chip">{CARD_TYPES.find((t) => t.id === cardType)?.label || "Concept Q&A"}</span>
+                    </div>
+                    <div className="fc-live-face-body">
+                      {back.trim() ? (
+                        <TutorMarkdown content={back} />
+                      ) : (
+                        <p className="text-learnos-muted italic">Type your explanation and evidence on the Back face…</p>
+                      )}
+                    </div>
+                    <div className="fc-live-face-footer">
+                      <span>Click card to flip back</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Two-Sided Physical Card Editor */
+              <div className={`fc-card-canvas ${standalone ? "side-by-side" : "flex flex-col gap-4"}`}>
+                {/* FACE 1: Question (Front) */}
+                <div className="fc-face-card fc-face-card-front">
+                  <div className="fc-face-card-header flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <span className="fc-face-indicator front">1</span>
+                      <div>
+                        <label htmlFor="fc-question-input" className="fc-field-label">Question (Front)</label>
+                      </div>
+                    </div>
+                    <FormatToolbar
+                      targetRef={frontRef}
+                      value={front}
+                      onChange={setFront}
+                      fieldName="Question"
+                      onOpenImageModal={() => setImageModalTarget("front")}
+                      onToggleFormulaPalette={() => setShowFormulaPalette((p) => (p === "front" ? null : "front"))}
+                    />
+                  </div>
+
+                  {showFormulaPalette === "front" && (
+                    <div className="fc-formula-palette flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[11px] font-semibold text-learnos-muted flex items-center gap-1">
+                        <FcIcon name="math" size={13} /> Quick formulas:
+                      </span>
+                      {QUICK_FORMULAS.map((f) => (
+                        <button
+                          key={f.label}
+                          type="button"
+                          className="fc-formula-chip"
+                          title={f.desc}
+                          onClick={() => insertSnippet(frontRef, front, setFront, `$${f.latex}$`)}
+                        >
+                          <span>{f.label}</span>
+                          <code>${f.latex}$</code>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <textarea
+                    id="fc-question-input"
+                    ref={frontRef}
+                    rows={standalone ? 4 : 3}
+                    value={front}
+                    onChange={(e) => setFront(e.target.value)}
+                    placeholder="Enter question or active-recall prompt..."
+                    required
+                    className="fc-card-textarea front"
+                  />
+                </div>
+
+                {/* FACE 2: Answer (Back) */}
+                <div className="fc-face-card fc-face-card-back">
+                  <div className="fc-face-card-header flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <span className="fc-face-indicator back">2</span>
+                      <div>
+                        <label htmlFor="fc-answer-input" className="fc-field-label">Answer (Back)</label>
+                      </div>
+                    </div>
+                    <FormatToolbar
+                      targetRef={backRef}
+                      value={back}
+                      onChange={setBack}
+                      fieldName="Answer"
+                      onOpenImageModal={() => setImageModalTarget("back")}
+                      onToggleFormulaPalette={() => setShowFormulaPalette((p) => (p === "back" ? null : "back"))}
+                    />
+                  </div>
+
+                  {showFormulaPalette === "back" && (
+                    <div className="fc-formula-palette flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[11px] font-semibold text-learnos-muted flex items-center gap-1">
+                        <FcIcon name="math" size={13} /> Quick formulas:
+                      </span>
+                      {QUICK_FORMULAS.map((f) => (
+                        <button
+                          key={f.label}
+                          type="button"
+                          className="fc-formula-chip"
+                          title={f.desc}
+                          onClick={() => insertSnippet(backRef, back, setBack, `\n$$\n${f.latex}\n$$\n`)}
+                        >
+                          <span>{f.label}</span>
+                          <code>{f.latex}</code>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <textarea
+                    id="fc-answer-input"
+                    ref={backRef}
+                    rows={standalone ? 5 : 4}
+                    value={back}
+                    onChange={(e) => setBack(e.target.value)}
+                    placeholder="Enter answer or explanation..."
+                    required
+                    className="fc-card-textarea back"
+                  />
+                </div>
+              </div>
+            )}
+
+            {!previewMode && (
+              /* Retrieval Hint Block */
+              <div className="fc-hint-card">
+                <div className="flex items-center gap-2">
+                  <FcIcon name="lightbulb" size={16} className="text-amber-400" />
+                  <label htmlFor="fc-hint-input" className="fc-field-label">Retrieval Hint (Optional)</label>
+                </div>
+                <input
+                  id="fc-hint-input"
+                  value={hint}
+                  onChange={(e) => setHint(e.target.value)}
+                  placeholder="Optional hint..."
+                  maxLength={600}
+                  className="fc-modal-input"
+                />
+              </div>
+            )}
+
+            {/* Visual Card Type Chips & Metadata */}
+            <div className="fc-card-type-section flex flex-col gap-2">
+              <span className="fc-field-label">Card Type</span>
+              <div className="fc-type-chips-grid grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {CARD_TYPES.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={`fc-type-card-chip ${cardType === t.id ? "selected" : ""}`}
+                    onClick={() => setCardType(t.id)}
+                  >
+                    <span className="fc-type-chip-icon">{t.icon}</span>
+                    <strong className="fc-type-chip-title">{t.label}</strong>
+                    <span className="fc-type-chip-desc">{t.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Course & Lesson Association */}
+            <div className="fc-meta-grid grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <label className="fc-field-block flex flex-col gap-1.5">
+                <span className="fc-field-label">Link to Course (Optional)</span>
+                <select
+                  value={courseId}
+                  onChange={(e) => {
+                    setCourseId(e.target.value);
+                    setLessonId("");
+                  }}
+                >
+                  <option value="">Personal / Unlinked deck</option>
+                  {allCourses.map((c) => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="fc-field-block flex flex-col gap-1.5">
+                <span className="fc-field-label">Link to Lesson / Topic</span>
+                <select
+                  value={lessonId}
+                  disabled={!courseId}
+                  onChange={(e) => setLessonId(e.target.value)}
+                >
+                  <option value="">{courseId ? "Whole course review" : "Personal deck"}</option>
+                  {manualCourseLessons.map((l) => (
+                    <option key={l.id} value={l.id}>{l.title}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            {formError && <p className="form-error" role="alert">{formError}</p>}
+          </form>
+        ) : tab === "deck" ? (
+          <div className={`fc-deck-portal flex flex-col gap-3.5 ${standalone ? "standalone" : ""}`}>
+            {/* Elevated Pinned Current Card */}
+            {resolvedCurrentCard && (
+              <div className="fc-deck-current-pin">
+                <div className="fc-deck-current-pin-head flex items-center justify-between gap-2">
+                  <span className="fc-current-badge">
+                    <FcIcon name="spark" size={12} />
+                    <span>Current card</span>
+                  </span>
+                  <div className="fc-deck-row-actions flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      className="fc-icon-btn edit icon-only"
+                      title="Edit card"
+                      onClick={() => beginEditFromDeck(resolvedCurrentCard)}
+                      aria-label="Edit card"
+                    >
+                      <FcIcon name="edit" size={14} />
+                    </button>
+                    {confirmDeleteId === resolvedCurrentCard.id ? (
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          className="danger-btn compact"
+                          disabled={deletingId === resolvedCurrentCard.id}
+                          onClick={() => handleDeleteInDeck(resolvedCurrentCard.id)}
+                        >
+                          {deletingId === resolvedCurrentCard.id ? "…" : "Confirm"}
+                        </button>
+                        <button
+                          type="button"
+                          className="quiet-btn compact"
+                          onClick={() => setConfirmDeleteId(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="fc-icon-btn delete icon-only"
+                        title="Delete card"
+                        onClick={() => setConfirmDeleteId(resolvedCurrentCard.id)}
+                        aria-label="Delete card"
+                      >
+                        <FcIcon name="trash" size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="fc-deck-row-badges flex items-center gap-2 flex-wrap">
+                  {(() => {
+                    const curLesson = resolvedCurrentCard.lesson_id ? allLessonsMap.get(resolvedCurrentCard.lesson_id) : null;
+                    const curCourse = allCourses.find((c) => c.id === (curLesson?.courseId || resolvedCurrentCard.course_id));
+                    return (
+                      <>
+                        {curCourse?.title && <HierarchyTag type="course" title={curCourse.title} />}
+                        {curLesson?.title && <HierarchyTag type="lesson" title={curLesson.title} />}
+                      </>
+                    );
+                  })()}
+                  {resolvedCurrentCard.origin === "ai_generated" && <span className="fc-badge-ai">AI✦</span>}
+                  {resolvedCurrentCard.card_type && resolvedCurrentCard.card_type !== "qa" && (
+                    <span className="fc-badge-type">{resolvedCurrentCard.card_type}</span>
+                  )}
+                  {Number(resolvedCurrentCard.lapses || 0) >= 6 && <span className="fc-badge-leech">Needs rewrite</span>}
+                </div>
+                <strong className="fc-deck-q text-base tracking-tight">{resolvedCurrentCard.front}</strong>
+              </div>
+            )}
+
+            {/* Streamlined Search and Segmented Status Filters */}
+            <div className="fc-deck-filter-bar flex flex-col gap-2.5">
+              <div className="fc-deck-search-wrapper relative">
+                <FcIcon name="search" size={16} className="fc-search-icon" />
+                <input
+                  type="search"
+                  value={deckSearch}
+                  onChange={(e) => setDeckSearch(e.target.value)}
+                  placeholder="Search questions, answers, hints…"
+                  aria-label="Search flashcards in deck"
+                  className="fc-deck-search-input w-full"
+                />
+                {deckSearch && (
+                  <button
+                    type="button"
+                    className="fc-search-clear-btn"
+                    onClick={() => setDeckSearch("")}
+                    aria-label="Clear search"
+                  >
+                    <FcIcon name="close" size={13} />
+                  </button>
+                )}
+              </div>
+
+              {/* Quick Segmented Filter Pills */}
+              <div className="fc-quick-filters flex items-center gap-1.5 flex-wrap" role="group" aria-label="Quick status filters">
+                <button
+                  type="button"
+                  className={`fc-quick-pill ${deckStatusFilter === "all" ? "active" : ""}`}
+                  onClick={() => setDeckStatusFilter("all")}
+                >
+                  <span>All cards</span>
+                  <span className="fc-pill-count">{statusCounts.all}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`fc-quick-pill due ${deckStatusFilter === "due" ? "active" : ""}`}
+                  onClick={() => setDeckStatusFilter("due")}
+                >
+                  <span className="fc-pill-dot due" />
+                  <span>Due now</span>
+                  <span className="fc-pill-count">{statusCounts.due}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`fc-quick-pill scheduled ${deckStatusFilter === "scheduled" ? "active" : ""}`}
+                  onClick={() => setDeckStatusFilter("scheduled")}
+                >
+                  <span className="fc-pill-dot scheduled" />
+                  <span>Scheduled</span>
+                  <span className="fc-pill-count">{statusCounts.scheduled}</span>
+                </button>
+                {statusCounts.leech > 0 && (
+                  <button
+                    type="button"
+                    className={`fc-quick-pill leech ${deckStatusFilter === "leech" ? "active" : ""}`}
+                    onClick={() => setDeckStatusFilter("leech")}
+                  >
+                    <span className="fc-pill-dot leech" />
+                    <span>Needs review</span>
+                    <span className="fc-pill-count">{statusCounts.leech}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Compact Secondary Dropdowns */}
+              <div className="fc-secondary-filter-row grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <select
+                  value={deckCourseFilter}
+                  onChange={(e) => setDeckCourseFilter(e.target.value)}
+                  aria-label="Filter deck by course"
+                  className="fc-compact-select"
+                >
+                  <option value="all">All courses</option>
+                  {allCourses.map((c) => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                  <option value="unlinked">Personal / Unlinked</option>
+                </select>
+
+                <select
+                  value={deckOriginFilter}
+                  onChange={(e) => setDeckOriginFilter(e.target.value)}
+                  aria-label="Filter deck by source"
+                  className="fc-compact-select"
+                >
+                  <option value="all">All sources</option>
+                  <option value="ai_generated">AI Generated</option>
+                  <option value="learner">Created by me</option>
+                </select>
+
+                <select
+                  value={deckTypeFilter}
+                  onChange={(e) => setDeckTypeFilter(e.target.value)}
+                  aria-label="Filter deck by card type"
+                  className="fc-compact-select"
+                >
+                  <option value="all">All card types</option>
+                  {CARD_TYPES.map((t) => (
+                    <option key={t.id} value={t.id}>{t.label}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={deckSort}
+                  onChange={(e) => setDeckSort(e.target.value)}
+                  aria-label="Sort deck"
+                  className="fc-compact-select"
+                >
+                  <option value="due">Sort: Due soonest</option>
+                  <option value="newest">Sort: Newest first</option>
+                  <option value="lapses">Sort: Most missed</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="fc-deck-summary flex items-center justify-between gap-2 text-xs text-learnos-muted">
+              <span>
+                Showing {pagedDeckCards.length} of {filteredDeckCards.length} other cards
+              </span>
+              {(deckSearch || deckCourseFilter !== "all" || deckStatusFilter !== "all" || deckOriginFilter !== "all" || deckTypeFilter !== "all") && (
+                <button
+                  type="button"
+                  className="text-button text-xs flex items-center gap-1"
+                  onClick={() => {
+                    setDeckSearch("");
+                    setDeckCourseFilter("all");
+                    setDeckStatusFilter("all");
+                    setDeckOriginFilter("all");
+                    setDeckTypeFilter("all");
+                  }}
+                >
+                  Reset filters
+                </button>
+              )}
+            </div>
+
+            {/* Elevated Card Rows with Modern Icon Action Buttons */}
+            <div className={`fc-deck-portal-list flex flex-col gap-2.5 ${standalone ? "" : "max-h-[460px] overflow-y-auto pr-1"}`}>
+              {pagedDeckCards.length === 0 ? (
+                <div className="fc-deck-empty-state text-center p-8 border border-dashed border-learnos-line rounded-xl">
+                  <FcIcon name="cards" size={32} className="mx-auto mb-2 text-learnos-muted" />
+                  <p className="text-sm font-semibold text-learnos-text">
+                    {flashcards.length === 0
+                      ? "Your deck is empty."
+                      : "No cards match the current filters."}
+                  </p>
+                  <p className="text-xs text-learnos-muted mt-1">
+                    {flashcards.length === 0
+                      ? "Use Write manually to craft your first card or Generate with AI."
+                      : "Try adjusting your search terms or quick filter pills."}
+                  </p>
+                </div>
+              ) : (
+                pagedDeckCards.map((item) => {
+                  const metaLesson = item.lesson_id ? allLessonsMap.get(item.lesson_id) : null;
+                  const metaCourse = allCourses.find((c) => c.id === (metaLesson?.courseId || item.course_id));
+                  const isDue = !item.due_at || new Date(item.due_at).getTime() <= Date.now();
+                  const isExpanded = Boolean(expandedDeckIds[item.id]);
+                  return (
+                    <div key={item.id} className="fc-deck-row">
+                      <div className="fc-deck-row-main">
+                        <div className="fc-deck-row-badges flex items-center gap-2 flex-wrap">
+                          <span className={`fc-due-pill ${isDue ? "due" : "later"}`}>
+                            <span className={`fc-due-dot ${isDue ? "due" : "later"}`} />
+                            <span>{isDue ? "Due now" : new Date(item.due_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                          </span>
+                          {metaCourse?.title && (
+                            <HierarchyTag type="course" title={metaCourse.title} />
+                          )}
+                          {metaLesson?.title && (
+                            <HierarchyTag type="lesson" title={metaLesson.title} />
+                          )}
+                          {item.origin === "ai_generated" && <span className="fc-badge-ai">AI✦</span>}
+                          {item.card_type && item.card_type !== "qa" && <span className="fc-badge-type">{item.card_type}</span>}
+                          {Number(item.lapses || 0) >= 6 && <span className="fc-badge-leech">Needs rewrite</span>}
+                        </div>
+                        <strong className="fc-deck-q">{item.front}</strong>
+                        {isExpanded && (
+                          <div className="fc-deck-expanded">
+                            <TutorMarkdown content={item.back} />
+                            {item.hint && <small className="fc-generated-hint">Hint: {item.hint}</small>}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Modern Icon Action Buttons */}
+                      <div className="fc-deck-row-actions flex items-center gap-1">
+                        <button
+                          type="button"
+                          className={`fc-icon-btn preview icon-only ${isExpanded ? "active" : ""}`}
+                          title={isExpanded ? "Hide answer" : "Preview answer"}
+                          onClick={() => setExpandedDeckIds((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
+                          aria-label={isExpanded ? "Hide answer" : "Preview answer"}
+                        >
+                          <FcIcon name={isExpanded ? "eyeOff" : "eye"} size={14} />
+                        </button>
+
+                        {isDue && onJumpToCard && (
+                          <button
+                            type="button"
+                            className="fc-icon-btn study"
+                            title="Study this card now"
+                            onClick={() => {
+                              onJumpToCard(item);
+                              if (isModal) onClose?.();
+                            }}
+                            aria-label="Study this card now"
+                          >
+                            <FcIcon name="play" size={13} />
+                            <span className="fc-btn-label">Study</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          className="fc-icon-btn edit icon-only"
+                          title="Edit card"
+                          onClick={() => beginEditFromDeck(item)}
+                          aria-label="Edit card"
+                        >
+                          <FcIcon name="edit" size={14} />
+                        </button>
+
+                        {confirmDeleteId === item.id ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              className="danger-btn compact"
+                              disabled={deletingId === item.id}
+                              onClick={() => handleDeleteInDeck(item.id)}
+                            >
+                              {deletingId === item.id ? "…" : "Confirm"}
+                            </button>
+                            <button
+                              type="button"
+                              className="quiet-btn compact"
+                              onClick={() => setConfirmDeleteId(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="fc-icon-btn delete icon-only"
+                            title="Delete card"
+                            onClick={() => setConfirmDeleteId(item.id)}
+                            aria-label="Delete card"
+                          >
+                            <FcIcon name="trash" size={14} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {remainingDeckCards > 0 && (
+              <div className="fc-deck-load-more flex justify-center pt-1">
+                <button
+                  type="button"
+                  className="secondary-btn compact fc-deck-load-more-btn"
+                  onClick={() => setVisibleLimit((limit) => limit + DECK_PAGE_SIZE)}
+                >
+                  Load {Math.min(DECK_PAGE_SIZE, remainingDeckCards)} more ({remainingDeckCards} remaining)
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* AI Studio Tab */
+          <div className="fc-ai-studio flex flex-col gap-4">
+            {!remote ? (
+              <div className="practice-status-banner is-error">
+                <span>Sign in to generate personalized AI flashcards from any topic, note, or lesson.</span>
+                <button type="button" className="quiet-btn compact" onClick={() => { if (isModal) onClose?.(); onOpenAccount?.(); }}>
+                  Sign in
+                </button>
+              </div>
+            ) : (
+              <form className="flex flex-col gap-3.5" onSubmit={handleGenerateAi}>
+                <div className="fc-scope-pills flex flex-wrap gap-2" role="group" aria-label="Generation source">
+                  <button
+                    type="button"
+                    className={`filter-chip ${aiScope === "personal" ? "selected" : ""}`}
+                    onClick={() => setAiScope("personal")}
+                  >
+                    Personal
+                  </button>
+                  {allCourses.length > 0 && (
+                    <button
+                      type="button"
+                      className={`filter-chip ${aiScope === "course" ? "selected" : ""}`}
+                      onClick={() => setAiScope("course")}
+                    >
+                      Course / Lesson
+                    </button>
+                  )}
+                </div>
+
+                {aiScope === "personal" ? (
+                  <div className="flex flex-col gap-3">
+                    <label className="fc-field-block flex flex-col gap-1.5">
+                      <span className="fc-field-label">What topic do you want flashcards for?</span>
+                      <input
+                        value={aiTopic}
+                        onChange={(e) => setAiTopic(e.target.value)}
+                        placeholder="e.g. Bayes' Theorem, Dynamic Programming, French irregular verbs…"
+                        maxLength={300}
+                        className="fc-modal-input"
+                      />
+                    </label>
+                    <label className="fc-field-block flex flex-col gap-1.5">
+                      <span className="fc-field-label">Paste notes, formulas, or key material (Optional)</span>
+                      <textarea
+                        rows={3}
+                        value={aiSourceText}
+                        onChange={(e) => setAiSourceText(e.target.value)}
+                        placeholder="Paste definitions, lecture notes, equations, or reference material…"
+                        className="fc-modal-input fc-ai-source-textarea"
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label className="fc-field-block flex flex-col gap-1.5">
+                      <span className="fc-field-label">Course</span>
+                      <select
+                        value={aiCourseId}
+                        onChange={(e) => {
+                          setAiCourseId(e.target.value);
+                          setAiLessonId("");
+                        }}
+                      >
+                        {allCourses.map((c) => (
+                          <option key={c.id} value={c.id}>{c.title}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="fc-field-block flex flex-col gap-1.5">
+                      <span className="fc-field-label">Topic / Lesson (Optional)</span>
+                      <select value={aiLessonId} onChange={(e) => setAiLessonId(e.target.value)}>
+                        <option value="">Whole course overview</option>
+                        {aiCourseLessons.map((l) => (
+                          <option key={l.id} value={l.id}>{l.title}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
+                  <label className="fc-field-block flex flex-col gap-1.5">
+                    <span className="fc-field-label">Cards to generate</span>
+                    <select value={aiCount} onChange={(e) => setAiCount(Number(e.target.value))}>
+                      <option value={4}>4 cards (quick set)</option>
+                      <option value={6}>6 cards (recommended)</option>
+                      <option value={8}>8 cards (deep review)</option>
+                    </select>
+                  </label>
+                  <label className="fc-field-block flex flex-col gap-1.5">
+                    <span className="fc-field-label">Focus style</span>
+                    <select value={aiStyle} onChange={(e) => setAiStyle(e.target.value)}>
+                      {AI_STYLES.map((s) => (
+                        <option key={s.id} value={s.id}>{s.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="fc-field-block flex flex-col gap-1.5">
+                    <span className="fc-field-label">Formulas</span>
+                    <label className={`fc-checkbox-card flex items-center gap-2.5 cursor-pointer select-none ${aiIncludeMath ? "is-checked" : ""}`}>
+                      <input
+                        type="checkbox"
+                        className="fc-styled-checkbox"
+                        checked={aiIncludeMath}
+                        onChange={(e) => setAiIncludeMath(e.target.checked)}
+                      />
+                      <span className="fc-checkbox-text">
+                        Include math formulas (<code>$...$</code>)
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <label className="fc-field-block flex flex-col gap-1.5">
+                  <span className="fc-field-label">Extra guidance (Optional)</span>
+                  <input
+                    value={aiFocus}
+                    onChange={(e) => setAiFocus(e.target.value)}
+                    placeholder="e.g. Focus on edge cases, derivations, or common pitfalls"
+                    maxLength={300}
+                    className="fc-modal-input"
+                  />
+                </label>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button type="submit" className="primary-btn" disabled={aiGenerating}>
+                    {aiGenerating ? <><span className="btn-spinner" /> Designing cards…</> : "Generate preview cards ↗"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {aiError && <p className="form-error" role="alert">{aiError}</p>}
+
+            {draftCards.length > 0 && (
+              <div className="fc-generated-preview flex flex-col gap-3 pt-3 border-t border-learnos-line">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div>
+                    <span className="eyebrow">REVIEW GENERATED CARDS</span>
+                    <p className="text-xs text-learnos-muted">
+                      {draftCards.filter((c) => c.selected).length} of {draftCards.length} selected
+                      {aiMeta?.model ? ` · via ${aiMeta.model}` : ""}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="primary-btn"
+                    disabled={savingBatch || !draftCards.some((c) => c.selected)}
+                    onClick={handleSaveSelectedBatch}
+                  >
+                    {savingBatch ? <><span className="btn-spinner" /> Saving…</> : `Save ${draftCards.filter((c) => c.selected).length} to deck ↗`}
+                  </button>
+                </div>
+
+                <div className="fc-generated-list flex flex-col gap-2.5 max-h-[300px] overflow-y-auto pr-1">
+                  {draftCards.map((card, idx) => (
+                    <article key={card._id} className={`fc-generated-item ${card.selected ? "selected" : ""}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={card.selected}
+                            onChange={(e) =>
+                              setDraftCards((prev) =>
+                                prev.map((x, j) => (j === idx ? { ...x, selected: e.target.checked } : x))
+                              )
+                            }
+                          />
+                          <span>Question {idx + 1}</span>
+                          <span className="fc-type-badge">{card.cardType || "qa"}</span>
+                        </label>
+                        <button
+                          type="button"
+                          className="text-button text-xs"
+                          onClick={() => {
+                            switchTab("manual");
+                            setFront(card.front);
+                            setBack(card.back);
+                            setHint(card.hint || "");
+                            setCardType(card.cardType || "qa");
+                            setCourseId(card.courseId || "");
+                            setLessonId(card.lessonId || "");
+                          }}
+                        >
+                          Edit in editor
+                        </button>
+                      </div>
+                      <div className="fc-generated-qa">
+                        <div className="fc-generated-q">
+                          <TutorMarkdown content={card.front} />
+                        </div>
+                        <div className="fc-generated-a">
+                          <TutorMarkdown content={card.back} />
+                        </div>
+                        {card.hint && <small className="fc-generated-hint">Hint: {card.hint}</small>}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Visual Image Inserter Modal */}
+      <ImageInserterModal
+        open={Boolean(imageModalTarget)}
+        onClose={() => setImageModalTarget(null)}
+        onInsert={(snippet) => {
+          if (imageModalTarget === "front") {
+            insertSnippet(frontRef, front, setFront, snippet);
+          } else if (imageModalTarget === "back") {
+            insertSnippet(backRef, back, setBack, snippet);
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+/**
+ * Modal wrapper for backwards compatibility and tests that expect dialog portal rendering.
+ */
+export function FlashcardPortalModal(props) {
+  if (props.standalone) {
+    return <FlashcardStudio {...props} standalone={true} isModal={false} />;
+  }
+
+  if (!props.open) return null;
+
   const modalNode = (
     <div
       className="modal-backdrop open fc-portal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={() => {
-        if (!saving && !aiGenerating && !savingBatch) onClose?.();
+        props.onClose?.();
       }}
       role="presentation"
     >
@@ -754,985 +1847,7 @@ export function FlashcardPortalModal({
         aria-labelledby="fc-portal-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-head fc-portal-head flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="fc-head-icon-box">
-              <FcIcon name={isEditing ? "edit" : "cards"} size={20} />
-            </div>
-            <div>
-              <span className="eyebrow">{isEditing ? "CARD EDITOR" : "FLASHCARD STUDIO PORTAL"}</span>
-              <h2 id="fc-portal-title" className="text-xl font-bold tracking-tight">
-                {isEditing ? "Update flashcard" : "Create or generate flashcards"}
-              </h2>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="modal-close grid place-items-center"
-            onClick={onClose}
-            disabled={saving || aiGenerating || savingBatch}
-            aria-label="Close flashcard portal"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className="modal-body fc-portal-body flex flex-col gap-4">
-          {!isEditing ? (
-            <div className="fc-portal-tabs fc-portal-tabs-3" role="tablist" aria-label="Flashcard studio tabs">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={tab === "manual"}
-                className={`fc-portal-tab ${tab === "manual" ? "active" : ""}`}
-                onClick={() => setTab("manual")}
-              >
-                <FcIcon name="edit" size={14} />
-                <span>Write manually</span>
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={tab === "ai"}
-                className={`fc-portal-tab ${tab === "ai" ? "active" : ""}`}
-                onClick={() => setTab("ai")}
-              >
-                <FcIcon name="spark" size={14} />
-                <span>Generate with AI</span>
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={tab === "deck"}
-                className={`fc-portal-tab ${tab === "deck" ? "active" : ""}`}
-                onClick={() => setTab("deck")}
-              >
-                <FcIcon name="cards" size={14} />
-                <span>Manage deck ({flashcards.length})</span>
-              </button>
-            </div>
-          ) : openedEditFromDeck && (
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                className="quiet-action flex items-center gap-1.5"
-                onClick={() => {
-                  setActiveEditingCard(null);
-                  setOpenedEditFromDeck(false);
-                  setTab("deck");
-                }}
-              >
-                ← Back to deck
-              </button>
-            </div>
-          )}
-
-          {tab === "manual" ? (
-            <form className="fc-portal-form flex flex-col gap-4" onSubmit={handleSaveManual}>
-              {/* Studio Mode Toolbar */}
-              <div className="fc-portal-mode-bar flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <span className="fc-studio-badge">
-                    <FcIcon name="cards" size={13} />
-                    <span>Two-sided physical card canvas</span>
-                  </span>
-                  <span className="text-xs text-learnos-muted hidden sm:inline">
-                    Supports Markdown, <code>$inline math$</code>, <code>$$block math$$</code>, and bounded <code>![alt](https://...)</code> images.
-                  </span>
-                </div>
-                <div className="note-view-toggle" role="group" aria-label="Preview toggle">
-                  <button
-                    type="button"
-                    className={`note-toggle-btn ${!previewMode ? "active" : ""}`}
-                    onClick={() => setPreviewMode(false)}
-                  >
-                    <FcIcon name="edit" size={13} />
-                    <span>Write</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`note-toggle-btn ${previewMode ? "active" : ""}`}
-                    onClick={() => setPreviewMode(true)}
-                  >
-                    <FcIcon name="flip" size={13} />
-                    <span>Live 3D Preview</span>
-                  </button>
-                </div>
-              </div>
-
-              {previewMode ? (
-                /* Interactive 3D Card Simulator */
-                <div className="fc-card-simulator-container">
-                  <div className="fc-simulator-controls flex items-center justify-between gap-2 pb-2">
-                    <span className="text-xs text-learnos-muted flex items-center gap-1.5">
-                      <FcIcon name="flip" size={14} />
-                      Click card or use the button below to test flip & hint interactivity
-                    </span>
-                    <button
-                      type="button"
-                      className="secondary-btn compact flex items-center gap-1"
-                      onClick={() => setSimulatorFlipped((s) => !s)}
-                    >
-                      <FcIcon name="flip" size={13} />
-                      <span>{simulatorFlipped ? "Flip to Question (Front)" : "Flip to Answer (Back)"}</span>
-                    </button>
-                  </div>
-
-                  <div
-                    className={`fc-live-card-3d ${simulatorFlipped ? "is-flipped" : ""}`}
-                    onClick={() => setSimulatorFlipped((s) => !s)}
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Click to flip simulated flashcard"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setSimulatorFlipped((s) => !s);
-                      }
-                    }}
-                  >
-                    {/* Front Face */}
-                    <div className="fc-live-card-face fc-live-card-front">
-                      <div className="fc-live-face-header flex items-center justify-between">
-                        <span className="fc-face-tag front">QUESTION (FRONT)</span>
-                        <span className="fc-face-chip">{CARD_TYPES.find((t) => t.id === cardType)?.label || "Concept Q&A"}</span>
-                      </div>
-                      <div className="fc-live-face-body">
-                        {front.trim() ? (
-                          <TutorMarkdown content={front} />
-                        ) : (
-                          <p className="text-learnos-muted italic">Type your question on the Front face…</p>
-                        )}
-                      </div>
-                      {hint.trim() && (
-                        <div
-                          className="fc-live-face-hint-container"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSimulatorShowHint((s) => !s);
-                          }}
-                        >
-                          <button type="button" className="text-button text-xs flex items-center gap-1">
-                            <FcIcon name="lightbulb" size={13} />
-                            <span>{simulatorShowHint ? "Hide hint" : "Show hint"}</span>
-                          </button>
-                          {simulatorShowHint && (
-                            <div className="fc-live-face-hint-box">
-                              <TutorMarkdown content={hint} />
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <div className="fc-live-face-footer">
-                        <span>Click card to reveal Answer</span>
-                      </div>
-                    </div>
-
-                    {/* Back Face */}
-                    <div className="fc-live-card-face fc-live-card-back">
-                      <div className="fc-live-face-header flex items-center justify-between">
-                        <span className="fc-face-tag back">ANSWER (BACK)</span>
-                        <span className="fc-face-chip">{CARD_TYPES.find((t) => t.id === cardType)?.label || "Concept Q&A"}</span>
-                      </div>
-                      <div className="fc-live-face-body">
-                        {back.trim() ? (
-                          <TutorMarkdown content={back} />
-                        ) : (
-                          <p className="text-learnos-muted italic">Type your explanation and evidence on the Back face…</p>
-                        )}
-                      </div>
-                      <div className="fc-live-face-footer">
-                        <span>Click card to flip back</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* Two-Sided Physical Card Editor */
-                <div className="fc-card-canvas flex flex-col gap-4">
-                  {/* FACE 1: Question (Front) */}
-                  <div className="fc-face-card fc-face-card-front">
-                    <div className="fc-face-card-header flex items-center justify-between gap-2 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <span className="fc-face-indicator front">1</span>
-                        <div>
-                          <label htmlFor="fc-question-input" className="fc-field-label">Question (Front)</label>
-                          <span className="fc-face-sublabel">Prompt shown during active recall</span>
-                        </div>
-                      </div>
-                      <FormatToolbar
-                        targetRef={frontRef}
-                        value={front}
-                        onChange={setFront}
-                        fieldName="Question"
-                        onOpenImageModal={() => setImageModalTarget("front")}
-                        onToggleFormulaPalette={() => setShowFormulaPalette((p) => (p === "front" ? null : "front"))}
-                      />
-                    </div>
-
-                    {showFormulaPalette === "front" && (
-                      <div className="fc-formula-palette flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[11px] font-semibold text-learnos-muted flex items-center gap-1">
-                          <FcIcon name="math" size={13} /> Quick formulas:
-                        </span>
-                        {QUICK_FORMULAS.map((f) => (
-                          <button
-                            key={f.label}
-                            type="button"
-                            className="fc-formula-chip"
-                            title={f.desc}
-                            onClick={() => insertSnippet(frontRef, front, setFront, `$${f.latex}$`)}
-                          >
-                            <span>{f.label}</span>
-                            <code>${f.latex}$</code>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    <textarea
-                      id="fc-question-input"
-                      ref={frontRef}
-                      rows={3}
-                      value={front}
-                      onChange={(e) => setFront(e.target.value)}
-                      placeholder="Ask one crisp active-recall question… e.g. Why does Bayes' theorem update $P(H \mid E)$?"
-                      required
-                      className="fc-card-textarea front"
-                    />
-                  </div>
-
-                  {/* FACE 2: Answer (Back) */}
-                  <div className="fc-face-card fc-face-card-back">
-                    <div className="fc-face-card-header flex items-center justify-between gap-2 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <span className="fc-face-indicator back">2</span>
-                        <div>
-                          <label htmlFor="fc-answer-input" className="fc-field-label">Answer (Back)</label>
-                          <span className="fc-face-sublabel">Clear explanation, proof, or key result revealed upon flipping</span>
-                        </div>
-                      </div>
-                      <FormatToolbar
-                        targetRef={backRef}
-                        value={back}
-                        onChange={setBack}
-                        fieldName="Answer"
-                        onOpenImageModal={() => setImageModalTarget("back")}
-                        onToggleFormulaPalette={() => setShowFormulaPalette((p) => (p === "back" ? null : "back"))}
-                      />
-                    </div>
-
-                    {showFormulaPalette === "back" && (
-                      <div className="fc-formula-palette flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[11px] font-semibold text-learnos-muted flex items-center gap-1">
-                          <FcIcon name="math" size={13} /> Quick formulas:
-                        </span>
-                        {QUICK_FORMULAS.map((f) => (
-                          <button
-                            key={f.label}
-                            type="button"
-                            className="fc-formula-chip"
-                            title={f.desc}
-                            onClick={() => insertSnippet(backRef, back, setBack, `\n$$\n${f.latex}\n$$\n`)}
-                          >
-                            <span>{f.label}</span>
-                            <code>{f.latex}</code>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    <textarea
-                      id="fc-answer-input"
-                      ref={backRef}
-                      rows={4}
-                      value={back}
-                      onChange={(e) => setBack(e.target.value)}
-                      placeholder={"Clear explanation + concrete example or formula:\n$$P(H \\mid E) = \\frac{P(E \\mid H)P(H)}{P(E)}$$"}
-                      required
-                      className="fc-card-textarea back"
-                    />
-                  </div>
-
-                  {/* Retrieval Hint Block */}
-                  <div className="fc-hint-card">
-                    <div className="flex items-center gap-2">
-                      <FcIcon name="lightbulb" size={16} className="text-amber-400" />
-                      <label htmlFor="fc-hint-input" className="fc-field-label">Retrieval Hint (Optional)</label>
-                    </div>
-                    <input
-                      id="fc-hint-input"
-                      value={hint}
-                      onChange={(e) => setHint(e.target.value)}
-                      placeholder="Short cue shown before flipping without giving away the answer…"
-                      maxLength={600}
-                      className="fc-modal-input"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Visual Card Type Chips & Metadata */}
-              <div className="fc-card-type-section flex flex-col gap-2">
-                <span className="fc-field-label">Card Type & Learning Objective</span>
-                <div className="fc-type-chips-grid grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {CARD_TYPES.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      className={`fc-type-card-chip ${cardType === t.id ? "selected" : ""}`}
-                      onClick={() => setCardType(t.id)}
-                    >
-                      <span className="fc-type-chip-icon">{t.icon}</span>
-                      <strong className="fc-type-chip-title">{t.label}</strong>
-                      <span className="fc-type-chip-desc">{t.desc}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Course & Lesson Association */}
-              <div className="fc-meta-grid grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                <label className="fc-field-block flex flex-col gap-1.5">
-                  <span className="fc-field-label">Link to Course (Optional)</span>
-                  <select
-                    value={courseId}
-                    onChange={(e) => {
-                      setCourseId(e.target.value);
-                      setLessonId("");
-                    }}
-                  >
-                    <option value="">Personal / Unlinked deck</option>
-                    {allCourses.map((c) => (
-                      <option key={c.id} value={c.id}>{c.title}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="fc-field-block flex flex-col gap-1.5">
-                  <span className="fc-field-label">Link to Lesson / Topic</span>
-                  <select
-                    value={lessonId}
-                    disabled={!courseId}
-                    onChange={(e) => setLessonId(e.target.value)}
-                  >
-                    <option value="">{courseId ? "Whole course review" : "Personal deck"}</option>
-                    {manualCourseLessons.map((l) => (
-                      <option key={l.id} value={l.id}>{l.title}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              {formError && <p className="form-error" role="alert">{formError}</p>}
-
-              <div className="modal-actions flex items-center justify-between gap-3 pt-3 border-t border-learnos-line">
-                <span className="text-xs text-learnos-muted hidden sm:inline">
-                  Tip: Press <code>Ctrl + Enter</code> to save immediately.
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="secondary-btn"
-                    onClick={() => {
-                      if (openedEditFromDeck) {
-                        setActiveEditingCard(null);
-                        setOpenedEditFromDeck(false);
-                        setTab("deck");
-                      } else {
-                        onClose?.();
-                      }
-                    }}
-                    disabled={saving}
-                  >
-                    {openedEditFromDeck ? "Back to deck" : "Cancel"}
-                  </button>
-                  <button type="submit" className="primary-btn" disabled={saving}>
-                    {saving ? (
-                      <>
-                        <span className="btn-spinner" /> Saving…
-                      </>
-                    ) : (
-                      <>
-                        <FcIcon name="check" size={14} />
-                        <span>{isEditing ? "Save changes" : "Save flashcard"}</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </form>
-          ) : tab === "deck" ? (
-            <div className="fc-deck-portal flex flex-col gap-3.5">
-              {/* Elevated Pinned Current Card */}
-              {resolvedCurrentCard && (
-                <div className="fc-deck-current-pin">
-                  <div className="fc-deck-current-pin-head flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="fc-current-badge">
-                        <FcIcon name="spark" size={12} />
-                        <span>Current card</span>
-                      </span>
-                      <span className="text-xs text-learnos-muted">Currently active in your study session</span>
-                    </div>
-                    <div className="fc-deck-row-actions flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        className="fc-icon-btn edit"
-                        title="Edit card"
-                        onClick={() => beginEditFromDeck(resolvedCurrentCard)}
-                      >
-                        <FcIcon name="edit" size={14} />
-                        <span className="fc-btn-label">Edit</span>
-                      </button>
-                      {confirmDeleteId === resolvedCurrentCard.id ? (
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            className="danger-btn compact"
-                            disabled={deletingId === resolvedCurrentCard.id}
-                            onClick={() => handleDeleteInDeck(resolvedCurrentCard.id)}
-                          >
-                            {deletingId === resolvedCurrentCard.id ? "…" : "Confirm"}
-                          </button>
-                          <button
-                            type="button"
-                            className="quiet-btn compact"
-                            onClick={() => setConfirmDeleteId(null)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className="fc-icon-btn delete"
-                          title="Delete card"
-                          onClick={() => setConfirmDeleteId(resolvedCurrentCard.id)}
-                        >
-                          <FcIcon name="trash" size={14} />
-                          <span className="fc-btn-label">Delete</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="fc-deck-row-badges flex items-center gap-1.5 flex-wrap">
-                    {resolvedCurrentCard.origin === "ai_generated" && <span className="fc-badge-ai">AI✦</span>}
-                    {resolvedCurrentCard.card_type && resolvedCurrentCard.card_type !== "qa" && (
-                      <span className="fc-badge-type">{resolvedCurrentCard.card_type}</span>
-                    )}
-                    {Number(resolvedCurrentCard.lapses || 0) >= 6 && <span className="fc-badge-leech">Needs rewrite</span>}
-                  </div>
-                  <strong className="fc-deck-q text-base tracking-tight">{resolvedCurrentCard.front}</strong>
-                  <small className="fc-deck-a text-learnos-muted">
-                    {String(resolvedCurrentCard.back || "").replace(/\s+/g, " ").slice(0, 160)}
-                    {String(resolvedCurrentCard.back || "").length > 160 ? "…" : ""}
-                  </small>
-                </div>
-              )}
-
-              {/* Streamlined Search and Segmented Status Filters */}
-              <div className="fc-deck-filter-bar flex flex-col gap-2.5">
-                <div className="fc-deck-search-wrapper relative">
-                  <FcIcon name="search" size={16} className="fc-search-icon" />
-                  <input
-                    type="search"
-                    value={deckSearch}
-                    onChange={(e) => setDeckSearch(e.target.value)}
-                    placeholder="Search questions, answers, hints…"
-                    aria-label="Search flashcards in deck"
-                    className="fc-deck-search-input w-full"
-                  />
-                  {deckSearch && (
-                    <button
-                      type="button"
-                      className="fc-search-clear-btn"
-                      onClick={() => setDeckSearch("")}
-                      aria-label="Clear search"
-                    >
-                      <FcIcon name="close" size={13} />
-                    </button>
-                  )}
-                </div>
-
-                {/* Quick Segmented Filter Pills */}
-                <div className="fc-quick-filters flex items-center gap-1.5 flex-wrap" role="group" aria-label="Quick status filters">
-                  <button
-                    type="button"
-                    className={`fc-quick-pill ${deckStatusFilter === "all" ? "active" : ""}`}
-                    onClick={() => setDeckStatusFilter("all")}
-                  >
-                    <span>All cards</span>
-                    <span className="fc-pill-count">{statusCounts.all}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`fc-quick-pill due ${deckStatusFilter === "due" ? "active" : ""}`}
-                    onClick={() => setDeckStatusFilter("due")}
-                  >
-                    <span className="fc-pill-dot due" />
-                    <span>Due now</span>
-                    <span className="fc-pill-count">{statusCounts.due}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`fc-quick-pill scheduled ${deckStatusFilter === "scheduled" ? "active" : ""}`}
-                    onClick={() => setDeckStatusFilter("scheduled")}
-                  >
-                    <span className="fc-pill-dot scheduled" />
-                    <span>Scheduled</span>
-                    <span className="fc-pill-count">{statusCounts.scheduled}</span>
-                  </button>
-                  {statusCounts.leech > 0 && (
-                    <button
-                      type="button"
-                      className={`fc-quick-pill leech ${deckStatusFilter === "leech" ? "active" : ""}`}
-                      onClick={() => setDeckStatusFilter("leech")}
-                    >
-                      <span className="fc-pill-dot leech" />
-                      <span>Needs review</span>
-                      <span className="fc-pill-count">{statusCounts.leech}</span>
-                    </button>
-                  )}
-                </div>
-
-                {/* Compact Secondary Dropdowns */}
-                <div className="fc-secondary-filter-row grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  <select
-                    value={deckCourseFilter}
-                    onChange={(e) => setDeckCourseFilter(e.target.value)}
-                    aria-label="Filter deck by course"
-                    className="fc-compact-select"
-                  >
-                    <option value="all">All courses</option>
-                    {allCourses.map((c) => (
-                      <option key={c.id} value={c.id}>{c.title}</option>
-                    ))}
-                    <option value="unlinked">Personal / Unlinked</option>
-                  </select>
-
-                  <select
-                    value={deckOriginFilter}
-                    onChange={(e) => setDeckOriginFilter(e.target.value)}
-                    aria-label="Filter deck by source"
-                    className="fc-compact-select"
-                  >
-                    <option value="all">All sources</option>
-                    <option value="ai_generated">AI Generated</option>
-                    <option value="learner">Created by me</option>
-                  </select>
-
-                  <select
-                    value={deckTypeFilter}
-                    onChange={(e) => setDeckTypeFilter(e.target.value)}
-                    aria-label="Filter deck by card type"
-                    className="fc-compact-select"
-                  >
-                    <option value="all">All card types</option>
-                    {CARD_TYPES.map((t) => (
-                      <option key={t.id} value={t.id}>{t.label}</option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={deckSort}
-                    onChange={(e) => setDeckSort(e.target.value)}
-                    aria-label="Sort deck"
-                    className="fc-compact-select"
-                  >
-                    <option value="due">Sort: Due soonest</option>
-                    <option value="newest">Sort: Newest first</option>
-                    <option value="lapses">Sort: Most missed</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="fc-deck-summary flex items-center justify-between gap-2 text-xs text-learnos-muted">
-                <span>
-                  Showing {pagedDeckCards.length} of {filteredDeckCards.length} other cards
-                  {resolvedCurrentCard ? " (+1 current card pinned above)" : ""}
-                </span>
-                {(deckSearch || deckCourseFilter !== "all" || deckStatusFilter !== "all" || deckOriginFilter !== "all" || deckTypeFilter !== "all") && (
-                  <button
-                    type="button"
-                    className="text-button text-xs flex items-center gap-1"
-                    onClick={() => {
-                      setDeckSearch("");
-                      setDeckCourseFilter("all");
-                      setDeckStatusFilter("all");
-                      setDeckOriginFilter("all");
-                      setDeckTypeFilter("all");
-                    }}
-                  >
-                    Reset filters
-                  </button>
-                )}
-              </div>
-
-              {/* Elevated Card Rows with Modern Icon Action Buttons */}
-              <div className="fc-deck-portal-list flex flex-col gap-2.5 max-h-[360px] overflow-y-auto pr-1">
-                {pagedDeckCards.length === 0 ? (
-                  <div className="fc-deck-empty-state text-center p-6 border border-dashed border-learnos-line rounded-xl">
-                    <FcIcon name="cards" size={28} className="mx-auto mb-2 text-learnos-muted" />
-                    <p className="text-sm font-semibold text-learnos-text">
-                      {flashcards.length === 0
-                        ? "Your deck is empty."
-                        : "No cards match the current filters."}
-                    </p>
-                    <p className="text-xs text-learnos-muted mt-1">
-                      {flashcards.length === 0
-                        ? "Use Write manually to craft your first card or Generate with AI."
-                        : "Try adjusting your search terms or quick filter pills."}
-                    </p>
-                  </div>
-                ) : (
-                  pagedDeckCards.map((item) => {
-                    const metaLesson = item.lesson_id ? allLessonsMap.get(item.lesson_id) : null;
-                    const metaCourse = allCourses.find((c) => c.id === (metaLesson?.courseId || item.course_id));
-                    const isDue = !item.due_at || new Date(item.due_at).getTime() <= Date.now();
-                    const isExpanded = Boolean(expandedDeckIds[item.id]);
-                    return (
-                      <div key={item.id} className="fc-deck-row">
-                        <div className="fc-deck-row-main">
-                          <div className="fc-deck-row-badges flex items-center gap-1.5 flex-wrap">
-                            <span className={`fc-due-pill ${isDue ? "due" : "later"}`}>
-                              <span className={`fc-due-dot ${isDue ? "due" : "later"}`} />
-                              {isDue ? "Due now" : new Date(item.due_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                            </span>
-                            {item.origin === "ai_generated" && <span className="fc-badge-ai">AI✦</span>}
-                            {item.card_type && item.card_type !== "qa" && <span className="fc-badge-type">{item.card_type}</span>}
-                            {Number(item.lapses || 0) >= 6 && <span className="fc-badge-leech">Needs rewrite</span>}
-                            {metaCourse?.title && <span className="fc-course-chip">{metaCourse.title}</span>}
-                            {metaLesson?.title && <span className="fc-lesson-chip">{metaLesson.title}</span>}
-                          </div>
-                          <strong className="fc-deck-q">{item.front}</strong>
-                          {isExpanded ? (
-                            <div className="fc-deck-expanded">
-                              <TutorMarkdown content={item.back} />
-                              {item.hint && <small className="fc-generated-hint">Hint: {item.hint}</small>}
-                            </div>
-                          ) : (
-                            <small className="fc-deck-a">
-                              {String(item.back || "").replace(/\s+/g, " ").slice(0, 140)}
-                              {String(item.back || "").length > 140 ? "…" : ""}
-                            </small>
-                          )}
-                        </div>
-
-                        {/* Modern Icon Action Buttons */}
-                        <div className="fc-deck-row-actions flex items-center gap-1">
-                          <button
-                            type="button"
-                            className={`fc-icon-btn preview ${isExpanded ? "active" : ""}`}
-                            title={isExpanded ? "Hide answer" : "Preview answer"}
-                            onClick={() => setExpandedDeckIds((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
-                            aria-label={isExpanded ? "Hide answer" : "Preview answer"}
-                          >
-                            <FcIcon name={isExpanded ? "eyeOff" : "eye"} size={14} />
-                            <span className="fc-btn-label">{isExpanded ? "Hide" : "Preview"}</span>
-                          </button>
-
-                          {isDue && onJumpToCard && (
-                            <button
-                              type="button"
-                              className="fc-icon-btn study"
-                              title="Study this card now"
-                              onClick={() => {
-                                onJumpToCard(item);
-                                onClose?.();
-                              }}
-                              aria-label="Study this card now"
-                            >
-                              <FcIcon name="play" size={13} />
-                              <span className="fc-btn-label">Study</span>
-                            </button>
-                          )}
-
-                          <button
-                            type="button"
-                            className="fc-icon-btn edit"
-                            title="Edit card"
-                            onClick={() => beginEditFromDeck(item)}
-                            aria-label="Edit card"
-                          >
-                            <FcIcon name="edit" size={14} />
-                            <span className="fc-btn-label">Edit</span>
-                          </button>
-
-                          {confirmDeleteId === item.id ? (
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                className="danger-btn compact"
-                                disabled={deletingId === item.id}
-                                onClick={() => handleDeleteInDeck(item.id)}
-                              >
-                                {deletingId === item.id ? "…" : "Confirm"}
-                              </button>
-                              <button
-                                type="button"
-                                className="quiet-btn compact"
-                                onClick={() => setConfirmDeleteId(null)}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              className="fc-icon-btn delete"
-                              title="Delete card"
-                              onClick={() => setConfirmDeleteId(item.id)}
-                              aria-label="Delete card"
-                            >
-                              <FcIcon name="trash" size={14} />
-                              <span className="fc-btn-label">Delete</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              {remainingDeckCards > 0 && (
-                <div className="fc-deck-load-more flex justify-center pt-1">
-                  <button
-                    type="button"
-                    className="secondary-btn compact fc-deck-load-more-btn"
-                    onClick={() => setVisibleLimit((limit) => limit + DECK_PAGE_SIZE)}
-                  >
-                    Load {Math.min(DECK_PAGE_SIZE, remainingDeckCards)} more ({remainingDeckCards} remaining)
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            /* AI Studio Tab */
-            <div className="fc-ai-studio flex flex-col gap-4">
-              {!remote ? (
-                <div className="practice-status-banner is-error">
-                  <span>Sign in to generate personalized AI flashcards from any topic, note, or lesson.</span>
-                  <button type="button" className="quiet-btn compact" onClick={() => { onClose?.(); onOpenAccount?.(); }}>
-                    Sign in
-                  </button>
-                </div>
-              ) : (
-                <form className="flex flex-col gap-3.5" onSubmit={handleGenerateAi}>
-                  <div className="fc-scope-pills flex flex-wrap gap-2" role="group" aria-label="Generation source">
-                    <button
-                      type="button"
-                      className={`filter-chip ${aiScope === "personal" ? "selected" : ""}`}
-                      onClick={() => setAiScope("personal")}
-                    >
-                      Personal topic / Notes
-                    </button>
-                    {allCourses.length > 0 && (
-                      <button
-                        type="button"
-                        className={`filter-chip ${aiScope === "course" ? "selected" : ""}`}
-                        onClick={() => setAiScope("course")}
-                      >
-                        Course / Lesson
-                      </button>
-                    )}
-                  </div>
-
-                  {aiScope === "personal" ? (
-                    <div className="flex flex-col gap-3">
-                      <label className="fc-field-block flex flex-col gap-1.5">
-                        <span className="fc-field-label">What topic do you want flashcards for?</span>
-                        <input
-                          value={aiTopic}
-                          onChange={(e) => setAiTopic(e.target.value)}
-                          placeholder="e.g. Bayes' Theorem, Dynamic Programming, French irregular verbs…"
-                          maxLength={300}
-                          className="fc-modal-input"
-                        />
-                      </label>
-                      {notes.length > 0 && (
-                        <label className="fc-field-block flex flex-col gap-1.5">
-                          <span className="fc-field-label">Or ground from a saved note (Optional)</span>
-                          <select value={aiNoteId} onChange={(e) => setAiNoteId(e.target.value)}>
-                            <option value="">None — use my topic / text below</option>
-                            {notes.map((n) => (
-                              <option key={n.id} value={n.id}>{n.title}</option>
-                            ))}
-                          </select>
-                        </label>
-                      )}
-                      <label className="fc-field-block flex flex-col gap-1.5">
-                        <span className="fc-field-label">Paste notes, formulas, or key material (Optional)</span>
-                        <textarea
-                          rows={3}
-                          value={aiSourceText}
-                          onChange={(e) => setAiSourceText(e.target.value)}
-                          placeholder="Paste definitions, lecture notes, equations, or paragraphs to turn into atomic active-recall cards…"
-                        />
-                      </label>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <label className="fc-field-block flex flex-col gap-1.5">
-                        <span className="fc-field-label">Course</span>
-                        <select
-                          value={aiCourseId}
-                          onChange={(e) => {
-                            setAiCourseId(e.target.value);
-                            setAiLessonId("");
-                          }}
-                        >
-                          {allCourses.map((c) => (
-                            <option key={c.id} value={c.id}>{c.title}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="fc-field-block flex flex-col gap-1.5">
-                        <span className="fc-field-label">Topic / Lesson (Optional)</span>
-                        <select value={aiLessonId} onChange={(e) => setAiLessonId(e.target.value)}>
-                          <option value="">Whole course overview</option>
-                          {aiCourseLessons.map((l) => (
-                            <option key={l.id} value={l.id}>{l.title}</option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
-                    <label className="fc-field-block flex flex-col gap-1.5">
-                      <span className="fc-field-label">Cards to generate</span>
-                      <select value={aiCount} onChange={(e) => setAiCount(Number(e.target.value))}>
-                        <option value={4}>4 cards (quick set)</option>
-                        <option value={6}>6 cards (recommended)</option>
-                        <option value={8}>8 cards (deep review)</option>
-                      </select>
-                    </label>
-                    <label className="fc-field-block flex flex-col gap-1.5">
-                      <span className="fc-field-label">Focus style</span>
-                      <select value={aiStyle} onChange={(e) => setAiStyle(e.target.value)}>
-                        {AI_STYLES.map((s) => (
-                          <option key={s.id} value={s.id}>{s.label}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="fc-checkbox-row flex items-center gap-2 text-xs text-learnos-text">
-                      <input
-                        type="checkbox"
-                        checked={aiIncludeMath}
-                        onChange={(e) => setAiIncludeMath(e.target.checked)}
-                      />
-                      <span>Include math formulas (<code>$...$</code>)</span>
-                    </label>
-                  </div>
-
-                  <label className="fc-field-block flex flex-col gap-1.5">
-                    <span className="fc-field-label">Extra guidance (Optional)</span>
-                    <input
-                      value={aiFocus}
-                      onChange={(e) => setAiFocus(e.target.value)}
-                      placeholder="e.g. Emphasize common mistakes, time complexity, or step-by-step intuition"
-                      maxLength={300}
-                    />
-                  </label>
-
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <span className="text-xs text-learnos-muted">
-                      Uses Minimum Information Principle: 1 atomic concept + retrieval hint per card.
-                    </span>
-                    <button type="submit" className="primary-btn" disabled={aiGenerating}>
-                      {aiGenerating ? <><span className="btn-spinner" /> Designing cards…</> : "Generate preview cards ↗"}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {aiError && <p className="form-error" role="alert">{aiError}</p>}
-
-              {draftCards.length > 0 && (
-                <div className="fc-generated-preview flex flex-col gap-3 pt-3 border-t border-learnos-line">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div>
-                      <span className="eyebrow">REVIEW GENERATED CARDS</span>
-                      <p className="text-xs text-learnos-muted">
-                        {draftCards.filter((c) => c.selected).length} of {draftCards.length} selected
-                        {aiMeta?.model ? ` · via ${aiMeta.model}` : ""}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      className="primary-btn"
-                      disabled={savingBatch || !draftCards.some((c) => c.selected)}
-                      onClick={handleSaveSelectedBatch}
-                    >
-                      {savingBatch ? <><span className="btn-spinner" /> Saving…</> : `Save ${draftCards.filter((c) => c.selected).length} to deck ↗`}
-                    </button>
-                  </div>
-
-                  <div className="fc-generated-list flex flex-col gap-2.5 max-h-[300px] overflow-y-auto pr-1">
-                    {draftCards.map((card, idx) => (
-                      <article key={card._id} className={`fc-generated-item ${card.selected ? "selected" : ""}`}>
-                        <div className="flex items-center justify-between gap-2">
-                          <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={card.selected}
-                              onChange={(e) =>
-                                setDraftCards((prev) =>
-                                  prev.map((x, j) => (j === idx ? { ...x, selected: e.target.checked } : x))
-                                )
-                              }
-                            />
-                            <span>Question {idx + 1}</span>
-                            <span className="fc-type-badge">{card.cardType || "qa"}</span>
-                          </label>
-                          <button
-                            type="button"
-                            className="text-button text-xs"
-                            onClick={() => {
-                              setTab("manual");
-                              setFront(card.front);
-                              setBack(card.back);
-                              setHint(card.hint || "");
-                              setCardType(card.cardType || "qa");
-                              setCourseId(card.courseId || "");
-                              setLessonId(card.lessonId || "");
-                            }}
-                          >
-                            Edit in editor
-                          </button>
-                        </div>
-                        <div className="fc-generated-qa">
-                          <div className="fc-generated-q">
-                            <TutorMarkdown content={card.front} />
-                          </div>
-                          <div className="fc-generated-a">
-                            <TutorMarkdown content={card.back} />
-                          </div>
-                          {card.hint && <small className="fc-generated-hint">Hint: {card.hint}</small>}
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Visual Image Inserter Modal */}
-        <ImageInserterModal
-          open={Boolean(imageModalTarget)}
-          onClose={() => setImageModalTarget(null)}
-          onInsert={(snippet) => {
-            if (imageModalTarget === "front") {
-              insertSnippet(frontRef, front, setFront, snippet);
-            } else if (imageModalTarget === "back") {
-              insertSnippet(backRef, back, setBack, snippet);
-            }
-          }}
-        />
+        <FlashcardStudio {...props} standalone={false} isModal={true} />
       </div>
     </div>
   );

@@ -134,7 +134,13 @@ export function recordBehavior(type, payload = {}) {
 
   if (type === "page_view") {
     day.pageViews = (day.pageViews || 0) + 1;
-    day.activeMinutes = (day.activeMinutes || 0) + 1;
+    // Honest tracking: Do not blindly award 1 full minute for every page view or rapid tab jump.
+    // Credit at most 1 active minute if at least 60 seconds have elapsed since the last credited view.
+    const nowTs = Date.now();
+    if (!day._lastPageViewCredit || (nowTs - day._lastPageViewCredit) >= 60000) {
+      day.activeMinutes = (day.activeMinutes || 0) + 1;
+      day._lastPageViewCredit = nowTs;
+    }
   } else if (type === "session_heartbeat") {
     day.activeMinutes = (day.activeMinutes || 0) + Number(payload.minutes || 1);
   } else if (type === "checkpoint_attempt") {
@@ -296,21 +302,28 @@ export function generateWeeklyRhythm(behaviorAggregates = {}, workspaceData = {}
     let eventsCount = agg.totalEvents || 0;
     let minutes = agg.activeMinutes || 0;
 
-    // Supplement with attempts and tasks for this date if telemetry wasn't active
-    if (workspaceData.attempts) {
-      const matchAttempts = workspaceData.attempts.filter(a =>
-        a.created_at && getLocalDateString(new Date(a.created_at).getTime()) === dateStr
-      ).length;
-      eventsCount += matchAttempts;
-      minutes += matchAttempts * 3;
-    }
-    if (workspaceData.tasks) {
-      const matchTasks = workspaceData.tasks.filter(t =>
-        t.status === "completed" && (t.completed_at || t.scheduled_at) &&
-        getLocalDateString(new Date(t.completed_at || t.scheduled_at).getTime()) === dateStr
-      ).length;
-      eventsCount += matchTasks;
-      minutes += matchTasks * 25;
+    // Honest tracking: Supplement with attempts and tasks for this date ONLY if telemetry wasn't active.
+    // This prevents artificial inflation and double-counting when real session telemetry exists.
+    if (eventsCount === 0 && minutes === 0) {
+      let fallbackAttempts = 0;
+      let fallbackTasks = 0;
+      if (workspaceData.attempts) {
+        fallbackAttempts = workspaceData.attempts.filter(a =>
+          a.created_at && getLocalDateString(new Date(a.created_at).getTime()) === dateStr
+        ).length;
+      }
+      if (workspaceData.tasks) {
+        fallbackTasks = workspaceData.tasks.filter(t =>
+          t.status === "completed" && (t.completed_at || t.scheduled_at) &&
+          getLocalDateString(new Date(t.completed_at || t.scheduled_at).getTime()) === dateStr
+        ).length;
+      }
+      if (fallbackAttempts > 0 || fallbackTasks > 0) {
+        eventsCount = fallbackAttempts + fallbackTasks;
+        // Conservative honest estimate for offline/pre-telemetry days:
+        // 2m per quiz attempt and up to 10m per completed task, capped at 120m daily
+        minutes = Math.min(120, (fallbackAttempts * 2) + (fallbackTasks * 10));
+      }
     }
 
     days.push({
@@ -321,6 +334,12 @@ export function generateWeeklyRhythm(behaviorAggregates = {}, workspaceData = {}
       eventsCount,
       minutes: Math.min(minutes, 360), // clamp for charting
       active: eventsCount > 0 || minutes > 0,
+      focusMinutes: agg.focusMinutes || 0,
+      checkpointAttempts: agg.checkpointAttempts || 0,
+      flashcardReviews: agg.flashcardReviews || 0,
+      drillsCompleted: agg.drillsCompleted || 0,
+      tutorQueries: agg.tutorQueries || 0,
+      pageViews: agg.pageViews || 0,
     });
   }
 
@@ -406,6 +425,11 @@ export function calculateLearnerMetrics(workspaceData = {}, settings = {}) {
       weeklyGoalMinutes,
       weeklyGoalPct,
       remainingMinutes: Math.max(0, weeklyGoalMinutes - weeklyMinutesSpent),
+      totalFocusMinutes: rhythm.reduce((sum, d) => sum + (d.focusMinutes || 0), 0),
+      totalCheckpoints: rhythm.reduce((sum, d) => sum + (d.checkpointAttempts || 0), 0),
+      totalDrills: rhythm.reduce((sum, d) => sum + (d.drillsCompleted || 0), 0),
+      totalCardReviews: rhythm.reduce((sum, d) => sum + (d.flashcardReviews || 0), 0),
+      totalTutorQueries: rhythm.reduce((sum, d) => sum + (d.tutorQueries || 0), 0),
     },
     rhythm,
     retention: {
