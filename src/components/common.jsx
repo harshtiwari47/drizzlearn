@@ -1,5 +1,6 @@
 import React from "react";
 import { buildPath, shouldInterceptNavClick } from "../router.js";
+import { HeaderSearchBar } from "./HeaderSearchBar.jsx";
 
 export function prettyDate(iso){if(!iso)return"";try{return new Date(iso).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});}catch{return iso;}}
 export function minuteLabel(mins){if(!mins&&mins!==0)return"";if(mins<60)return`${mins}m`;const h=Math.floor(mins/60);const m=mins%60;return m?`${h}h ${m}m`:`${h}h`;}
@@ -573,9 +574,12 @@ export default function App(){
         </nav>
         <div className="header-actions flex items-center gap-3">
           {(syncing||activeRequests>0||busy)&&<span className="sync-indicator flex items-center gap-1.5 text-xs" role="status" aria-live="polite"><span className="btn-spinner"/><span>Loading...</span></span>}
-          <form className="top-search flex items-center gap-2.5" onSubmit={submitSearch}>
-            <Icon name="search"/><input value={queryText} onChange={e=>setQueryText(e.target.value)} type="search" placeholder="Search lessons and tools" aria-label="Search lessons and tools" />
-          </form>
+          <HeaderSearchBar
+            queryText={queryText}
+            setQueryText={setQueryText}
+            onSubmit={submitSearch}
+            placeholder="Search..."
+          />
           <button className={`avatar grid place-items-center ${!(user?.fullName||data.settings.fullName)?"logged-out":""}`} type="button" aria-label={user?.fullName||data.settings.fullName||"Sign in"} title={user?.fullName||data.settings.fullName||"Sign in to your account"} onClick={()=>user?go("settings"):openAccount()}>
             {(user?.fullName||data.settings.fullName||"?").split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase()}
           </button>
