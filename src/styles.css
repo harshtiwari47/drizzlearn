@@ -9578,130 +9578,170 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 
 
 /* ==========================================================================
-   Interactive Hero Stage & Thematic Hover Backdrops
+   Hero & Header Combined Group with Dynamic Ambient Theme Glow
    ========================================================================== */
 
-.hero-interactive-stage {
+.hero-header-combined-group {
   position: relative !important;
   width: 100% !important;
   overflow: visible !important;
+  margin-bottom: 28px !important;
+  border-radius: 28px !important;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-.stage-ambient-backdrop-wrap {
-  position: absolute !important;
-  top: -140px !important;
-  left: -15vw !important;
-  right: -15vw !important;
-  bottom: -90px !important;
-  pointer-events: none !important;
+/* Ensure Header and Hero Interactive elements sit cleanly above background glow */
+.hero-header-combined-group > .topbar,
+.hero-header-combined-group .topbar {
+  position: relative !important;
+  z-index: 20 !important;
+}
+
+.hero-header-combined-group .hero-interactive-stage {
+  position: relative !important;
+  width: 100% !important;
   overflow: visible !important;
-  z-index: 0 !important;
-  border-radius: 0 !important;
-  mask-image: radial-gradient(ellipse 65% 55% at 50% 50%, black 20%, transparent 80%) !important;
-  -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 50%, black 20%, transparent 80%) !important;
+  z-index: 10 !important;
 }
 
-/* Base stage ambient idle aura (alive even without hovering) */
-.stage-bg-default {
+/* The ambient wrapper that holds the glowing atmospheres */
+.combined-stage-ambient-wrap {
+  position: absolute !important;
+  inset: -60px -8vw -40px -8vw !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  overflow: hidden !important;
+  border-radius: 36px !important;
+  mask-image: radial-gradient(ellipse 85% 75% at 50% 50%, black 35%, transparent 92%) !important;
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 50%, black 35%, transparent 92%) !important;
+}
+
+.combined-stage-glow {
   position: absolute !important;
   inset: 0 !important;
-  opacity: 0.72 !important;
-  transition: opacity 0.6s ease, transform 0.8s ease !important;
-  background: 
-    radial-gradient(ellipse 65% 50% at 32% 46%, rgba(14, 165, 233, 0.28) 0%, transparent 65%),
-    radial-gradient(ellipse 60% 48% at 68% 46%, rgba(99, 102, 241, 0.28) 0%, transparent 65%),
-    radial-gradient(ellipse 55% 42% at 50% 52%, rgba(56, 189, 248, 0.18) 0%, transparent 70%),
-    linear-gradient(180deg, rgba(14, 116, 144, 0.14) 0%, rgba(15, 23, 42, 0.4) 100%) !important;
-  filter: blur(32px) saturate(1.5) !important;
-  transform: scale(1.04) !important;
-  animation: stageAmbientPulse 10s ease-in-out infinite alternate !important;
+  opacity: 0 !important;
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), filter 0.55s ease !important;
+  pointer-events: none !important;
+  filter: blur(52px) !important;
+  will-change: opacity, transform;
 }
 
-@keyframes stageAmbientPulse {
+/* 1. Initial State: Lighter, attractive glow focused directly behind the input bar */
+.combined-stage-glow.glow-input-focus {
+  background:
+    /* Concentrated bright core right behind the input row */
+    radial-gradient(ellipse 720px 160px at 50% 50%, rgba(108, 207, 246, 0.32) 0%, rgba(14, 165, 233, 0.18) 38%, rgba(6, 182, 212, 0.04) 65%, transparent 75%),
+    /* Soft wider aura behind the hero headline and input bar */
+    radial-gradient(ellipse 950px 280px at 50% 48%, rgba(56, 189, 248, 0.16) 0%, rgba(14, 116, 144, 0.06) 50%, transparent 72%) !important;
+  opacity: 0.95 !important;
+  transform: scale(1) !important;
+  animation: heroInputGlowBreathing 8s ease-in-out infinite alternate !important;
+}
+
+@keyframes heroInputGlowBreathing {
   0% {
-    transform: scale(1.02) translateY(0);
-    opacity: 0.68;
+    opacity: 0.88;
+    transform: scale(0.99);
   }
   50% {
-    transform: scale(1.06) translateY(-4px);
-    opacity: 0.82;
+    opacity: 1;
+    transform: scale(1.02);
   }
   100% {
-    transform: scale(1.03) translateY(2px);
-    opacity: 0.72;
+    opacity: 0.88;
+    transform: scale(0.99);
   }
+}
+
+/* 2. Card Themed Hover Glows: Lighter but attractive spatial ambient backdrops */
+/* Card 1: Roadmap - Glowing Emerald & Mint */
+.combined-stage-glow.glow-card-roadmap {
+  background:
+    radial-gradient(ellipse 720px 360px at 28% 74%, rgba(16, 185, 129, 0.36) 0%, rgba(52, 211, 153, 0.20) 35%, rgba(6, 182, 212, 0.06) 60%, transparent 75%),
+    radial-gradient(ellipse 980px 500px at 36% 56%, rgba(16, 185, 129, 0.18) 0%, rgba(5, 150, 105, 0.08) 45%, transparent 70%),
+    radial-gradient(circle 400px at 20% 18%, rgba(16, 185, 129, 0.12) 0%, transparent 60%) !important;
+  transform: scale(1.02) !important;
+}
+
+/* Card 2: Flashcards - Glacial Cyan & Electric Cobalt */
+.combined-stage-glow.glow-card-flashcards {
+  background:
+    radial-gradient(ellipse 720px 360px at 42% 74%, rgba(6, 182, 212, 0.38) 0%, rgba(108, 207, 246, 0.22) 35%, rgba(99, 102, 241, 0.07) 60%, transparent 75%),
+    radial-gradient(ellipse 980px 500px at 45% 56%, rgba(108, 207, 246, 0.20) 0%, rgba(14, 165, 233, 0.10) 45%, transparent 70%),
+    radial-gradient(circle 400px at 40% 18%, rgba(108, 207, 246, 0.14) 0%, transparent 60%) !important;
+  transform: scale(1.02) !important;
+}
+
+/* Card 3: AI Notes - Radiant Amethyst & Deep Violet */
+.combined-stage-glow.glow-card-notes {
+  background:
+    radial-gradient(ellipse 720px 360px at 58% 74%, rgba(168, 85, 247, 0.38) 0%, rgba(139, 92, 246, 0.22) 35%, rgba(217, 70, 239, 0.07) 60%, transparent 75%),
+    radial-gradient(ellipse 980px 500px at 55% 56%, rgba(168, 85, 247, 0.20) 0%, rgba(124, 58, 237, 0.10) 45%, transparent 70%),
+    radial-gradient(circle 400px at 60% 18%, rgba(168, 85, 247, 0.14) 0%, transparent 60%) !important;
+  transform: scale(1.02) !important;
+}
+
+/* Card 4: Practice - Dynamic Neon Indigo to Magenta */
+.combined-stage-glow.glow-card-practice {
+  background:
+    radial-gradient(ellipse 720px 360px at 72% 74%, rgba(99, 102, 241, 0.38) 0%, rgba(217, 70, 239, 0.22) 35%, rgba(59, 130, 246, 0.07) 60%, transparent 75%),
+    radial-gradient(ellipse 980px 500px at 65% 56%, rgba(99, 102, 241, 0.20) 0%, rgba(217, 70, 239, 0.10) 45%, transparent 70%),
+    radial-gradient(circle 400px at 80% 18%, rgba(217, 70, 239, 0.14) 0%, transparent 60%) !important;
+  transform: scale(1.02) !important;
+}
+
+/* Radial Vignette Overlay: Preserves contrast and prevents wash-out */
+.combined-stage-radial-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0, 16, 17, 0.5) 85%) !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+/* Active Hover & Focus States (Driven by React state or CSS :has pseudo-class) */
+.hero-header-combined-group.glow-roadmap .glow-card-roadmap,
+.hero-header-combined-group:has(.square-card-roadmap:hover) .glow-card-roadmap,
+.hero-header-combined-group:has(.square-card-roadmap:focus-visible) .glow-card-roadmap {
+  opacity: 1 !important;
+  transform: scale(1.03) !important;
+}
+
+.hero-header-combined-group.glow-flashcards .glow-card-flashcards,
+.hero-header-combined-group:has(.square-card-flashcards:hover) .glow-card-flashcards,
+.hero-header-combined-group:has(.square-card-flashcards:focus-visible) .glow-card-flashcards {
+  opacity: 1 !important;
+  transform: scale(1.03) !important;
+}
+
+.hero-header-combined-group.glow-notes .glow-card-notes,
+.hero-header-combined-group:has(.square-card-notes:hover) .glow-card-notes,
+.hero-header-combined-group:has(.square-card-notes:focus-visible) .glow-card-notes {
+  opacity: 1 !important;
+  transform: scale(1.03) !important;
+}
+
+.hero-header-combined-group.glow-practice .glow-card-practice,
+.hero-header-combined-group:has(.square-card-practice:hover) .glow-card-practice,
+.hero-header-combined-group:has(.square-card-practice:focus-visible) .glow-card-practice {
+  opacity: 1 !important;
+  transform: scale(1.03) !important;
+}
+
+/* Soften the input focus glow when any card is hovered */
+.hero-header-combined-group.glow-roadmap .glow-input-focus,
+.hero-header-combined-group.glow-flashcards .glow-input-focus,
+.hero-header-combined-group.glow-notes .glow-input-focus,
+.hero-header-combined-group.glow-practice .glow-input-focus,
+.hero-header-combined-group:has(.square-card:hover) .glow-input-focus,
+.hero-header-combined-group:has(.square-card:focus-visible) .glow-input-focus {
+  opacity: 0.18 !important;
+  transform: scale(0.97) !important;
 }
 
 /* Subtle default glow on each tool card when idle */
 .learning-tools-strip .tool-card {
   box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6), 0 0 16px -2px rgba(56, 189, 248, 0.08) !important;
-}
-
-/* Reduce default background slightly when a specific tool is active so the active hover pop stands out */
-.hero-interactive-stage.bg-roadmap .stage-bg-default,
-.hero-interactive-stage.bg-flashcards .stage-bg-default,
-.hero-interactive-stage.bg-notes .stage-bg-default,
-.hero-interactive-stage.bg-practice .stage-bg-default {
-  opacity: 0.25 !important;
-}
-
-.stage-bg-image {
-  position: absolute !important;
-  inset: 0 !important;
-  opacity: 0 !important;
-  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  background-size: cover !important;
-  background-position: center !important;
-  filter: blur(28px) saturate(1.45) !important;
-  transform: scale(1.08) !important;
-}
-
-/* Roadmap: Winding cyber highway / neon mountain road glowing in deep emerald & cyan */
-.stage-bg-roadmap {
-  background: 
-    radial-gradient(ellipse at 42% 45%, rgba(16, 185, 129, 0.36) 0%, rgba(6, 182, 212, 0.24) 40%, transparent 72%),
-    linear-gradient(135deg, rgba(6, 78, 59, 0.35) 0%, rgba(15, 23, 42, 0.8) 100%),
-    repeating-linear-gradient(65deg, rgba(16, 185, 129, 0.08) 0px, rgba(16, 185, 129, 0.08) 2px, transparent 2px, transparent 40px) !important;
-}
-
-/* Flashcards: Aurora memory cards floating in glowing frozen cyan & electric cobalt */
-.stage-bg-flashcards {
-  background: 
-    radial-gradient(ellipse at 50% 50%, rgba(108, 207, 246, 0.42) 0%, rgba(99, 102, 241, 0.28) 45%, transparent 75%),
-    linear-gradient(135deg, rgba(30, 58, 138, 0.38) 0%, rgba(15, 23, 42, 0.8) 100%),
-    radial-gradient(circle at 65% 35%, rgba(108, 207, 246, 0.25) 0%, transparent 40%) !important;
-}
-
-/* AI Notes: Radiant amethyst sanctuary & neural constellations in deep violet */
-.stage-bg-notes {
-  background: 
-    radial-gradient(ellipse at 58% 48%, rgba(168, 85, 247, 0.38) 0%, rgba(99, 102, 241, 0.25) 45%, transparent 75%),
-    linear-gradient(135deg, rgba(88, 28, 135, 0.38) 0%, rgba(15, 23, 42, 0.8) 100%),
-    radial-gradient(circle at 40% 60%, rgba(192, 132, 252, 0.2) 0%, transparent 45%) !important;
-}
-
-/* Practice: Dynamic neon pulse arena in electric blue & magenta */
-.stage-bg-practice {
-  background: 
-    radial-gradient(ellipse at 65% 52%, rgba(59, 130, 246, 0.4) 0%, rgba(217, 70, 239, 0.28) 45%, transparent 75%),
-    linear-gradient(135deg, rgba(76, 29, 149, 0.38) 0%, rgba(15, 23, 42, 0.8) 100%),
-    repeating-linear-gradient(-45deg, rgba(59, 130, 246, 0.06) 0px, rgba(59, 130, 246, 0.06) 2px, transparent 2px, transparent 36px) !important;
-}
-
-.stage-bg-overlay {
-  position: absolute !important;
-  inset: 0 !important;
-  background: radial-gradient(circle at center, transparent 35%, rgba(0, 16, 17, 0.72) 85%) !important;
-  pointer-events: none !important;
-}
-
-/* Active Hover Transitions for Backdrop */
-.hero-interactive-stage.bg-roadmap .stage-bg-roadmap,
-.hero-interactive-stage.bg-flashcards .stage-bg-flashcards,
-.hero-interactive-stage.bg-notes .stage-bg-notes,
-.hero-interactive-stage.bg-practice .stage-bg-practice {
-  opacity: 1 !important;
-  transform: scale(1.02) !important;
 }
 
 /* Hero Section and Interactive Children Z-Index */
@@ -12901,6 +12941,34 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 
 /* 1. Mobile Phone Breakpoint: <= 480px */
 @media (max-width: 480px) {
+  .hero-header-combined-group {
+    margin-bottom: 20px !important;
+    border-radius: 20px !important;
+  }
+  .combined-stage-ambient-wrap {
+    inset: -30px -15px -20px -15px !important;
+    mask-image: radial-gradient(ellipse 95% 85% at 50% 50%, black 50%, transparent 95%) !important;
+    -webkit-mask-image: radial-gradient(ellipse 95% 85% at 50% 50%, black 50%, transparent 95%) !important;
+  }
+  .combined-stage-glow {
+    filter: blur(36px) !important;
+  }
+  .combined-stage-glow.glow-input-focus {
+    background: radial-gradient(ellipse 340px 140px at 50% 48%, rgba(108, 207, 246, 0.35) 0%, rgba(14, 165, 233, 0.18) 45%, transparent 75%) !important;
+  }
+  .combined-stage-glow.glow-card-roadmap {
+    background: radial-gradient(circle 260px at 25% 78%, rgba(16, 185, 129, 0.38) 0%, transparent 70%) !important;
+  }
+  .combined-stage-glow.glow-card-flashcards {
+    background: radial-gradient(circle 260px at 75% 78%, rgba(6, 182, 212, 0.40) 0%, transparent 70%) !important;
+  }
+  .combined-stage-glow.glow-card-notes {
+    background: radial-gradient(circle 260px at 25% 92%, rgba(168, 85, 247, 0.40) 0%, transparent 70%) !important;
+  }
+  .combined-stage-glow.glow-card-practice {
+    background: radial-gradient(circle 260px at 75% 92%, rgba(99, 102, 241, 0.40) 0%, transparent 70%) !important;
+  }
+
   #generator {
     gap: 16px !important;
     margin-bottom: 24px !important;
@@ -12993,6 +13061,17 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 
 /* 2. Small Tablet / Phablet Breakpoint: 481px to 768px */
 @media (min-width: 481px) and (max-width: 768px) {
+  .hero-header-combined-group {
+    margin-bottom: 24px !important;
+    border-radius: 24px !important;
+  }
+  .combined-stage-ambient-wrap {
+    inset: -40px -25px -30px -25px !important;
+  }
+  .combined-stage-glow {
+    filter: blur(42px) !important;
+  }
+
   #generator {
     gap: 20px !important;
     margin-bottom: 28px !important;
@@ -13068,6 +13147,17 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 
 /* 3. Tablet Breakpoint: 769px to 1024px */
 @media (min-width: 769px) and (max-width: 1024px) {
+  .hero-header-combined-group {
+    margin-bottom: 26px !important;
+    border-radius: 26px !important;
+  }
+  .combined-stage-ambient-wrap {
+    inset: -50px -5vw -35px -5vw !important;
+  }
+  .combined-stage-glow {
+    filter: blur(48px) !important;
+  }
+
   #generator {
     gap: 22px !important;
     margin-bottom: 30px !important;
@@ -13134,6 +13224,14 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 
 /* 4. Small Desktop / Laptop Breakpoint: 1025px to 1280px */
 @media (min-width: 1025px) and (max-width: 1280px) {
+  .hero-header-combined-group {
+    margin-bottom: 28px !important;
+    border-radius: 28px !important;
+  }
+  .combined-stage-ambient-wrap {
+    inset: -60px -6vw -40px -6vw !important;
+  }
+
   #generator {
     gap: 24px !important;
     margin-bottom: 32px !important;
@@ -13200,6 +13298,14 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 
 /* 5. Standard Desktop Monitor Breakpoint: 1281px to 1536px */
 @media (min-width: 1281px) and (max-width: 1536px) {
+  .hero-header-combined-group {
+    margin-bottom: 32px !important;
+    border-radius: 30px !important;
+  }
+  .combined-stage-ambient-wrap {
+    inset: -70px -8vw -45px -8vw !important;
+  }
+
   #generator {
     gap: 26px !important;
     margin-bottom: 34px !important;
@@ -13267,6 +13373,14 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 
 /* 6. Large Widescreen Breakpoint: 1537px to 1919px */
 @media (min-width: 1537px) and (max-width: 1919px) {
+  .hero-header-combined-group {
+    margin-bottom: 36px !important;
+    border-radius: 32px !important;
+  }
+  .combined-stage-ambient-wrap {
+    inset: -80px -9vw -50px -9vw !important;
+  }
+
   #generator {
     gap: 28px !important;
     margin-bottom: 36px !important;
@@ -13334,6 +13448,17 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 
 /* 7. Ultra-wide & 4K Breakpoint: >= 1920px */
 @media (min-width: 1920px) {
+  .hero-header-combined-group {
+    margin-bottom: 40px !important;
+    border-radius: 36px !important;
+  }
+  .combined-stage-ambient-wrap {
+    inset: -90px -10vw -60px -10vw !important;
+  }
+  .combined-stage-glow {
+    filter: blur(64px) !important;
+  }
+
   #generator {
     gap: 32px !important;
     margin-bottom: 40px !important;

@@ -95,7 +95,8 @@ function PlayingCardsReviewSection({ dueCards, go }) {
 export { PlayingCardsReviewSection };
 
 const Home = React.memo(function Home(p){
-  const {data,activeCourse,lessons,dueCards,nextTask,stats,progressPercent,go,openLesson,setModal}=p;
+  const {data,activeCourse,lessons,dueCards,nextTask,stats,progressPercent,go,openLesson,setModal,header}=p;
+  const [hoveredTool,setHoveredTool]=useState(null);
   const [timelinePeriod,setTimelinePeriod]=useState("week");
   const done=data.tasks.filter(t=>t.status==="completed").length,plannedToday=data.tasks.filter(t=>new Date(t.scheduled_at||0).toDateString()===new Date().toDateString());
   const weekDays=Array.from({length:7},(_,i)=>{const date=new Date();const day=(date.getDay()+6)%7;date.setDate(date.getDate()-day+i);return date;});
@@ -123,132 +124,179 @@ const Home = React.memo(function Home(p){
   },[activeCourse,nextTask,isModuleDone]);
 
   return <>
-    {/* Hero Interactive Stage with Edge Decors, Search Bar, and 4 Modern Square Tool Cards */}
-    <div className="hero-interactive-stage relative">
-      {/* Left Edge: 3D Layered Cyber Grimoire */}
-      <div className="stage-edge-decor stage-edge-left" aria-hidden="true" onClick={()=>go("courses")} title="Browse learning materials">
-        <div className="hero-book-wrapper">
-          <div className="hero-book-shadow" />
-          <div className="hero-book-spine" />
-          <div className="hero-book-body">
-            <div className="hero-book-gilded-pages" />
-            <div className="hero-book-front grid place-items-center">
-              <div className="hero-book-insignia grid place-items-center">
-                <span className="hero-book-gem">✦</span>
-              </div>
-              <span className="hero-book-ribbon" />
-            </div>
-          </div>
-          <div className="hero-book-glow" />
-        </div>
+    {/* Combined Header and Hero Interactive Group */}
+    <div className={`hero-header-combined-group relative ${hoveredTool ? `glow-${hoveredTool}` : "glow-initial"}`}>
+      {/* Dynamic Ambient Background Glow Elements */}
+      <div className="combined-stage-ambient-wrap" aria-hidden="true">
+        <div className="combined-stage-glow glow-input-focus" />
+        <div className="combined-stage-glow glow-card-roadmap" />
+        <div className="combined-stage-glow glow-card-flashcards" />
+        <div className="combined-stage-glow glow-card-notes" />
+        <div className="combined-stage-glow glow-card-practice" />
+        <div className="combined-stage-radial-overlay" />
       </div>
 
-      {/* Right Edge: Cute AI Companion Robot with Visor */}
-      <div className="stage-edge-decor stage-edge-right" aria-hidden="true" onClick={()=>go("tutor")} title="Ask AI tutor">
-        <div className="hero-bot-wrapper">
-          <div className="hero-bot-antenna">
-            <span className="antenna-stem" />
-            <span className="antenna-orb" />
-          </div>
-          <div className="hero-bot-body">
-            <div className="hero-bot-visor grid place-items-center">
-              <div className="hero-bot-face-screen flex items-center justify-center gap-2.5">
-                <span className="bot-eye-curve left">◠</span>
-                <span className="bot-blush" />
-                <span className="bot-eye-curve right">◠</span>
+      {header}
+
+      {/* Hero Interactive Stage with Edge Decors, Search Bar, and 4 Modern Square Tool Cards */}
+      <div className="hero-interactive-stage relative">
+        {/* Left Edge: 3D Layered Cyber Grimoire */}
+        <div className="stage-edge-decor stage-edge-left" aria-hidden="true" onClick={()=>go("courses")} title="Browse learning materials">
+          <div className="hero-book-wrapper">
+            <div className="hero-book-shadow" />
+            <div className="hero-book-spine" />
+            <div className="hero-book-body">
+              <div className="hero-book-gilded-pages" />
+              <div className="hero-book-front grid place-items-center">
+                <div className="hero-book-insignia grid place-items-center">
+                  <span className="hero-book-gem">✦</span>
+                </div>
+                <span className="hero-book-ribbon" />
               </div>
             </div>
-            <span className="bot-ear-pod left" />
-            <span className="bot-ear-pod right" />
-            <div className="bot-chassis-collar" />
+            <div className="hero-book-glow" />
           </div>
-          <div className="hero-bot-glow" />
         </div>
+
+        {/* Right Edge: Cute AI Companion Robot with Visor */}
+        <div className="stage-edge-decor stage-edge-right" aria-hidden="true" onClick={()=>go("tutor")} title="Ask AI tutor">
+          <div className="hero-bot-wrapper">
+            <div className="hero-bot-antenna">
+              <span className="antenna-stem" />
+              <span className="antenna-orb" />
+            </div>
+            <div className="hero-bot-body">
+              <div className="hero-bot-visor grid place-items-center">
+                <div className="hero-bot-face-screen flex items-center justify-center gap-2.5">
+                  <span className="bot-eye-curve left">◠</span>
+                  <span className="bot-blush" />
+                  <span className="bot-eye-curve right">◠</span>
+                </div>
+              </div>
+              <span className="bot-ear-pod left" />
+              <span className="bot-ear-pod right" />
+              <div className="bot-chassis-collar" />
+            </div>
+            <div className="hero-bot-glow" />
+          </div>
+        </div>
+
+        {/* Hero Headline & Generator Row */}
+        <section className="hero flex flex-col items-center text-center gap-6 mb-7" id="generator">
+          <h1 className="hero-headline text-4xl sm:text-5xl font-extrabold tracking-tight">
+            What do you want to <span className="text-primary-gradient">learn?</span>
+          </h1>
+          <form
+            className="generate-row flex items-center gap-2.5 max-w-2xl w-full"
+            onSubmit={e=>{
+              e.preventDefault();
+              const value=new FormData(e.currentTarget).get("topic");
+              sessionStorage.setItem("learnos.goal.prefill",String(value||""));
+              p.setModalState?.(null);
+              go("goal");
+            }}
+          >
+            <div className="generate-input-box flex items-center gap-2 flex-1 min-w-0">
+              <span className="spark pl-3" aria-hidden="true">✦</span>
+              <input
+                name="topic"
+                defaultValue=""
+                aria-label="Topic to learn"
+                placeholder="Enter a topic or skill (e.g. Python for AI, Spanish, Astrophysics)..."
+                className="generate-input flex-1"
+              />
+            </div>
+            <button className="primary-btn flex items-center gap-1.5" type="submit" disabled={p.busy}>
+              {p.busy?<><span className="btn-spinner"/> Generating…</>:<>Generate course <span>↗</span></>}
+            </button>
+          </form>
+        </section>
+
+        {/* 4 Square Frosted Glass Learning Tool Cards */}
+        <section className="learning-tools-strip flex justify-center w-full mb-8 relative" aria-label="Learning tools">
+          <div className="square-tools-grid relative z-10">
+            <a
+              href="#/course"
+              className="square-card square-card-roadmap"
+              onMouseEnter={()=>setHoveredTool("roadmap")}
+              onMouseLeave={()=>setHoveredTool(null)}
+              onFocus={()=>setHoveredTool("roadmap")}
+              onBlur={()=>setHoveredTool(null)}
+              onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("course");}}
+            >
+              <div className="square-card-bg-shape" />
+              <div className="square-card-top">
+                <span className="square-card-icon grid place-items-center"><Icon name="progress" size={17}/></span>
+                <span className="square-arrow">↗</span>
+              </div>
+              <div className="square-card-body">
+                <strong className="square-card-title">Roadmap</strong>
+                <p className="square-card-desc">Structured path</p>
+              </div>
+            </a>
+
+            <a
+              href="#/flashcards"
+              className="square-card square-card-flashcards"
+              onMouseEnter={()=>setHoveredTool("flashcards")}
+              onMouseLeave={()=>setHoveredTool(null)}
+              onFocus={()=>setHoveredTool("flashcards")}
+              onBlur={()=>setHoveredTool(null)}
+              onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("flashcards");}}
+            >
+              <div className="square-card-bg-shape" />
+              <div className="square-card-top">
+                <span className="square-card-icon grid place-items-center"><Icon name="cards" size={17}/></span>
+                <span className="square-card-pill">{dueCards.length || 78} due</span>
+              </div>
+              <div className="square-card-body">
+                <strong className="square-card-title">Flashcards</strong>
+                <p className="square-card-desc">Active recall</p>
+              </div>
+            </a>
+
+            <a
+              href="#/notes"
+              className="square-card square-card-notes"
+              onMouseEnter={()=>setHoveredTool("notes")}
+              onMouseLeave={()=>setHoveredTool(null)}
+              onFocus={()=>setHoveredTool("notes")}
+              onBlur={()=>setHoveredTool(null)}
+              onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("notes");}}
+            >
+              <div className="square-card-bg-shape" />
+              <div className="square-card-top">
+                <span className="square-card-icon grid place-items-center"><Icon name="notes" size={17}/></span>
+                <span className="square-arrow">↗</span>
+              </div>
+              <div className="square-card-body">
+                <strong className="square-card-title">AI Notes</strong>
+                <p className="square-card-desc">Lesson ideas</p>
+              </div>
+            </a>
+
+            <a
+              href="#/practice"
+              className="square-card square-card-practice"
+              onMouseEnter={()=>setHoveredTool("practice")}
+              onMouseLeave={()=>setHoveredTool(null)}
+              onFocus={()=>setHoveredTool("practice")}
+              onBlur={()=>setHoveredTool(null)}
+              onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("practice");}}
+            >
+              <div className="square-card-bg-shape" />
+              <div className="square-card-top">
+                <span className="square-card-icon grid place-items-center"><Icon name="practice" size={17}/></span>
+                <span className="square-arrow">↗</span>
+              </div>
+              <div className="square-card-body">
+                <strong className="square-card-title">Practice</strong>
+                <p className="square-card-desc">Tests & studio</p>
+              </div>
+            </a>
+          </div>
+        </section>
       </div>
-
-      {/* Hero Headline & Generator Row */}
-      <section className="hero flex flex-col items-center text-center gap-6 mb-7" id="generator">
-        <h1 className="hero-headline text-4xl sm:text-5xl font-extrabold tracking-tight">
-          What do you want to <span className="text-primary-gradient">learn?</span>
-        </h1>
-        <form
-          className="generate-row flex items-center gap-2.5 max-w-2xl w-full"
-          onSubmit={e=>{
-            e.preventDefault();
-            const value=new FormData(e.currentTarget).get("topic");
-            sessionStorage.setItem("learnos.goal.prefill",String(value||""));
-            p.setModalState?.(null);
-            go("goal");
-          }}
-        >
-          <div className="generate-input-box flex items-center gap-2 flex-1 min-w-0">
-            <span className="spark pl-3" aria-hidden="true">✦</span>
-            <input
-              name="topic"
-              defaultValue=""
-              aria-label="Topic to learn"
-              placeholder="Enter a topic or skill (e.g. Python for AI, Spanish, Astrophysics)..."
-              className="generate-input flex-1"
-            />
-          </div>
-          <button className="primary-btn flex items-center gap-1.5" type="submit" disabled={p.busy}>
-            {p.busy?<><span className="btn-spinner"/> Generating…</>:<>Generate course <span>↗</span></>}
-          </button>
-        </form>
-      </section>
-
-      {/* 4 Square Frosted Glass Learning Tool Cards */}
-      <section className="learning-tools-strip flex justify-center w-full mb-8 relative" aria-label="Learning tools">
-        <div className="square-tools-grid relative z-10">
-          <a href="#/course" className="square-card square-card-roadmap" onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("course");}}>
-            <div className="square-card-bg-shape" />
-            <div className="square-card-top">
-              <span className="square-card-icon grid place-items-center"><Icon name="progress" size={17}/></span>
-              <span className="square-arrow">↗</span>
-            </div>
-            <div className="square-card-body">
-              <strong className="square-card-title">Roadmap</strong>
-              <p className="square-card-desc">Structured path</p>
-            </div>
-          </a>
-
-          <a href="#/flashcards" className="square-card square-card-flashcards" onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("flashcards");}}>
-            <div className="square-card-bg-shape" />
-            <div className="square-card-top">
-              <span className="square-card-icon grid place-items-center"><Icon name="cards" size={17}/></span>
-              <span className="square-card-pill">{dueCards.length || 78} due</span>
-            </div>
-            <div className="square-card-body">
-              <strong className="square-card-title">Flashcards</strong>
-              <p className="square-card-desc">Active recall</p>
-            </div>
-          </a>
-
-          <a href="#/notes" className="square-card square-card-notes" onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("notes");}}>
-            <div className="square-card-bg-shape" />
-            <div className="square-card-top">
-              <span className="square-card-icon grid place-items-center"><Icon name="notes" size={17}/></span>
-              <span className="square-arrow">↗</span>
-            </div>
-            <div className="square-card-body">
-              <strong className="square-card-title">AI Notes</strong>
-              <p className="square-card-desc">Lesson ideas</p>
-            </div>
-          </a>
-
-          <a href="#/practice" className="square-card square-card-practice" onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("practice");}}>
-            <div className="square-card-bg-shape" />
-            <div className="square-card-top">
-              <span className="square-card-icon grid place-items-center"><Icon name="practice" size={17}/></span>
-              <span className="square-arrow">↗</span>
-            </div>
-            <div className="square-card-body">
-              <strong className="square-card-title">Practice</strong>
-              <p className="square-card-desc">Tests & studio</p>
-            </div>
-          </a>
-        </div>
-      </section>
     </div>
 
     {/* 2-Column Dashboard Grid */}

@@ -855,69 +855,79 @@ export default function App(){
     </aside>
     {mobileMoreOpen&&<><button className="mobile-more-scrim fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" type="button" aria-label="Close study tools menu" onClick={()=>setMobileMoreOpen(false)}/><nav className="mobile-more-menu z-50" id="mobile-more-menu" aria-label="More study tools">{toolNavItems.map(([name,label,glyph])=>nav(name,label,glyph))}</nav></>}
     <main className="main flex-1 min-w-0">
-      <header className="topbar flex items-center justify-between gap-3.5 mb-7 sticky top-0 z-30" aria-label="Header navigation">
-        <div className="header-brand-wrap flex items-center">
-          <a href="#/" className="header-brand hanging-paperclip-brand flex items-center text-inherit no-underline cursor-pointer" onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("home");}} aria-label="Drizzlearn Home">
-            {/* Hanging Paperclip Tag Container */}
-            <div className="hanging-clip-anchor relative">
-              {/* Layer 1: Back portion of paperclip (sits BEHIND the card tag) */}
-              <div className="paperclip-metal clip-back-layer" aria-hidden="true">
-                <svg className="paperclip-svg" viewBox="0 0 24 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M19 18 V46 C19 50.5 15.5 54 11 54 C6.5 54 3 50.5 3 46 V11 C3 5.5 6.5 2 11 2 C15.5 2 19 5.5 19 11" 
-                    stroke="url(#clipBackGrad)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
-                  <defs>
-                    <linearGradient id="clipBackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#ffffff" />
-                      <stop offset="40%" stopColor="#8de0fa" />
-                      <stop offset="100%" stopColor="#1e3a45" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
+      {(() => {
+        const headerElement = (
+          <header className="topbar flex items-center justify-between gap-3.5 mb-7 sticky top-0 z-30" aria-label="Header navigation">
+            <div className="header-brand-wrap flex items-center">
+              <a href="#/" className="header-brand hanging-paperclip-brand flex items-center text-inherit no-underline cursor-pointer" onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("home");}} aria-label="Drizzlearn Home">
+                {/* Hanging Paperclip Tag Container */}
+                <div className="hanging-clip-anchor relative">
+                  {/* Layer 1: Back portion of paperclip (sits BEHIND the card tag) */}
+                  <div className="paperclip-metal clip-back-layer" aria-hidden="true">
+                    <svg className="paperclip-svg" viewBox="0 0 24 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M19 18 V46 C19 50.5 15.5 54 11 54 C6.5 54 3 50.5 3 46 V11 C3 5.5 6.5 2 11 2 C15.5 2 19 5.5 19 11" 
+                        stroke="url(#clipBackGrad)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+                      <defs>
+                        <linearGradient id="clipBackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#ffffff" />
+                          <stop offset="40%" stopColor="#8de0fa" />
+                          <stop offset="100%" stopColor="#1e3a45" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
 
-              {/* Layer 2: Hanging Paper Tag Card with left-to-right transparent fade */}
-              <div className="hanging-card-tag flex items-center">
-                <div className="brand-name tracking-wider">Drizzlearn</div>
-              </div>
+                  {/* Layer 2: Hanging Paper Tag Card with left-to-right transparent fade */}
+                  <div className="hanging-card-tag flex items-center">
+                    <div className="brand-name tracking-wider">Drizzlearn</div>
+                  </div>
 
-              {/* Layer 3: Front prong of paperclip (sits OVER the front face of the card) */}
-              <div className="paperclip-metal clip-front-layer" aria-hidden="true">
-                <svg className="paperclip-svg" viewBox="0 0 24 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M11 2 C15.5 2 19 5.5 19 11 V40 C19 44 16.5 47 13 47 C9.5 47 7 44 7 40 V15 C7 12.5 8.8 10.5 11 10.5 C13.2 10.5 15 12.5 15 15 V33" 
-                    stroke="url(#clipFrontGrad)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
-                  <defs>
-                    <linearGradient id="clipFrontGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#ffffff" />
-                      <stop offset="30%" stopColor="#a5f3fc" />
-                      <stop offset="65%" stopColor="#6ccff6" />
-                      <stop offset="100%" stopColor="#0891b2" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
+                  {/* Layer 3: Front prong of paperclip (sits OVER the front face of the card) */}
+                  <div className="paperclip-metal clip-front-layer" aria-hidden="true">
+                    <svg className="paperclip-svg" viewBox="0 0 24 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M11 2 C15.5 2 19 5.5 19 11 V40 C19 44 16.5 47 13 47 C9.5 47 7 44 7 40 V15 C7 12.5 8.8 10.5 11 10.5 C13.2 10.5 15 12.5 15 15 V33" 
+                        stroke="url(#clipFrontGrad)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+                      <defs>
+                        <linearGradient id="clipFrontGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#ffffff" />
+                          <stop offset="30%" stopColor="#a5f3fc" />
+                          <stop offset="65%" stopColor="#6ccff6" />
+                          <stop offset="100%" stopColor="#0891b2" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                </div>
+              </a>
             </div>
-          </a>
-        </div>
-        <nav className="header-nav flex items-center gap-1" aria-label="Main navigation">
-          <div className="header-nav-group flex items-center gap-1">
-            {primaryNavItems.map(([name,label,glyph])=>nav(name,label,glyph,true))}
-          </div>
-          <div className="header-nav-divider" aria-hidden="true" />
-          <div className="header-nav-group flex items-center gap-1">
-            {toolNavItems.map(([name,label,glyph])=>nav(name,label,glyph,true))}
-          </div>
-        </nav>
-        <div className="header-actions flex items-center gap-3">
-          {(syncing||activeRequests>0||busy)&&<span className="sync-indicator flex items-center gap-1.5 text-xs" role="status" aria-live="polite"><span className="btn-spinner"/><span>Loading...</span></span>}
-          <form className="top-search flex items-center gap-2.5" onSubmit={submitSearch}>
-            <Icon name="search"/><input value={queryText} onChange={e=>setQueryText(e.target.value)} type="search" placeholder="Search lessons and tools" aria-label="Search lessons and tools" />
-          </form>
-          <button className={`avatar grid place-items-center ${!(user?.fullName||data.settings.fullName)?"logged-out":""}`} type="button" aria-label={user?.fullName||data.settings.fullName||"Sign in"} title={user?.fullName||data.settings.fullName||"Sign in to your account"} onClick={()=>user?go("settings"):openAccount()}>
-            {(user?.fullName||data.settings.fullName||"?").split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase()}
-          </button>
-        </div>
-      </header>
-      <PageContent page={page} routeParams={routeParams} routeQuery={routeQuery} data={data} setData={setData} user={user} setUser={setUser} remote={remote} setRemote={setRemote} logout={logout} openAccount={openAccount} activeCourse={activeCourse} lessons={lessons} allLessons={allLessons} activeLesson={activeLesson} dueCards={dueCards} nextTask={nextTask} stats={stats} progressPercent={progressPercent} pendingTasks={pendingTasks} proposal={proposal} setProposal={setProposal} busy={busy} generationProgress={generationProgress} generationError={generationError} setGenerationError={setGenerationError} courseFilter={courseFilter} setCourseFilter={setCourseFilter} go={go} openLesson={openLesson} submitGoal={submitGoal} approveProposal={approveProposal} submitCheckpoint={submitCheckpoint} saveNote={saveNote} draftNote={draftNote} deleteNote={deleteNote} confirmDeleteCourse={confirmDeleteCourse} deletingCourseId={deletingCourseId} rateCard={rateCard} addFlashcard={addFlashcard} updateFlashcard={updateFlashcard} deleteFlashcard={deleteFlashcard} addFlashcardsBatch={addFlashcardsBatch} sendTutor={sendTutor} updateData={updateData} request={request} requestStream={requestStream} refreshRemote={refreshRemote} flashToast={flashToast} setModal={setModal} setActiveLessonId={setActiveLessonId} setSearchResults={setSearchResults} searchResults={searchResults} setLoginMode={setLoginMode} setModalState={setModal} generatingCourseId={generatingCourseId} syncing={syncing} activeRequests={activeRequests} />
+            <nav className="header-nav flex items-center gap-1" aria-label="Main navigation">
+              <div className="header-nav-group flex items-center gap-1">
+                {primaryNavItems.map(([name,label,glyph])=>nav(name,label,glyph,true))}
+              </div>
+              <div className="header-nav-divider" aria-hidden="true" />
+              <div className="header-nav-group flex items-center gap-1">
+                {toolNavItems.map(([name,label,glyph])=>nav(name,label,glyph,true))}
+              </div>
+            </nav>
+            <div className="header-actions flex items-center gap-3">
+              {(syncing||activeRequests>0||busy)&&<span className="sync-indicator flex items-center gap-1.5 text-xs" role="status" aria-live="polite"><span className="btn-spinner"/><span>Loading...</span></span>}
+              <form className="top-search flex items-center gap-2.5" onSubmit={submitSearch}>
+                <Icon name="search"/><input value={queryText} onChange={e=>setQueryText(e.target.value)} type="search" placeholder="Search lessons and tools" aria-label="Search lessons and tools" />
+              </form>
+              <button className={`avatar grid place-items-center ${!(user?.fullName||data.settings.fullName)?"logged-out":""}`} type="button" aria-label={user?.fullName||data.settings.fullName||"Sign in"} title={user?.fullName||data.settings.fullName||"Sign in to your account"} onClick={()=>user?go("settings"):openAccount()}>
+                {(user?.fullName||data.settings.fullName||"?").split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase()}
+              </button>
+            </div>
+          </header>
+        );
+
+        return (
+          <>
+            {page !== "home" && headerElement}
+            <PageContent page={page} header={page === "home" ? headerElement : null} routeParams={routeParams} routeQuery={routeQuery} data={data} setData={setData} user={user} setUser={setUser} remote={remote} setRemote={setRemote} logout={logout} openAccount={openAccount} activeCourse={activeCourse} lessons={lessons} allLessons={allLessons} activeLesson={activeLesson} dueCards={dueCards} nextTask={nextTask} stats={stats} progressPercent={progressPercent} pendingTasks={pendingTasks} proposal={proposal} setProposal={setProposal} busy={busy} generationProgress={generationProgress} generationError={generationError} setGenerationError={setGenerationError} courseFilter={courseFilter} setCourseFilter={setCourseFilter} go={go} openLesson={openLesson} submitGoal={submitGoal} approveProposal={approveProposal} submitCheckpoint={submitCheckpoint} saveNote={saveNote} draftNote={draftNote} deleteNote={deleteNote} confirmDeleteCourse={confirmDeleteCourse} deletingCourseId={deletingCourseId} rateCard={rateCard} addFlashcard={addFlashcard} updateFlashcard={updateFlashcard} deleteFlashcard={deleteFlashcard} addFlashcardsBatch={addFlashcardsBatch} sendTutor={sendTutor} updateData={updateData} request={request} requestStream={requestStream} refreshRemote={refreshRemote} flashToast={flashToast} setModal={setModal} setActiveLessonId={setActiveLessonId} setSearchResults={setSearchResults} searchResults={searchResults} setLoginMode={setLoginMode} setModalState={setModal} generatingCourseId={generatingCourseId} syncing={syncing} activeRequests={activeRequests} />
+          </>
+        );
+      })()}
       <footer className="app-footer flex items-center justify-between text-sm"><span>Drizzlearn</span><button type="button" onClick={()=>go("settings")}>Settings</button></footer>
     </main>
     {toast&&<div className="toast show fixed z-50" role="status" aria-live="polite">{toast}</div>}
