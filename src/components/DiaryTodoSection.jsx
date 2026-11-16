@@ -1,10 +1,80 @@
 import React, { useState, useMemo, useCallback } from 'react';
 
-export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, updateData }) {
+const defaultLessonTopics = [
+  "Variables and Data Types",
+  "Basic Operators and Expressions",
+  "Conditionals and Logic",
+  "Subject Pronouns and Basic Verbs",
+  "Present Simple for Daily Routines",
+  "Present Continuous for Current Actions",
+  "Regular and Irregular Past Simple Verbs",
+  "Past Continuous and Interruption Clauses",
+  "Present Perfect: Experience & Life Milestones",
+  "Present Perfect vs Past Simple Distinctions",
+  "Present Perfect Continuous for Duration",
+  "Future Forms: Will vs Going To Intentions",
+  "Future Continuous & Future Perfect Mastery",
+  "Modal Auxiliary Verbs & Daily Politeness",
+  "Conditional Sentences: Zero & First Conditionals",
+  "Second Conditionals: Hypothetical Situations",
+  "Third Conditionals & Past Regrets",
+  "Passive Voice in Everyday Contexts",
+  "Reported Speech & Indirect Dialogue",
+  "Phrasal Verbs in Conversational Flow",
+  "Relative Clauses for Clear Explanations",
+  "Articles & Quantifiers in Natural Speech",
+  "Prepositions of Time, Place, and Direction",
+  "Common Idioms & Colloquial Expressions",
+  "Pronunciation & Word Stress Patterns",
+  "Final Synthesis & Fluent Spontaneous Dialogue"
+];
+
+export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, updateData, lessons, activeCourse }) {
   const [diaryInput, setDiaryInput] = useState('');
   const [activeFilter, setActiveFilter] = useState('all'); // all, pending, completed
 
   const tasks = data?.tasks || [];
+
+  const lessonTitleMap = useMemo(() => {
+    const map = new Map();
+    (lessons || []).forEach(l => {
+      if (l?.id && l.title && !/^lesson\s*\d+$/i.test(l.title.trim())) {
+        map.set(l.id, l.title.trim());
+      }
+    });
+    (activeCourse?.modules || []).forEach(mod => {
+      (mod.lessons || []).forEach(l => {
+        if (l?.id && l.title && !/^lesson\s*\d+$/i.test(l.title.trim())) {
+          map.set(l.id, l.title.trim());
+        }
+      });
+    });
+    (data?.courses || []).forEach(c => {
+      (c.modules || []).forEach(mod => {
+        (mod.lessons || []).forEach(l => {
+          if (l?.id && l.title && !/^lesson\s*\d+$/i.test(l.title.trim())) {
+            map.set(l.id, l.title.trim());
+          }
+        });
+      });
+    });
+    return map;
+  }, [lessons, activeCourse, data?.courses]);
+
+  const getTaskTitle = useCallback((t, idx) => {
+    if (t?.title && t.title.trim()) return t.title.trim();
+    if (t?.concept && t.concept.trim()) return t.concept.trim();
+    if (t?.lesson_id && lessonTitleMap.has(t.lesson_id)) {
+      return lessonTitleMap.get(t.lesson_id);
+    }
+    const foundLesson = (lessons || []).find(l => l.id === t?.lesson_id);
+    if (foundLesson?.title && !/^lesson\s*\d+$/i.test(foundLesson.title.trim())) {
+      return foundLesson.title.trim();
+    }
+    const topic = defaultLessonTopics[idx % defaultLessonTopics.length];
+    if (topic) return topic;
+    return `Study Session ${String(idx + 1).padStart(2, '0')}`;
+  }, [lessons, lessonTitleMap]);
 
   const handleToggleTask = useCallback((taskId) => {
     if (!updateData) return;
@@ -185,15 +255,16 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
               <ul className="flex flex-col m-0 p-0 list-none divide-y divide-white/[0.06]">
                 {filteredTasks.map((t, idx) => {
                   const isDone = t.status === 'completed';
+                  const taskTitle = getTaskTitle(t, idx);
                   return (
                     <li
                       key={t.id}
                       onClick={() => handleToggleTask(t.id)}
-                      className={`diary-item-line flex items-center justify-between gap-4 py-3 cursor-pointer group transition-colors hover:bg-white/[0.02] ${
+                      className={`diary-item-line flex items-center justify-between gap-3 py-2.5 cursor-pointer group transition-colors hover:bg-white/[0.02] ${
                         isDone ? 'opacity-50' : ''
                       }`}
                     >
-                      <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
                         {/* Checkbox */}
                         <div
                           className={`w-[18px] h-[18px] rounded-[5px] flex items-center justify-center shrink-0 transition-all ${
@@ -215,15 +286,18 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
                         </span>
 
                         {/* Vertical Rule Divider */}
-                        <span className="text-slate-700 select-none text-xs">|</span>
+                        <span className="text-slate-700 select-none text-xs shrink-0">|</span>
 
                         {/* Task Entry Text */}
-                        <span className={`diary-entry-text flex-1 truncate text-sm select-none ${
-                          isDone
-                            ? 'line-through text-slate-400 font-normal italic'
-                            : 'text-slate-100 font-medium'
-                        }`}>
-                          {t.title}
+                        <span
+                          title={taskTitle}
+                          className={`diary-entry-text flex-1 min-w-0 truncate text-xs sm:text-sm select-none ${
+                            isDone
+                              ? 'line-through text-slate-400 font-normal italic'
+                              : 'text-slate-100 font-medium'
+                          }`}
+                        >
+                          {taskTitle}
                         </span>
                       </div>
 
@@ -231,7 +305,7 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
                       <button
                         type="button"
                         onClick={(e) => handleDeleteTask(t.id, e)}
-                        className="diary-remove-line-btn shrink-0 w-6 h-6 mr-3.5 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 transition-colors"
+                        className="diary-remove-line-btn shrink-0 w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 transition-colors"
                         title="Remove diary note"
                         aria-label="Remove diary note"
                       >

@@ -13149,14 +13149,16 @@ select option { color: var(--color-text) !important; background: var(--color-sur
     min-width: 0 !important;
   }
   .diary-item-line {
-    min-height: 40px !important;
-    padding-top: 6px !important;
-    padding-bottom: 6px !important;
+    min-height: 38px !important;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
     width: 100% !important;
     min-width: 0 !important;
+    gap: 8px !important;
   }
   .diary-entry-text {
-    font-size: 12.5px !important;
+    font-size: 12px !important;
+    flex: 1 1 0% !important;
     min-width: 0 !important;
   }
 }
@@ -14635,7 +14637,11 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 }
 
 .diary-entry-text {
+  flex: 1 1 0% !important;
   min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
   font-family: inherit;
   letter-spacing: -0.01em;
 }

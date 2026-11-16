@@ -427,7 +427,7 @@ const Home = React.memo(function Home(p){
         </section>
 
         {/* Learning Diary nested in left-stack directly below Roadmap */}
-        <DiaryTodoSection data={data} updateData={p.updateData} />
+        <DiaryTodoSection data={data} updateData={p.updateData} lessons={lessons} activeCourse={activeCourse} />
       </div>
 
       {/* Right Column Stack */}
