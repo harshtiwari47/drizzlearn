@@ -1,6 +1,7 @@
 import React from "react";
 import { buildPath, shouldInterceptNavClick } from "../router.js";
 import { HeaderSearchBar } from "./HeaderSearchBar.jsx";
+import { AppFooter } from "./AppFooter.jsx";
 
 export function prettyDate(iso){if(!iso)return"";try{return new Date(iso).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});}catch{return iso;}}
 export function minuteLabel(mins){if(!mins&&mins!==0)return"";if(mins<60)return`${mins}m`;const h=Math.floor(mins/60);const m=mins%60;return m?`${h}h ${m}m`:`${h}h`;}
@@ -586,7 +587,7 @@ export default function App(){
         </div>
       </header>
       <PageContent page={page} routeParams={routeParams} routeQuery={routeQuery} data={data} setData={setData} user={user} setUser={setUser} remote={remote} setRemote={setRemote} logout={logout} openAccount={openAccount} activeCourse={activeCourse} lessons={lessons} allLessons={allLessons} activeLesson={activeLesson} dueCards={dueCards} nextTask={nextTask} stats={stats} progressPercent={progressPercent} pendingTasks={pendingTasks} proposal={proposal} setProposal={setProposal} busy={busy} generationProgress={generationProgress} generationError={generationError} setGenerationError={setGenerationError} courseFilter={courseFilter} setCourseFilter={setCourseFilter} go={go} openLesson={openLesson} submitGoal={submitGoal} approveProposal={approveProposal} submitCheckpoint={submitCheckpoint} saveNote={saveNote} draftNote={draftNote} deleteNote={deleteNote} confirmDeleteCourse={confirmDeleteCourse} deletingCourseId={deletingCourseId} rateCard={rateCard} addFlashcard={addFlashcard} updateFlashcard={updateFlashcard} deleteFlashcard={deleteFlashcard} addFlashcardsBatch={addFlashcardsBatch} sendTutor={sendTutor} updateData={updateData} request={request} requestStream={requestStream} refreshRemote={refreshRemote} flashToast={flashToast} setModal={setModal} setActiveLessonId={setActiveLessonId} setSearchResults={setSearchResults} searchResults={searchResults} setLoginMode={setLoginMode} setModalState={setModal} generatingCourseId={generatingCourseId} syncing={syncing} activeRequests={activeRequests} />
-      <footer className="app-footer flex items-center justify-between text-sm"><span>Drizzlearn</span><button type="button" onClick={()=>go("settings")}>Settings</button></footer>
+      <AppFooter go={go} />
     </main>
     {toast&&<div className="toast show fixed z-50" role="status" aria-live="polite">{toast}</div>}
     {modal&&<Modal modal={modal} onClose={()=>{if(!deletingCourseId){setDeleteCourseError("");setModal(null);}}} onApprove={()=>approveProposal(true)} onDeleteCourse={deleteCourse} deletingCourse={Boolean(deletingCourseId)} deleteCourseError={deleteCourseError} loginMode={loginMode} setLoginMode={setLoginMode} authSubmit={authSubmit} authError={authError} authMessage={authMessage} setAuthError={setAuthError} setAuthMessage={setAuthMessage} logout={logout} authBusy={authBusy} />}

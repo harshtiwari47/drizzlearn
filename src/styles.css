@@ -16341,109 +16341,269 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 }
 
 /* ==========================================================================
-   DRIZZLEARN WAVE GRADIENT FOOTER & TYPOGRAPHY
+   DRIZZLEARN REDESIGNED FOOTER (Study Desk Setup + Friendly Copy + Wave Gradients)
    ========================================================================== */
-.app-footer {
+
+.app-footer-redesign {
   position: relative !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  margin-top: 56px !important;
+  display: block !important;
+  margin-top: 64px !important;
   margin-bottom: 0 !important;
   margin-left: -40px !important;
   margin-right: -40px !important;
   width: calc(100% + 80px) !important;
-  min-height: 70px !important;
-  padding: 18px 40px !important;
-  border: none !important;
-  border-top: none !important;
-  outline: none !important;
-  border-radius: 0 !important;
-  background:
-    radial-gradient(85% 100px at 50% 0%, rgba(13, 148, 136, 0.12) 0%, rgba(8, 145, 178, 0.05) 50%, transparent 80%),
-    radial-gradient(45% 70px at 15% 0%, rgba(6, 95, 70, 0.1) 0%, transparent 65%),
-    radial-gradient(45% 70px at 85% 0%, rgba(14, 116, 144, 0.09) 0%, transparent 65%),
-    linear-gradient(180deg, rgba(5, 15, 20, 0.72) 0%, rgba(2, 8, 12, 0.94) 100%) !important;
-  box-shadow: none !important;
-  overflow: hidden !important;
+  background: linear-gradient(180deg, #070d14 0%, #03070b 100%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-sizing: border-box !important;
 }
 
-.footer-wave-ambient {
+/* Background Layer: Wave gradients & glowing ambient meshes */
+.footer-wave-canvas {
   position: absolute !important;
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  height: 100% !important;
-  pointer-events: none !important;
   overflow: hidden !important;
-  z-index: 1 !important;
-  opacity: 0.85 !important;
+  pointer-events: none !important;
 }
 
-.footer-wave-svg {
+.footer-top-edge-line {
+  background: linear-gradient(90deg, 
+    rgba(56, 189, 248, 0) 0%, 
+    rgba(56, 189, 248, 0.4) 25%, 
+    rgba(129, 140, 248, 0.45) 50%, 
+    rgba(52, 211, 153, 0.4) 75%, 
+    rgba(52, 211, 153, 0) 100%) !important;
+}
+
+.footer-mesh-glow {
+  position: absolute !important;
+  border-radius: 50% !important;
+  filter: blur(80px) !important;
+  opacity: 0.18 !important;
+  pointer-events: none !important;
+}
+
+.footer-mesh-glow.glow-cyan {
+  top: 12% !important;
+  left: 18% !important;
+  width: 450px !important;
+  height: 280px !important;
+  background: radial-gradient(circle, #00e5ff 0%, transparent 70%) !important;
+}
+
+.footer-mesh-glow.glow-violet {
+  bottom: 15% !important;
+  right: 12% !important;
+  width: 500px !important;
+  height: 320px !important;
+  background: radial-gradient(circle, #818cf8 0%, transparent 70%) !important;
+}
+
+.footer-mesh-glow.glow-amber {
+  top: 25% !important;
+  left: 8% !important;
+  width: 320px !important;
+  height: 240px !important;
+  background: radial-gradient(circle, #f59e0b 0%, transparent 70%) !important;
+  opacity: 0.12 !important;
+}
+
+.footer-wave-svg-backdrop {
   width: 100% !important;
   height: 100% !important;
   display: block !important;
-  filter: drop-shadow(0 2px 8px rgba(13, 148, 136, 0.18)) !important;
+  filter: drop-shadow(0 2px 12px rgba(14, 116, 144, 0.15)) !important;
 }
 
-.footer-brand-title {
-  font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-  font-size: 15.5px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.14em !important;
-  text-transform: uppercase !important;
-  line-height: 1 !important;
+/* Inner Container */
+.footer-inner-container {
+  max-width: 1280px !important;
+  box-sizing: border-box !important;
 }
 
-.footer-brand-title .brand-text-drizz {
-  color: #f1f5f9 !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+/* Left Column: Cozy Study Desk Setup Frame & Lighting */
+.footer-desk-frame {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-.footer-brand-title .brand-text-learn {
-  color: #2dd4bf !important;
-  text-shadow: 0 0 10px rgba(45, 212, 191, 0.35) !important;
+.footer-desk-ambient-glow {
+  position: absolute !important;
+  bottom: 12% !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 85% !important;
+  height: 55% !important;
+  background: radial-gradient(circle at 60% 40%, rgba(245, 158, 11, 0.22) 0%, rgba(0, 229, 255, 0.12) 45%, transparent 70%) !important;
+  filter: blur(40px) !important;
+  border-radius: 50% !important;
+  pointer-events: none !important;
 }
 
-.footer-settings-btn {
-  font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.04em !important;
-  color: #94a3b8 !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 9999px !important;
-  padding: 6px 16px !important;
+.footer-desk-img {
+  filter: drop-shadow(0 24px 36px rgba(0, 0, 0, 0.75)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5)) !important;
+  transform-origin: center center !important;
+}
+
+/* Right Column: Friendly Copy Elements */
+.footer-brand-pill {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  backdrop-filter: blur(12px) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.footer-headline {
+  font-family: var(--font-display, 'Space Grotesk', 'Manrope', sans-serif) !important;
+}
+
+.footer-perk-card {
+  background: rgba(255, 255, 255, 0.025) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  backdrop-filter: blur(10px) !important;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2) !important;
 }
 
-.footer-settings-btn:hover {
-  color: #2dd4bf !important;
-  border-color: rgba(45, 212, 191, 0.4) !important;
-  background: rgba(45, 212, 191, 0.08) !important;
-  box-shadow: 0 0 12px rgba(45, 212, 191, 0.2) !important;
-  transform: translateY(-1px) !important;
+.footer-perk-card:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-2px) !important;
 }
 
-@media (max-width: 900px) {
-  .app-footer {
-    margin-left: -20px !important;
-    margin-right: -20px !important;
-    width: calc(100% + 40px) !important;
-    padding: 16px 20px !important;
-  }
+/* Quick Nav Buttons */
+.footer-nav-btn {
+  font-family: var(--font-ui, 'Manrope', sans-serif) !important;
 }
 
-@media (max-width: 620px) {
-  .app-footer {
+/* Responsive Footer Breakpoints (480px, 768px, 1024px, 1280px, 1536px, 1920px) */
+
+@media (max-width: 480px) {
+  .app-footer-redesign {
     margin-left: -14px !important;
     margin-right: -14px !important;
     width: calc(100% + 28px) !important;
-    padding: 14px 16px !important;
+    margin-top: 36px !important;
+  }
+  .footer-inner-container {
+    padding: 38px 16px 28px !important;
+  }
+  .footer-main-grid {
+    gap: 28px !important;
+  }
+  .footer-desk-frame {
+    max-width: 280px !important;
+  }
+  .footer-headline {
+    font-size: 20px !important;
+  }
+  .footer-body {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+  }
+  .footer-perks-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .footer-bottom-bar {
+    padding-top: 24px !important;
+    margin-top: 32px !important;
+    text-align: center !important;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .app-footer-redesign {
+    margin-left: -20px !important;
+    margin-right: -20px !important;
+    width: calc(100% + 40px) !important;
+    margin-top: 48px !important;
+  }
+  .footer-inner-container {
+    padding: 50px 24px 34px !important;
+  }
+  .footer-main-grid {
+    gap: 36px !important;
+  }
+  .footer-desk-frame {
+    max-width: 360px !important;
+  }
+  .footer-headline {
+    font-size: 24px !important;
+  }
+  .footer-perks-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .app-footer-redesign {
+    margin-left: -24px !important;
+    margin-right: -24px !important;
+    width: calc(100% + 48px) !important;
+  }
+  .footer-inner-container {
+    padding: 64px 32px 40px !important;
+    max-width: 980px !important;
+  }
+  .footer-main-grid {
+    grid-template-columns: repeat(12, 1fr) !important;
+    gap: 32px !important;
+  }
+  .footer-desk-col {
+    grid-column: span 5 !important;
+  }
+  .footer-copy-col {
+    grid-column: span 7 !important;
+  }
+  .footer-desk-frame {
+    max-width: 380px !important;
+  }
+  .footer-headline {
+    font-size: 27px !important;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1280px) {
+  .footer-inner-container {
+    padding: 72px 48px 44px !important;
+    max-width: 1200px !important;
+  }
+  .footer-desk-frame {
+    max-width: 440px !important;
+  }
+  .footer-headline {
+    font-size: 32px !important;
+  }
+}
+
+@media (min-width: 1281px) and (max-width: 1536px) {
+  .footer-inner-container {
+    padding: 84px 60px 48px !important;
+    max-width: 1360px !important;
+  }
+  .footer-desk-frame {
+    max-width: 480px !important;
+  }
+  .footer-headline {
+    font-size: 36px !important;
+  }
+}
+
+@media (min-width: 1537px) {
+  .footer-inner-container {
+    padding: 96px 80px 54px !important;
+    max-width: 1560px !important;
+  }
+  .footer-desk-frame {
+    max-width: 520px !important;
+  }
+  .footer-headline {
+    font-size: 40px !important;
   }
 }
 

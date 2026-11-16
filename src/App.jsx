@@ -46,6 +46,7 @@ import {
 } from "./components/common.jsx";
 import { HeaderSearchBar } from "./components/HeaderSearchBar.jsx";
 import { MobileNavDrawer } from "./components/MobileNavDrawer.jsx";
+import { AppFooter } from "./components/AppFooter.jsx";
 import {
   HomePage,
   Home,
@@ -948,7 +949,7 @@ export default function App(){
           </>
         );
       })()}
-      <footer className="app-footer flex items-center justify-between text-sm"><span>Drizzlearn</span><button type="button" onClick={()=>go("settings")}>Settings</button></footer>
+      <AppFooter go={go} />
     </main>
     {toast&&<div className="toast show fixed z-50" role="status" aria-live="polite">{toast}</div>}
     {modal&&<Modal modal={modal} onClose={()=>{if(!deletingCourseId){setDeleteCourseError("");setModal(null);}}} onApprove={()=>approveProposal(true)} onDeleteCourse={deleteCourse} deletingCourse={Boolean(deletingCourseId)} deleteCourseError={deleteCourseError} loginMode={loginMode} setLoginMode={setLoginMode} authSubmit={authSubmit} authError={authError} authMessage={authMessage} setAuthError={setAuthError} setAuthMessage={setAuthMessage} logout={logout} authBusy={authBusy} />}
