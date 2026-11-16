@@ -16423,17 +16423,36 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   box-sizing: border-box !important;
 }
 
+/* Main grid: ensure elements align to bottom so desk image sticks flush to the border */
+.footer-main-grid {
+  align-items: flex-end !important;
+  margin-bottom: 0 !important;
+}
+
+.footer-desk-col {
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  align-self: flex-end !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
 /* Left Column: Cozy Study Desk Setup Frame & Lighting */
 .footer-desk-frame {
   position: relative !important;
   display: flex !important;
-  align-items: center !important;
+  align-items: flex-end !important;
   justify-content: center !important;
+  align-self: flex-end !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: 0 !important;
 }
 
 .footer-desk-ambient-glow {
   position: absolute !important;
-  bottom: 12% !important;
+  bottom: 8% !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
   width: 85% !important;
@@ -16445,8 +16464,16 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 }
 
 .footer-desk-img {
+  display: block !important;
+  vertical-align: bottom !important;
+  margin-bottom: -1px !important;
+  padding-bottom: 0 !important;
   filter: drop-shadow(0 24px 36px rgba(0, 0, 0, 0.75)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5)) !important;
-  transform-origin: center center !important;
+  transform-origin: bottom center !important;
+}
+
+.footer-bottom-bar {
+  margin-top: 0 !important;
 }
 
 /* Right Column: Friendly Copy Elements */

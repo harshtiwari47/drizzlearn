@@ -4,25 +4,15 @@ import React from "react";
  * AppFooter
  * 
  * Beautifully designed footer for Drizzlearn featuring:
- * - Left side: Cozy study desk setup illustration (/images/footer-study-desk.png)
+ * - Left side: Cozy study desk setup illustration resting directly flush on the bottom border
  * - Right side: Friendly, human, simple copy about Drizzlearn (zero AI buzzword slop)
  * - Multi-layer wave gradients and ambient glowing crests in the background
- * - Top & bottom generous paddings with multi-breakpoint responsiveness (480px, 768px, 1024px, 1280px, 1536px, 1920px)
+ * - Top & bottom paddings with multi-breakpoint responsiveness (480px, 768px, 1024px, 1280px, 1536px, 1920px)
  */
 export function AppFooter({ go }) {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  const navLinks = [
-    { label: "Home", page: "home" },
-    { label: "Courses", page: "courses" },
-    { label: "Today's Plan", page: "today" },
-    { label: "Flashcards", page: "flashcards" },
-    { label: "Practice", page: "practice" },
-    { label: "AI Tutor", page: "tutor" },
-    { label: "Settings", page: "settings" },
-  ];
 
   return (
     <footer className="app-footer-redesign relative w-full overflow-hidden text-slate-300" role="contentinfo">
@@ -96,27 +86,27 @@ export function AppFooter({ go }) {
       </div>
 
       {/* Main Footer Content Container */}
-      <div className="footer-inner-container relative z-10 mx-auto w-full px-5 sm:px-8 md:px-12 lg:px-16 py-14 sm:py-16 md:py-20 lg:py-24">
-        {/* Top Section: Left Study Desk Image + Right Friendly Brand Story */}
-        <div className="footer-main-grid grid grid-cols-1 lg:grid-cols-12 items-center gap-10 lg:gap-14">
+      <div className="footer-inner-container relative z-10 mx-auto w-full px-5 sm:px-8 md:px-12 lg:px-16 pt-14 sm:pt-16 md:pt-20 lg:pt-24 pb-8 sm:pb-10">
+        {/* Main Grid: Left Study Desk Image sticking to bottom border + Right Friendly Brand Story */}
+        <div className="footer-main-grid grid grid-cols-1 lg:grid-cols-12 items-end gap-8 lg:gap-14">
           
-          {/* Left Column: Cozy Study Desk Illustration */}
-          <div className="footer-desk-col lg:col-span-5 flex justify-center lg:justify-start">
-            <div className="footer-desk-frame relative group w-full max-w-[480px] flex items-center justify-center">
+          {/* Left Column: Cozy Study Desk Illustration (sticks flush to the bottom border) */}
+          <div className="footer-desk-col lg:col-span-5 flex justify-center lg:justify-start items-end self-end order-2 lg:order-1">
+            <div className="footer-desk-frame relative group w-full max-w-[480px] flex items-end justify-center mb-0 pb-0">
               {/* Soft warm desk lamp glow aura */}
               <div className="footer-desk-ambient-glow" aria-hidden="true" />
               
               <img
                 src="/images/footer-study-desk.png"
                 alt="Cozy Drizzlearn study desk setup with books, plants, and monitor"
-                className="footer-desk-img relative z-10 w-full h-auto object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                className="footer-desk-img relative z-10 w-full h-auto object-contain block mb-[-1px] align-bottom transition-transform duration-500 ease-out group-hover:scale-[1.01]"
                 loading="lazy"
               />
             </div>
           </div>
 
           {/* Right Column: Friendly Copy About Drizzlearn */}
-          <div className="footer-copy-col lg:col-span-7 flex flex-col items-start gap-5">
+          <div className="footer-copy-col lg:col-span-7 flex flex-col items-start gap-5 pb-6 sm:pb-8 lg:pb-10 order-1 lg:order-2">
             {/* Brand Logo Tag */}
             <div className="flex items-center gap-3">
               <div className="footer-brand-pill flex items-center gap-2 px-3.5 py-1.5 rounded-full">
@@ -126,7 +116,6 @@ export function AppFooter({ go }) {
                   <span className="brand-text-learn">LEARN</span>
                 </span>
               </div>
-              <span className="text-xs text-slate-400 font-mono tracking-wider uppercase">Your quiet study corner</span>
             </div>
 
             {/* Friendly Headline */}
@@ -165,26 +154,12 @@ export function AppFooter({ go }) {
                 </div>
               </div>
             </div>
-
-            {/* Quick Navigation Links */}
-            <nav className="footer-nav-strip flex flex-wrap items-center gap-2 sm:gap-3 pt-3" aria-label="Footer navigation">
-              {navLinks.map((item) => (
-                <button
-                  key={item.page}
-                  type="button"
-                  onClick={() => go?.(item.page)}
-                  className="footer-nav-btn text-xs font-medium text-slate-300 hover:text-cyan-300 px-3 py-1.5 rounded-lg hover:bg-white/[0.06] transition-colors cursor-pointer"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
           </div>
 
         </div>
 
-        {/* Bottom Bar: Copyright & Back to Top */}
-        <div className="footer-bottom-bar flex flex-col sm:flex-row items-center justify-between gap-4 pt-10 mt-12 border-t border-white/[0.08]">
+        {/* Bottom Bar: Horizontal border directly touching the desk illustration */}
+        <div className="footer-bottom-bar flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 sm:pt-8 mt-0 border-t border-white/[0.08]">
           <p className="text-xs text-slate-400 font-medium text-center sm:text-left">
             © {new Date().getFullYear()} Drizzlearn. Made with care for curious minds everywhere.
           </p>
