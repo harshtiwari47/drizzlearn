@@ -71,9 +71,9 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
   }), []);
 
   return (
-    <section className="diary-section-wrapper w-full mb-6" aria-label="Personal Learning Diary & Task Planner">
+    <section className="diary-section-wrapper w-full mb-6 min-w-0" aria-label="Personal Learning Diary & Task Planner">
       {/* Outer Notebook Container Card */}
-      <div className="diary-notebook-card relative flex overflow-hidden rounded-[20px] bg-[#0c1017] border border-white/[0.08] shadow-2xl">
+      <div className="diary-notebook-card relative flex overflow-hidden rounded-[20px] bg-[#0c1017] border border-white/[0.08] shadow-2xl w-full min-w-0">
         {/* Left Crimson Leather Spine */}
         <div className="diary-folio-spine absolute top-0 bottom-0 left-0 w-[38px] bg-gradient-to-r from-[#5c111a] via-[#881324] to-[#450a12] rounded-l-[20px] z-10" aria-hidden="true">
           {/* Vertical Leather Stitching */}
@@ -88,10 +88,10 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
         </div>
 
         {/* Main Dark Paper Content Area (Generous pl-[72px] to clear the rings cleanly) */}
-        <div className="diary-paper-content flex-1 flex flex-col pl-[72px] pr-6 pt-5 pb-5 min-h-[440px] z-10">
+        <div className="diary-paper-content flex-1 min-w-0 w-full flex flex-col pl-[72px] pr-6 pt-5 pb-5 min-h-[440px] z-10 box-border">
           {/* Top Header Row */}
-          <div className="diary-header-row flex flex-wrap items-center justify-between gap-4 mb-4">
-            <div className="diary-title-group flex flex-col">
+          <div className="diary-header-row flex flex-wrap items-center justify-between gap-4 mb-4 w-full min-w-0">
+            <div className="diary-title-group flex flex-col min-w-0">
               {/* Badge: Red Square + DAILY JOURNAL | Date */}
               <div className="diary-badge-row flex items-center gap-2 mb-1">
                 <span className="w-2.5 h-2.5 rounded-[2px] bg-red-600 inline-block shrink-0 shadow-xs shadow-red-500/50" />
@@ -109,7 +109,7 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
             </div>
 
             {/* Filter Tabs */}
-            <div className="diary-filter-tabs flex items-center gap-2">
+            <div className="diary-filter-tabs flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => setActiveFilter('all')}
@@ -147,9 +147,9 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
           </div>
 
           {/* Input Row with Pencil Icon and Solid Red '+ Add Line' Button */}
-          <div className="diary-input-wrap mb-4">
-            <form onSubmit={handleAddTask} className="diary-input-form flex items-center gap-3">
-              <div className="diary-input-box flex-1 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] focus-within:border-white/20 focus-within:bg-white/[0.05] transition-all">
+          <div className="diary-input-wrap mb-4 w-full min-w-0">
+            <form onSubmit={handleAddTask} className="diary-input-form flex items-center gap-3 w-full min-w-0">
+              <div className="diary-input-box flex-1 min-w-0 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] focus-within:border-white/20 focus-within:bg-white/[0.05] transition-all">
                 <svg className="w-4 h-4 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                 </svg>
@@ -158,7 +158,7 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
                   placeholder="Write a task, concept revision, or lesson goal..."
                   value={diaryInput}
                   onChange={(e) => setDiaryInput(e.target.value)}
-                  className="diary-text-input flex-1 bg-transparent text-white placeholder:text-slate-500 text-sm font-sans focus:outline-none outline-none border-none ring-0 shadow-none"
+                  className="diary-text-input flex-1 min-w-0 w-full bg-transparent text-white placeholder:text-slate-500 text-sm font-sans focus:outline-none outline-none border-none ring-0 shadow-none"
                 />
               </div>
               <button
@@ -172,7 +172,7 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
           </div>
 
           {/* Ruled Lines Content Arena */}
-          <div className="diary-lines-content-arena flex-1 overflow-y-auto max-h-[360px] custom-diary-scroll pr-3">
+          <div className="diary-lines-content-arena flex-1 min-w-0 w-full overflow-y-auto max-h-[360px] custom-diary-scroll pr-2">
             {filteredTasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-slate-400">
                 <div className="w-10 h-10 rounded-full bg-slate-800/80 flex items-center justify-center text-white mb-2 text-lg font-serif">

@@ -300,9 +300,9 @@ const Home = React.memo(function Home(p){
     </div>
 
     {/* 2-Column Dashboard Grid */}
-    <section className="dashboard-grid grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+    <section className="dashboard-grid grid grid-cols-1 lg:grid-cols-2 gap-6 items-start w-full min-w-0">
       {/* Left Column Stack */}
-      <div className="left-stack flex flex-col gap-6">
+      <div className="left-stack flex flex-col gap-6 min-w-0 w-full">
         {/* Current Course Card with Sculpted Human Progress Avatar */}
         <section className="panel course-panel glass-course-card flex flex-col" id="course">
           <div className="panel-head flex items-center justify-between">
@@ -431,7 +431,7 @@ const Home = React.memo(function Home(p){
       </div>
 
       {/* Right Column Stack */}
-      <div className="right-stack flex flex-col gap-6">
+      <div className="right-stack flex flex-col gap-6 min-w-0 w-full">
         {/* Study Timeline Pinned with Washi Tape */}
         <section className="panel timeline-panel sticky-note-timeline flex flex-col relative" id="timeline">
           <div className="sticky-tape-strip" aria-hidden="true" />
