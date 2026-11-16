@@ -88,12 +88,12 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
         </div>
 
         {/* Main Dark Paper Content Area (Generous pl-[72px] to clear the rings cleanly) */}
-        <div className="flex-1 flex flex-col pl-[72px] pr-6 pt-5 pb-5 min-h-[440px] z-10">
+        <div className="diary-paper-content flex-1 flex flex-col pl-[72px] pr-6 pt-5 pb-5 min-h-[440px] z-10">
           {/* Top Header Row */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <div className="flex flex-col">
+          <div className="diary-header-row flex flex-wrap items-center justify-between gap-4 mb-4">
+            <div className="diary-title-group flex flex-col">
               {/* Badge: Red Square + DAILY JOURNAL | Date */}
-              <div className="flex items-center gap-2 mb-1">
+              <div className="diary-badge-row flex items-center gap-2 mb-1">
                 <span className="w-2.5 h-2.5 rounded-[2px] bg-red-600 inline-block shrink-0 shadow-xs shadow-red-500/50" />
                 <span className="text-xs font-bold tracking-wider text-slate-200 uppercase font-mono">
                   DAILY JOURNAL
@@ -103,17 +103,17 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
                   {todayStr}
                 </span>
               </div>
-              <h3 className="text-xl font-bold text-white tracking-tight">
+              <h3 className="diary-main-heading text-xl font-bold text-white tracking-tight">
                 Study Journal & Action List
               </h3>
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex items-center gap-2">
+            <div className="diary-filter-tabs flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setActiveFilter('all')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`diary-filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                   activeFilter === 'all'
                     ? 'bg-red-600 text-white shadow-md shadow-red-600/30'
                     : 'bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-slate-200 hover:bg-white/[0.08]'
@@ -124,7 +124,7 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
               <button
                 type="button"
                 onClick={() => setActiveFilter('pending')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`diary-filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                   activeFilter === 'pending'
                     ? 'bg-red-600 text-white shadow-md shadow-red-600/30'
                     : 'bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-slate-200 hover:bg-white/[0.08]'
@@ -135,7 +135,7 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
               <button
                 type="button"
                 onClick={() => setActiveFilter('completed')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`diary-filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                   activeFilter === 'completed'
                     ? 'bg-red-600 text-white shadow-md shadow-red-600/30'
                     : 'bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-slate-200 hover:bg-white/[0.08]'
@@ -147,9 +147,9 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
           </div>
 
           {/* Input Row with Pencil Icon and Solid Red '+ Add Line' Button */}
-          <div className="mb-4">
-            <form onSubmit={handleAddTask} className="flex items-center gap-3">
-              <div className="flex-1 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] focus-within:border-white/20 focus-within:bg-white/[0.05] transition-all">
+          <div className="diary-input-wrap mb-4">
+            <form onSubmit={handleAddTask} className="diary-input-form flex items-center gap-3">
+              <div className="diary-input-box flex-1 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] focus-within:border-white/20 focus-within:bg-white/[0.05] transition-all">
                 <svg className="w-4 h-4 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                 </svg>
@@ -158,13 +158,13 @@ export const DiaryTodoSection = React.memo(function DiaryTodoSection({ data, upd
                   placeholder="Write a task, concept revision, or lesson goal..."
                   value={diaryInput}
                   onChange={(e) => setDiaryInput(e.target.value)}
-                  className="flex-1 bg-transparent text-white placeholder:text-slate-500 text-sm font-sans focus:outline-none outline-none border-none ring-0 shadow-none"
+                  className="diary-text-input flex-1 bg-transparent text-white placeholder:text-slate-500 text-sm font-sans focus:outline-none outline-none border-none ring-0 shadow-none"
                 />
               </div>
               <button
                 type="submit"
                 disabled={!diaryInput.trim()}
-                className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:hover:bg-red-600 text-white font-medium text-sm transition-all shadow-md shadow-red-600/25 shrink-0 flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed active:scale-[0.98]"
+                className="diary-add-btn px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:hover:bg-red-600 text-white font-medium text-sm transition-all shadow-md shadow-red-600/25 shrink-0 flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed active:scale-[0.98]"
               >
                 <span>+</span> Add Line
               </button>

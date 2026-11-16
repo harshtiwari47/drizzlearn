@@ -13057,6 +13057,67 @@ select option { color: var(--color-text) !important; background: var(--color-sur
     padding: 12px 20px !important;
     font-size: 14.5px !important;
   }
+
+  /* Diary Todo Section: Mobile 480px */
+  .diary-notebook-card {
+    border-radius: 16px !important;
+  }
+  .diary-folio-spine {
+    width: 24px !important;
+  }
+  .diary-spine-wire-strip {
+    left: 15px !important;
+    width: 18px !important;
+  }
+  .diary-ring-coil {
+    width: 18px !important;
+    height: 6px !important;
+  }
+  .diary-paper-content {
+    padding-left: 44px !important;
+    padding-right: 12px !important;
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
+    min-height: 360px !important;
+  }
+  .diary-main-heading {
+    font-size: 17px !important;
+    line-height: 1.25 !important;
+  }
+  .diary-filter-tabs {
+    gap: 4px !important;
+    flex-wrap: wrap !important;
+  }
+  .diary-filter-btn {
+    padding: 3px 8px !important;
+    font-size: 11px !important;
+  }
+  .diary-input-wrap {
+    margin-bottom: 12px !important;
+  }
+  .diary-input-box {
+    padding: 6px 10px !important;
+  }
+  .diary-text-input {
+    font-size: 13px !important;
+  }
+  .diary-add-btn {
+    padding: 6px 12px !important;
+    font-size: 12.5px !important;
+    border-radius: 9px !important;
+  }
+  .diary-lines-content-arena {
+    max-height: 280px !important;
+    padding-right: 6px !important;
+  }
+  .diary-item-line {
+    min-height: 42px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+  .diary-entry-text {
+    font-size: 13px !important;
+  }
 }
 
 /* 2. Small Tablet / Phablet Breakpoint: 481px to 768px */
@@ -13143,6 +13204,33 @@ select option { color: var(--color-text) !important; background: var(--color-sur
     padding: 13px 28px !important;
     font-size: 15px !important;
   }
+
+  /* Diary Todo Section: Small Tablet 481px to 768px */
+  .diary-folio-spine {
+    width: 30px !important;
+  }
+  .diary-spine-wire-strip {
+    left: 20px !important;
+    width: 20px !important;
+  }
+  .diary-ring-coil {
+    width: 20px !important;
+    height: 7px !important;
+  }
+  .diary-paper-content {
+    padding-left: 56px !important;
+    padding-right: 18px !important;
+  }
+  .diary-main-heading {
+    font-size: 18.5px !important;
+  }
+  .diary-filter-btn {
+    padding: 4px 10px !important;
+    font-size: 11.5px !important;
+  }
+  .diary-lines-content-arena {
+    max-height: 320px !important;
+  }
 }
 
 /* 3. Tablet Breakpoint: 769px to 1024px */
@@ -13220,6 +13308,15 @@ select option { color: var(--color-text) !important; background: var(--color-sur
     padding: 14px 30px !important;
     font-size: 15px !important;
   }
+
+  /* Diary Todo Section: Tablet 769px to 1024px */
+  .diary-paper-content {
+    padding-left: 68px !important;
+    padding-right: 22px !important;
+  }
+  .diary-lines-content-arena {
+    max-height: 340px !important;
+  }
 }
 
 /* 4. Small Desktop / Laptop Breakpoint: 1025px to 1280px */
@@ -13293,6 +13390,15 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   .course-panel.glass-course-card .continue-btn {
     padding: 14px 34px !important;
     font-size: 15.5px !important;
+  }
+
+  /* Diary Todo Section: Small Desktop / Laptop 1025px to 1280px */
+  .diary-paper-content {
+    padding-left: 72px !important;
+    padding-right: 24px !important;
+  }
+  .diary-lines-content-arena {
+    max-height: 360px !important;
   }
 }
 
@@ -13369,6 +13475,15 @@ select option { color: var(--color-text) !important; background: var(--color-sur
     font-size: 16px !important;
     border-radius: 15px !important;
   }
+
+  /* Diary Todo Section: Standard Desktop 1281px to 1536px */
+  .diary-paper-content {
+    padding-left: 76px !important;
+    padding-right: 26px !important;
+  }
+  .diary-lines-content-arena {
+    max-height: 380px !important;
+  }
 }
 
 /* 6. Large Widescreen Breakpoint: 1537px to 1919px */
@@ -13443,6 +13558,15 @@ select option { color: var(--color-text) !important; background: var(--color-sur
     padding: 16px 42px !important;
     font-size: 16.5px !important;
     border-radius: 16px !important;
+  }
+
+  /* Diary Todo Section: Large Widescreen 1537px to 1919px */
+  .diary-paper-content {
+    padding-left: 80px !important;
+    padding-right: 28px !important;
+  }
+  .diary-lines-content-arena {
+    max-height: 400px !important;
   }
 }
 
@@ -13522,6 +13646,24 @@ select option { color: var(--color-text) !important; background: var(--color-sur
     padding: 18px 46px !important;
     font-size: 17.5px !important;
     border-radius: 18px !important;
+  }
+
+  /* Diary Todo Section: Ultra-wide 4K >= 1920px */
+  .diary-paper-content {
+    padding-left: 84px !important;
+    padding-right: 32px !important;
+  }
+  .diary-main-heading {
+    font-size: 22px !important;
+  }
+  .diary-lines-content-arena {
+    max-height: 440px !important;
+  }
+  .diary-item-line {
+    min-height: 52px !important;
+  }
+  .diary-entry-text {
+    font-size: 14.5px !important;
   }
 }
 
@@ -14146,24 +14288,32 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   flex-shrink: 0;
 }
 
-/* Custom discrete scrollbar (Translucent Red Accent Pill matching Target Design) */
+/* Custom discrete scrollbar (Transparent Minimal Red Accent matching Target Design) */
 .custom-diary-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(220, 38, 38, 0.45) transparent;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(239, 68, 68, 0.16) transparent !important;
 }
 .custom-diary-scroll::-webkit-scrollbar {
-  width: 3px;
+  width: 4px !important;
 }
 .custom-diary-scroll::-webkit-scrollbar-track {
-  background: transparent;
+  background: transparent !important;
 }
 .custom-diary-scroll::-webkit-scrollbar-thumb {
-  background: rgba(220, 38, 38, 0.45);
-  border-radius: 9999px;
-  transition: background-color 0.2s ease;
+  background: rgba(239, 68, 68, 0.16) !important;
+  border-radius: 9999px !important;
+  transition: background-color 0.25s ease !important;
+}
+.custom-diary-scroll:hover::-webkit-scrollbar-thumb {
+  background: rgba(239, 68, 68, 0.32) !important;
 }
 .custom-diary-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(239, 68, 68, 0.85);
+  background: rgba(239, 68, 68, 0.55) !important;
+}
+.custom-diary-scroll::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Task items on ruled lines - Full-width clean borders matching each row */
