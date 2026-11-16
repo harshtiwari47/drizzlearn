@@ -10956,8 +10956,8 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 /* Vector Curved Connecting Conduit SVG */
 .futuristic-map-svg-canvas {
   position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
+  top: 0 !important;
+  left: 0 !important;
   height: 100% !important;
   pointer-events: none !important;
   z-index: 2 !important;
@@ -11187,13 +11187,13 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 
 .futuristic-hover-card {
   position: absolute !important;
-  bottom: calc(100% + 14px) !important;
+  bottom: calc(100% + 8px) !important;
   left: 50% !important;
   transform: translateX(-50%) translateY(8px) !important;
-  width: 260px !important;
-  padding: 14px 16px !important;
-  border-radius: 16px !important;
-  background: rgba(3, 18, 20, 0.95) !important;
+  width: 244px !important;
+  padding: 11px 13px !important;
+  border-radius: 14px !important;
+  background: rgba(3, 18, 20, 0.96) !important;
   border: 1px solid rgba(108, 207, 246, 0.45) !important;
   backdrop-filter: blur(18px) !important;
   -webkit-backdrop-filter: blur(18px) !important;
@@ -11201,7 +11201,7 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
-  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s !important;
+  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s !important;
   z-index: 100 !important;
 }
 
@@ -11317,15 +11317,8 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   left: 30% !important;
 }
 
-@media (max-width: 640px) {
-  .futuristic-map-arena {
-    height: 320px !important;
-  }
-}
-
-
 /* ==========================================================================
-   Refined Outer Roadmap Panel & Z-Index Layering
+   Refined Outer Roadmap Panel & Scrollable Futuristic Track
    ========================================================================== */
 
 /* Outer panel matching the sleek futuristic glass vibe */
@@ -11339,16 +11332,98 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Inner arena integration */
-.futuristic-map-arena {
+/* Outer frame wrapper for the map */
+.futuristic-map-wrapper {
   position: relative !important;
   width: 100% !important;
-  height: 270px !important;
-  padding: 18px 24px !important;
+  overflow: hidden !important;
   border-radius: 16px !important;
   background: radial-gradient(ellipse at 50% 65%, rgba(13, 38, 42, 0.35) 0%, rgba(2, 14, 16, 0.6) 100%) !important;
-  border: 1px solid rgba(108, 207, 246, 0.1) !important;
-  overflow: visible !important;
+  border: 1px solid rgba(108, 207, 246, 0.15) !important;
+}
+
+/* Horizontal Scroll Container */
+.roadmap-scroll-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(108, 207, 246, 0.35) rgba(255, 255, 255, 0.03) !important;
+}
+
+.roadmap-scroll-container::-webkit-scrollbar {
+  height: 6px !important;
+}
+
+.roadmap-scroll-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-radius: 9999px !important;
+  margin: 0 16px !important;
+}
+
+.roadmap-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(108, 207, 246, 0.32) !important;
+  border-radius: 9999px !important;
+  transition: background 0.2s ease !important;
+}
+
+.roadmap-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(108, 207, 246, 0.6) !important;
+}
+
+/* Edge Fade Overlays */
+.roadmap-edge-fade-left {
+  background: linear-gradient(to right, rgba(3, 16, 18, 0.95) 0%, rgba(3, 16, 18, 0.7) 40%, transparent 100%) !important;
+}
+
+.roadmap-edge-fade-right {
+  background: linear-gradient(to left, rgba(3, 16, 18, 0.95) 0%, rgba(3, 16, 18, 0.7) 40%, transparent 100%) !important;
+}
+
+/* Arrow Navigation Buttons */
+.roadmap-arrow-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  color: #94a3b8 !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.roadmap-arrow-btn:hover:not(:disabled) {
+  color: #6ccff6 !important;
+  background: rgba(108, 207, 246, 0.12) !important;
+  border-color: rgba(108, 207, 246, 0.3) !important;
+}
+
+.roadmap-arrow-btn:disabled {
+  opacity: 0.25 !important;
+  cursor: not-allowed !important;
+}
+
+.roadmap-view-btn {
+  cursor: pointer !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Inner arena track */
+.futuristic-map-arena {
+  position: relative !important;
+  height: 315px !important;
+  padding: 0 !important;
+  user-select: none !important;
 }
 
 /* Stacking and Z-Index Hierarchy */
@@ -11363,7 +11438,121 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   position: absolute !important;
   transform: translate(-50%, -50%) !important;
   pointer-events: auto !important;
-  z-index: 10 !important;
+  transition: z-index 0.2s ease !important;
+}
+
+.futuristic-island-anchor:hover,
+.futuristic-island-anchor:focus-within {
+  z-index: 80 !important;
+}
+
+/* Smart Hover Card Placements */
+.card-placement-above {
+  bottom: calc(100% + 8px) !important;
+  top: auto !important;
+}
+
+.card-placement-below {
+  top: calc(100% + 14px) !important;
+  bottom: auto !important;
+}
+
+.card-placement-below .card-pointer-caret {
+  top: auto !important;
+  bottom: 100% !important;
+  border-left: 8px solid transparent !important;
+  border-right: 8px solid transparent !important;
+  border-bottom: 8px solid rgba(3, 18, 20, 0.96) !important;
+  border-top: none !important;
+}
+
+.card-align-center {
+  left: 50% !important;
+  transform: translateX(-50%) translateY(8px) !important;
+}
+.card-placement-below.card-align-center {
+  transform: translateX(-50%) translateY(-8px) !important;
+}
+
+.card-align-left {
+  left: 15% !important;
+  transform: translateX(-15%) translateY(8px) !important;
+}
+.card-align-left .card-pointer-caret {
+  left: 18% !important;
+}
+.card-placement-below.card-align-left {
+  transform: translateX(-15%) translateY(-8px) !important;
+}
+
+.card-align-right {
+  left: 85% !important;
+  transform: translateX(-85%) translateY(8px) !important;
+}
+.card-align-right .card-pointer-caret {
+  left: 82% !important;
+}
+.card-placement-below.card-align-right {
+  transform: translateX(-85%) translateY(-8px) !important;
+}
+
+.futuristic-island-block:hover .card-placement-above.card-align-center,
+.futuristic-island-block:focus-visible .card-placement-above.card-align-center {
+  transform: translateX(-50%) translateY(0) !important;
+}
+.futuristic-island-block:hover .card-placement-above.card-align-left,
+.futuristic-island-block:focus-visible .card-placement-above.card-align-left {
+  transform: translateX(-15%) translateY(0) !important;
+}
+.futuristic-island-block:hover .card-placement-above.card-align-right,
+.futuristic-island-block:focus-visible .card-placement-above.card-align-right {
+  transform: translateX(-85%) translateY(0) !important;
+}
+
+.futuristic-island-block:hover .card-placement-below.card-align-center,
+.futuristic-island-block:focus-visible .card-placement-below.card-align-center {
+  transform: translateX(-50%) translateY(0) !important;
+}
+.futuristic-island-block:hover .card-placement-below.card-align-left,
+.futuristic-island-block:focus-visible .card-placement-below.card-align-left {
+  transform: translateX(-15%) translateY(0) !important;
+}
+.futuristic-island-block:hover .card-placement-below.card-align-right,
+.futuristic-island-block:focus-visible .card-placement-below.card-align-right {
+  transform: translateX(-85%) translateY(0) !important;
+}
+
+@media (max-width: 480px) {
+  .roadmap-panel {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  .roadmap-panel .panel-head {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+  }
+  .futuristic-hover-card {
+    width: 220px !important;
+    padding: 10px 12px !important;
+  }
+  .card-quest-title {
+    font-size: 13px !important;
+  }
+  .island-platform-base {
+    width: 56px !important;
+    height: 56px !important;
+    border-radius: 16px !important;
+  }
+  .island-title {
+    font-size: 11px !important;
+    max-width: 80px !important;
+  }
+}
+
+@media (min-width: 1536px) {
+  .futuristic-map-arena {
+    height: 295px !important;
+  }
 }
 
 /* When any anchor is hovered, elevate its stacking context above all neighbor nodes */

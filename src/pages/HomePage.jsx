@@ -123,6 +123,161 @@ const Home = React.memo(function Home(p){
     return firstIncomplete!==-1?firstIncomplete:0;
   },[activeCourse,nextTask,isModuleDone]);
 
+  const roadmapScrollRef = useRef(null);
+  const [roadmapView, setRoadmapView] = useState("auto");
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Normalize roadmap blocks so whether a course has 1 module or multiple modules,
+  // each step along the learning path is rendered as an interactive block!
+  const totalLessonsInCourse = useMemo(() => {
+    return (activeCourse?.modules || []).reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
+  }, [activeCourse]);
+
+  const roadmapBlocks = useMemo(() => {
+    if (!activeCourse) return [];
+    const modules = activeCourse.modules || [];
+    if (!modules.length) return [];
+
+    // If view is explicitly lessons, or if the course has 1 module with lessons, expand all lessons as sequential blocks!
+    const showLessons = roadmapView === "lessons" || (modules.length === 1 && (modules[0]?.lessons?.length || 0) > 0);
+
+    if (showLessons) {
+      const allLessons = modules.flatMap((m, mIdx) => 
+        (m.lessons || []).map((l, lIdx) => ({
+          id: l.id,
+          title: l.title,
+          moduleTitle: m.title,
+          objective: l.objective || m.objective || "Master this core concept",
+          estimatedMinutes: l.estimated_minutes || 25,
+          isDone: isLessonDone(l.id),
+          targetLessonId: l.id,
+          moduleIndex: mIdx,
+          lessonIndex: lIdx,
+          type: "lesson"
+        }))
+      );
+      return allLessons.map((item, idx) => ({
+        ...item,
+        levelNumber: idx + 1,
+        subtitle: item.moduleTitle ? `${item.moduleTitle} • Lvl ${idx + 1}` : `Level ${idx + 1}`
+      }));
+    }
+
+    // Default for multiple modules: show each module as a major milestone block
+    return modules.map((m, mIdx) => {
+      const isDone = isModuleDone(m);
+      const targetLesson = m.lessons?.find(l => !isLessonDone(l.id)) || m.lessons?.[0];
+      return {
+        id: m.id || `mod-${mIdx}`,
+        title: m.title,
+        subtitle: `${m.lessons?.length || 0} lessons`,
+        objective: m.objective || "Complete all lessons in this stage",
+        estimatedMinutes: m.estimatedMinutes || (m.lessons?.length || 1) * 25,
+        isDone,
+        targetLessonId: targetLesson?.id,
+        levelNumber: mIdx + 1,
+        type: "module",
+        lessonsCount: m.lessons?.length || 0
+      };
+    });
+  }, [activeCourse, roadmapView, isLessonDone, isModuleDone]);
+
+  const activeBlockIndex = useMemo(() => {
+    if (!roadmapBlocks.length) return 0;
+    if (nextTask?.lesson_id) {
+      const idx = roadmapBlocks.findIndex(b => b.targetLessonId === nextTask.lesson_id || b.id === nextTask.lesson_id);
+      if (idx !== -1) return idx;
+    }
+    const firstIncomplete = roadmapBlocks.findIndex(b => !b.isDone);
+    return firstIncomplete !== -1 ? firstIncomplete : 0;
+  }, [roadmapBlocks, nextTask]);
+
+  const completedBlocksCount = useMemo(() => {
+    return roadmapBlocks.filter(b => b.isDone).length;
+  }, [roadmapBlocks]);
+
+  const blockSpacing = 165;
+  const startX = 85;
+  const endPadding = 90;
+  const totalBlocks = roadmapBlocks.length;
+  const totalTrackWidth = useMemo(() => {
+    return Math.max(720, startX + Math.max(0, totalBlocks - 1) * blockSpacing + endPadding);
+  }, [totalBlocks, startX, blockSpacing, endPadding]);
+
+  const updateScrollButtons = useCallback(() => {
+    const el = roadmapScrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 12);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 12);
+  }, []);
+
+  const scrollRoadmapBy = (offset) => {
+    if (roadmapScrollRef.current) {
+      roadmapScrollRef.current.scrollBy({ left: offset, behavior: "smooth" });
+    }
+  };
+
+  const centerOnActiveBlock = useCallback(() => {
+    if (roadmapScrollRef.current && roadmapBlocks.length > 0) {
+      const activeX = startX + activeBlockIndex * blockSpacing;
+      const containerWidth = roadmapScrollRef.current.clientWidth || 700;
+      roadmapScrollRef.current.scrollTo({
+        left: Math.max(0, activeX - containerWidth / 2),
+        behavior: "smooth"
+      });
+    }
+  }, [activeBlockIndex, roadmapBlocks.length, startX, blockSpacing]);
+
+  useEffect(() => {
+    centerOnActiveBlock();
+  }, [centerOnActiveBlock]);
+
+  useEffect(() => {
+    const el = roadmapScrollRef.current;
+    if (!el) return;
+    updateScrollButtons();
+    const handleResize = () => updateScrollButtons();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [updateScrollButtons, totalTrackWidth]);
+
+  // Dynamic vector conduit curve generation
+  const { mainPathD, glowPathD } = useMemo(() => {
+    if (totalBlocks === 0) return { mainPathD: "", glowPathD: "" };
+    
+    if (totalBlocks === 1) {
+      const x0 = startX;
+      const y0 = 205;
+      const d = `M ${Math.max(20, x0 - 60)} ${y0} C ${x0 - 25} ${y0}, ${x0 - 25} ${y0}, ${x0} ${y0} C ${x0 + 40} ${y0}, ${x0 + 80} 140, ${x0 + 150} 120`;
+      return { mainPathD: d, glowPathD: d };
+    }
+
+    let d = `M ${Math.max(20, startX - 60)} 205`;
+    d += ` C ${startX - 30} 205, ${startX - 30} 205, ${startX} 205`;
+
+    for (let i = 0; i < totalBlocks - 1; i++) {
+      const xCurr = startX + i * blockSpacing;
+      const yCurr = i % 2 === 0 ? 205 : 95;
+      const xNext = startX + (i + 1) * blockSpacing;
+      const yNext = (i + 1) % 2 === 0 ? 205 : 95;
+      const dx = xNext - xCurr;
+      const cp1x = xCurr + dx * 0.45;
+      const cp1y = yCurr;
+      const cp2x = xNext - dx * 0.45;
+      const cp2y = yNext;
+      d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${xNext} ${yNext}`;
+    }
+
+    const lastX = startX + (totalBlocks - 1) * blockSpacing;
+    const lastY = (totalBlocks - 1) % 2 === 0 ? 205 : 95;
+    const exitX = Math.min(totalTrackWidth - 20, lastX + 90);
+    d += ` C ${lastX + 40} ${lastY}, ${exitX - 25} ${lastY}, ${exitX} ${lastY}`;
+
+    return { mainPathD: d, glowPathD: d };
+  }, [totalBlocks, startX, blockSpacing, totalTrackWidth]);
+
   return <>
     {/* Combined Header and Hero Interactive Group */}
     <div className={`hero-header-combined-group relative ${hoveredTool ? `glow-${hoveredTool}` : "glow-initial"}`}>
@@ -350,79 +505,287 @@ const Home = React.memo(function Home(p){
 
         {/* Learning Roadmap with Futuristic Map Arena Vector Track */}
         <section className="panel roadmap-panel flex flex-col" id="roadmap">
-          <div className="panel-head flex items-center justify-between">
-            <div className="panel-title flex items-center gap-2.5">
-              <Icon name="spark"/>Learning roadmap
+          <div className="panel-head flex items-center justify-between flex-wrap gap-2.5">
+            <div className="panel-title flex items-center gap-2.5 flex-wrap">
+              <Icon name="spark"/>
+              <span>Learning roadmap</span>
+              {totalBlocks > 0 && (
+                <span className="roadmap-count-badge font-mono text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/25">
+                  {completedBlocksCount}/{totalBlocks} Mastered
+                </span>
+              )}
             </div>
+
             <div className="flex items-center gap-2">
-              <button className="quiet-btn grid place-items-center" aria-label="Open full roadmap" onClick={()=>go("course")}>↗</button>
+              {activeCourse?.modules?.length > 1 && (
+                <div className="roadmap-toggle-group flex items-center p-0.5 rounded-lg bg-black/40 border border-white/10 text-xs">
+                  <button
+                    type="button"
+                    className={`roadmap-view-btn px-2.5 py-1 rounded-md transition-all ${roadmapView !== "lessons" ? "active bg-cyan-500/20 text-cyan-300 font-semibold" : "text-slate-400 hover:text-slate-200"}`}
+                    onClick={() => setRoadmapView("modules")}
+                  >
+                    Modules ({activeCourse.modules.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`roadmap-view-btn px-2.5 py-1 rounded-md transition-all ${roadmapView === "lessons" ? "active bg-cyan-500/20 text-cyan-300 font-semibold" : "text-slate-400 hover:text-slate-200"}`}
+                    onClick={() => setRoadmapView("lessons")}
+                  >
+                    All Lessons ({totalLessonsInCourse})
+                  </button>
+                </div>
+              )}
+
+              {/* Scroll Navigation Arrows */}
+              <div className="roadmap-scroll-arrows flex items-center gap-1">
+                <button
+                  type="button"
+                  className="roadmap-arrow-btn"
+                  disabled={!canScrollLeft}
+                  onClick={() => scrollRoadmapBy(-280)}
+                  aria-label="Scroll roadmap left"
+                  title="Scroll left"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  className="roadmap-arrow-btn"
+                  disabled={!canScrollRight}
+                  onClick={() => scrollRoadmapBy(280)}
+                  aria-label="Scroll roadmap right"
+                  title="Scroll right"
+                >
+                  ›
+                </button>
+              </div>
+
+              <button
+                className="quiet-btn grid place-items-center"
+                aria-label="Open full roadmap"
+                onClick={() => go("course")}
+                title="View full course roadmap"
+              >
+                ↗
+              </button>
             </div>
           </div>
-          {activeCourse?(
-            <div className="futuristic-map-arena relative overflow-visible">
-              <div className="futuristic-map-grid-bg" aria-hidden="true" />
-              <div className="futuristic-conduit-glow" aria-hidden="true" />
 
-              <svg className="futuristic-map-svg-canvas" viewBox="0 0 700 240" fill="none" preserveAspectRatio="none" aria-hidden="true">
-                <defs>
-                  <linearGradient id="cyberPathGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.9" />
-                    <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.85" />
-                    <stop offset="50%" stopColor="#6ccff6" stopOpacity="0.8" />
-                    <stop offset="75%" stopColor="#a855f7" stopOpacity="0.7" />
-                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.5" />
-                  </linearGradient>
-                  <filter id="conduitGlow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="3.5" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-                <path d="M 60 180 C 130 190, 160 80, 220 95 C 280 110, 310 180, 370 170 C 430 160, 470 60, 530 85 C 570 100, 610 50, 640 45" stroke="rgba(108, 207, 246, 0.12)" strokeWidth="8" strokeLinecap="round" />
-                <path className="cyber-main-path" d="M 60 180 C 130 190, 160 80, 220 95 C 280 110, 310 180, 370 170 C 430 160, 470 60, 530 85 C 570 100, 610 50, 640 45" stroke="url(#cyberPathGrad)" strokeWidth="3" strokeDasharray="6 4" filter="url(#conduitGlow)" strokeLinecap="round" />
-              </svg>
+          {activeCourse ? (
+            <div className="futuristic-map-wrapper relative w-full overflow-hidden rounded-2xl border border-cyan-500/15">
+              {/* Left/Right Edge Fade Overlays indicating scrollable content */}
+              <div
+                className={`roadmap-edge-fade-left absolute left-0 top-0 bottom-0 w-12 z-20 pointer-events-none transition-opacity duration-200 ${canScrollLeft ? "opacity-100" : "opacity-0"}`}
+                aria-hidden="true"
+              />
+              <div
+                className={`roadmap-edge-fade-right absolute right-0 top-0 bottom-0 w-12 z-20 pointer-events-none transition-opacity duration-200 ${canScrollRight ? "opacity-100" : "opacity-0"}`}
+                aria-hidden="true"
+              />
 
-              <div className="futuristic-nodes-layer">
-                {activeCourse.modules.slice(0,5).map((m,i)=>{
-                  const complete=isModuleDone(m);
-                  const isActive=i===activeModuleIndex;
-                  const targetLesson=m.lessons?.find(l=>!isLessonDone(l.id))||m.lessons?.[0];
-                  const islandThemes = ["island-emerald","island-cyan","island-sapphire","island-violet","island-magenta"];
-                  const islandTheme = islandThemes[i % islandThemes.length];
+              {/* Horizontally Scrollable Arena Track */}
+              <div
+                ref={roadmapScrollRef}
+                onScroll={updateScrollButtons}
+                className="roadmap-scroll-container w-full overflow-x-auto overflow-y-hidden select-none"
+                tabIndex={0}
+                role="region"
+                aria-label="Interactive Learning Roadmap Track"
+              >
+                <div
+                  className="futuristic-map-arena relative"
+                  style={{ width: `${totalTrackWidth}px`, minWidth: "100%", height: "315px" }}
+                >
+                  {/* Background Matrix Grid */}
+                  <div
+                    className="futuristic-map-grid-bg"
+                    aria-hidden="true"
+                    style={{ width: `${totalTrackWidth}px` }}
+                  />
+                  <div
+                    className="futuristic-conduit-glow"
+                    aria-hidden="true"
+                    style={{ width: `${totalTrackWidth}px` }}
+                  />
 
-                  return (
-                    <div key={m.id||i} className={`futuristic-island-anchor node-pos-${i+1}`}>
-                      <div 
-                        className={`futuristic-island-block ${islandTheme} ${complete?"is-complete":isActive?"is-active":"is-locked"}`}
-                        tabIndex={0}
-                        role="button"
-                        aria-label={`Level ${i+1}: ${m.title}`}
-                        onClick={()=>targetLesson&&openLesson(targetLesson.id)}
-                      >
-                        <div className="island-platform-base">
-                          <span className="platform-crystal" />
-                          <div className="platform-core grid place-items-center relative">
-                            {complete ? <span className="platform-star">★</span> : isActive ? <span className="platform-play">▶</span> : <span className="platform-lock">🔒</span>}
-                            {isActive && <span className="platform-radar-ring" />}
+                  {/* Connecting Vector Conduit SVG Canvas */}
+                  <svg
+                    className="futuristic-map-svg-canvas"
+                    viewBox={`0 0 ${totalTrackWidth} 315`}
+                    style={{ width: `${totalTrackWidth}px`, height: "315px" }}
+                    fill="none"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <defs>
+                      <linearGradient id="cyberPathGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.9" />
+                        <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.85" />
+                        <stop offset="50%" stopColor="#6ccff6" stopOpacity="0.8" />
+                        <stop offset="75%" stopColor="#a855f7" stopOpacity="0.7" />
+                        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.5" />
+                      </linearGradient>
+                      <filter id="conduitGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3.5" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+
+                    {/* Ambient Glow Tube */}
+                    <path
+                      d={glowPathD}
+                      stroke="rgba(108, 207, 246, 0.12)"
+                      strokeWidth="9"
+                      strokeLinecap="round"
+                    />
+
+                    {/* Pulsing Animated Cyber Conduit */}
+                    <path
+                      className="cyber-main-path"
+                      d={mainPathD}
+                      stroke="url(#cyberPathGrad)"
+                      strokeWidth="3.2"
+                      strokeDasharray="7 5"
+                      filter="url(#conduitGlow)"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+
+                  {/* Floating Island Nodes Layer */}
+                  <div
+                    className="futuristic-nodes-layer"
+                    style={{ width: `${totalTrackWidth}px`, height: "315px" }}
+                  >
+                    {roadmapBlocks.map((block, i) => {
+                      const complete = block.isDone;
+                      const isActive = i === activeBlockIndex;
+                      const islandThemes = [
+                        "island-emerald",
+                        "island-cyan",
+                        "island-sapphire",
+                        "island-violet",
+                        "island-magenta",
+                        "island-amber"
+                      ];
+                      const islandTheme = islandThemes[i % islandThemes.length];
+                      const x = startX + i * blockSpacing;
+                      const y = i % 2 === 0 ? 205 : 95;
+                      const isUpper = i % 2 === 1;
+
+                      // Smart horizontal alignment for hover card to avoid edge clipping
+                      const isNearLeft = x < 160;
+                      const isNearRight = x > totalTrackWidth - 160;
+                      const hAlignClass = isNearLeft ? "card-align-left" : isNearRight ? "card-align-right" : "card-align-center";
+
+                      return (
+                        <div
+                          key={block.id || i}
+                          className={`futuristic-island-anchor ${isUpper ? "node-pos-upper" : "node-pos-lower"}`}
+                          style={{ left: `${x}px`, top: `${y}px` }}
+                        >
+                          <div
+                            className={`futuristic-island-block ${islandTheme} ${complete ? "is-complete" : isActive ? "is-active" : "is-locked"}`}
+                            tabIndex={0}
+                            role="button"
+                            aria-label={`Level ${block.levelNumber}: ${block.title}`}
+                            onClick={() => block.targetLessonId && openLesson(block.targetLessonId)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                block.targetLessonId && openLesson(block.targetLessonId);
+                              }
+                            }}
+                          >
+                            <div className="island-platform-base">
+                              <span className="platform-crystal" />
+                              <div className="platform-core grid place-items-center relative">
+                                {complete ? (
+                                  <span className="platform-star">★</span>
+                                ) : isActive ? (
+                                  <span className="platform-play">▶</span>
+                                ) : (
+                                  <span className="platform-lock">🔒</span>
+                                )}
+                                {isActive && <span className="platform-radar-ring" />}
+                              </div>
+                              <span className="island-level-pill">LVL {block.levelNumber}</span>
+                            </div>
+
+                            <div className="island-label-box">
+                              <strong className="island-title" title={block.title}>
+                                {block.title.length > 15 ? block.title.slice(0, 14) + "…" : block.title}
+                              </strong>
+                              <span className="island-sub">
+                                {complete ? "Mastered ✓" : isActive ? "Current level" : `Level ${block.levelNumber}`}
+                              </span>
+                            </div>
+
+                            {/* Floating Interactive Hover Card */}
+                            <div
+                              className={`futuristic-hover-card ${isUpper ? "card-placement-below" : "card-placement-above"} ${hAlignClass}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="card-pointer-caret" />
+                              <div className="flex items-center justify-between gap-2 mb-1.5">
+                                <span className="card-stage-chip">STAGE {block.levelNumber}</span>
+                                <span className={`card-badge ${complete ? "badge-complete" : isActive ? "badge-active" : "badge-locked"}`}>
+                                  {complete ? "Mastered" : isActive ? "In Progress" : "Locked"}
+                                </span>
+                              </div>
+                              <h4 className="card-quest-title">{block.title}</h4>
+                              <p className="card-quest-desc">{block.objective}</p>
+                              <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-white/[0.08]">
+                                <span className="card-xp-tag">+{block.estimatedMinutes * 10} XP</span>
+                                <button
+                                  type="button"
+                                  className="card-action-btn text-xs font-bold text-cyan-300 hover:text-cyan-200 cursor-pointer flex items-center gap-1"
+                                  onClick={() => block.targetLessonId && openLesson(block.targetLessonId)}
+                                >
+                                  {complete ? "Review ↗" : isActive ? "Continue ↗" : "Start ↗"}
+                                </button>
+                              </div>
+                            </div>
+
                           </div>
-                          <span className="island-level-pill">LVL {i+1}</span>
                         </div>
-                        <div className="island-label-box">
-                          <strong className="island-title">{m.title.length > 14 ? m.title.slice(0, 13) + "…" : m.title}</strong>
-                          <span className="island-sub">
-                            {complete ? "Mastered ✓" : isActive ? "Current level" : `Level ${i+1}`}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Interactive Footer Navigation Bar for Mobile and Desktop context */}
+              <div className="roadmap-footer-helper flex items-center justify-between px-3 sm:px-4 py-2 border-t border-white/[0.06] bg-black/25 text-xs text-slate-400">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[11px] text-cyan-400 font-mono font-bold shrink-0">
+                    LVL {activeBlockIndex + 1}/{totalBlocks}
+                  </span>
+                  <span className="text-slate-600 shrink-0">•</span>
+                  <span className="text-[11px] text-slate-300 truncate font-medium">
+                    {roadmapBlocks[activeBlockIndex]?.title || "Active Level"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="hidden sm:inline text-[11px] text-slate-500">
+                    Scroll or drag to explore path
+                  </span>
+                  <button
+                    type="button"
+                    onClick={centerOnActiveBlock}
+                    className="text-[11px] font-semibold text-cyan-300 hover:text-cyan-200 px-2.5 py-1 rounded-md bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/25 transition-colors cursor-pointer"
+                  >
+                    Center active
+                  </button>
+                </div>
               </div>
             </div>
-          ):(
-            <div className="panel-empty flex flex-col items-center justify-center p-6 text-center">Create a goal to see your course roadmap.</div>
+          ) : (
+            <div className="panel-empty flex flex-col items-center justify-center p-6 text-center">
+              Create a goal to see your course roadmap.
+            </div>
           )}
         </section>
 
