@@ -12686,70 +12686,73 @@ select option { color: var(--color-text) !important; background: var(--color-sur
    Solid Sculpted Human Anatomical Avatar Progress Meter (Transparent Glass Card)
    ========================================================================== */
 
-/* Transparent Slightly Blurred Glass Course Card with Ambient Glow Behind (Border removed, moving wavy color changing gradient) */
+/* Transparent Slightly Blurred Glass Course Card with Ambient Glow Behind (Moving animated gradient: transparent to green, highly transparent red, yellow) */
 .course-panel.glass-course-card {
   position: relative !important;
-  background: rgba(10, 24, 34, 0.38) !important;
+  background: rgba(9, 21, 30, 0.62) !important;
   backdrop-filter: blur(32px) !important;
   -webkit-backdrop-filter: blur(32px) !important;
-  border: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
   outline: none !important;
   border-radius: 28px !important;
-  box-shadow: 
-    0 24px 64px rgba(0, 0, 0, 0.6) !important;
-  padding: 26px 32px !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65) !important;
+  padding: 28px 32px !important;
   overflow: hidden !important;
-  transition: box-shadow 0.35s ease !important;
+  isolation: isolate !important;
+  transition: box-shadow 0.35s ease, transform 0.35s ease !important;
 }
 
 .course-panel.glass-course-card:hover {
-  border: none !important;
-  outline: none !important;
-  box-shadow: 
-    0 28px 72px rgba(0, 0, 0, 0.72) !important;
+  box-shadow: 0 28px 72px rgba(0, 0, 0, 0.72) !important;
 }
 
-/* Moving Wavy Gradient & Dynamic Color Shift (Cyan, Light Orange, Amber, Indigo) */
-.course-card-ambient-aura {
+/* Moving Animated Gradient: Transparent to Green, Highly Transparent Red, Yellow */
+.course-panel.glass-course-card::before {
+  content: '' !important;
   position: absolute !important;
   inset: -60% !important;
   border-radius: 50% !important;
-  background: radial-gradient(
-    circle at 30% 40%, 
-    rgba(6, 182, 212, 0.38) 0%, 
-    rgba(251, 146, 60, 0.3) 25%, 
-    rgba(14, 165, 233, 0.26) 50%, 
-    rgba(253, 186, 116, 0.22) 70%, 
-    transparent 85%
-  ) !important;
-  filter: blur(55px) !important;
+  background: 
+    radial-gradient(circle at 22% 30%, rgba(34, 197, 94, 0.38) 0%, transparent 48%),
+    radial-gradient(circle at 78% 68%, rgba(234, 179, 8, 0.28) 0%, transparent 50%),
+    radial-gradient(circle at 62% 24%, rgba(239, 68, 68, 0.08) 0%, transparent 42%),
+    radial-gradient(circle at 35% 82%, rgba(16, 185, 129, 0.32) 0%, transparent 52%),
+    linear-gradient(135deg, transparent 0%, rgba(34, 197, 94, 0.22) 32%, rgba(239, 68, 68, 0.07) 64%, rgba(234, 179, 8, 0.26) 100%) !important;
+  background-size: 200% 200% !important;
+  filter: blur(52px) !important;
   pointer-events: none !important;
   z-index: 0 !important;
-  animation: wavyCourseAuraShift 14s infinite ease-in-out alternate !important;
+  animation: courseCardAuraFlow 14s ease-in-out infinite alternate !important;
   transform-origin: center center !important;
 }
 
-@keyframes wavyCourseAuraShift {
+@keyframes courseCardAuraFlow {
   0% {
     transform: translate(-10%, -8%) rotate(0deg) scale(1);
-    opacity: 0.85;
-    filter: blur(55px) hue-rotate(0deg);
+    background-position: 0% 50%;
+    opacity: 0.88;
   }
   33% {
-    transform: translate(6%, -4%) rotate(120deg) scale(1.15, 0.95);
+    transform: translate(8%, -5%) rotate(120deg) scale(1.14, 0.94);
+    background-position: 50% 100%;
     opacity: 1;
-    filter: blur(62px) hue-rotate(18deg);
   }
   66% {
-    transform: translate(-4%, 8%) rotate(240deg) scale(0.92, 1.18);
-    opacity: 0.9;
-    filter: blur(58px) hue-rotate(-15deg);
+    transform: translate(-6%, 8%) rotate(240deg) scale(0.93, 1.15);
+    background-position: 100% 50%;
+    opacity: 0.92;
   }
   100% {
-    transform: translate(8%, 6%) rotate(360deg) scale(1.1, 1.05);
-    opacity: 0.95;
-    filter: blur(64px) hue-rotate(25deg);
+    transform: translate(7%, 6%) rotate(360deg) scale(1.08, 1.02);
+    background-position: 0% 50%;
+    opacity: 0.96;
   }
+}
+
+/* Content sits above animated aura */
+.course-panel.glass-course-card > * {
+  position: relative !important;
+  z-index: 2 !important;
 }
 
 /* Header Inside Course Card (No Dividing Border) */
@@ -12814,44 +12817,54 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   transition: transform 0.3s ease !important;
 }
 
-/* Typography Enhancements for Course Card */
+/* Typography Enhancements for Course Card: Larger Prominent Title */
 .course-info {
   min-width: 0 !important;
 }
 
 .course-main-title {
   font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-  font-size: 28px !important;
+  font-size: 32px !important;
   font-weight: 800 !important;
-  line-height: 1.22 !important;
+  line-height: 1.2 !important;
   letter-spacing: -0.035em !important;
   color: #ffffff !important;
   margin: 0 0 14px 0 !important;
 }
 
-/* Course Meta Chips */
+/* Course Meta Chips with Icons & Generous Spacing */
 .course-meta {
   display: flex !important;
   flex-wrap: wrap !important;
-  gap: 10px !important;
+  gap: 12px !important;
   align-items: center !important;
+  margin: 4px 0 14px 0 !important;
 }
 
 .course-meta-pill {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
-  padding: 6px 14px !important;
+  gap: 8px !important;
+  padding: 7px 16px !important;
   font-size: 13.5px !important;
   font-weight: 600 !important;
   color: #e2e8f0 !important;
   background: rgba(255, 255, 255, 0.06) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 9999px !important;
+  letter-spacing: -0.01em !important;
+  transition: all 0.2s ease !important;
+}
+
+.course-meta-pill:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(56, 189, 248, 0.35) !important;
+  color: #ffffff !important;
 }
 
 .course-meta-pill svg {
   color: #38bdf8 !important;
+  flex-shrink: 0 !important;
 }
 
 /* Course Action Row (No Dividing Border) */
@@ -12865,6 +12878,7 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   border: none !important;
 }
 
+.course-progress-note,
 .course-sessions-text {
   font-size: 14.5px !important;
   font-weight: 500 !important;
@@ -12872,30 +12886,327 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   letter-spacing: -0.01em !important;
 }
 
-/* Continue Button Sizing */
-.continue-btn-glow {
-  padding: 14px 34px !important;
+/* Continue Button with Increased Padding & Luminous Aesthetics */
+.course-continue-btn,
+.course-panel.glass-course-card .continue-btn {
+  padding: 14px 36px !important;
+  min-height: 48px !important;
   font-size: 15.5px !important;
   font-weight: 750 !important;
   border-radius: 14px !important;
   letter-spacing: -0.01em !important;
+  background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 45%, #7dd3fc 100%) !important;
+  color: #034f75 !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 4px 20px rgba(56, 189, 248, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  flex-shrink: 0 !important;
 }
 
-@media (max-width: 768px) {
+.course-continue-btn:hover,
+.course-panel.glass-course-card .continue-btn:hover {
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 8px 28px rgba(56, 189, 248, 0.65), inset 0 1px 0 #ffffff !important;
+  color: #082f49 !important;
+  background: linear-gradient(135deg, #ffffff 0%, #bae6fd 45%, #38bdf8 100%) !important;
+}
+
+.course-continue-btn:active,
+.course-panel.glass-course-card .continue-btn:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+/* ==========================================================================
+   Multi-Breakpoint Responsiveness for Course Card:
+   Breakpoints: 480px, 768px, 1024px, 1280px, 1536px, 1920px
+   ========================================================================== */
+
+/* 1. Mobile Phone Breakpoint: <= 480px */
+@media (max-width: 480px) {
+  .course-panel.glass-course-card {
+    padding: 18px 16px !important;
+    border-radius: 20px !important;
+  }
   .course-content-futuristic,
   .course-panel.glass-course-card .course-content {
     grid-template-columns: 1fr !important;
-    gap: 20px !important;
+    gap: 16px !important;
   }
   .human-progress-container {
     width: 100% !important;
+    justify-content: center !important;
   }
   .human-progress-svg {
-    max-width: 200px !important;
-    height: 225px !important;
+    width: 180px !important;
+    max-width: 180px !important;
+    height: 210px !important;
   }
   .course-main-title {
-    font-size: 22px !important;
+    font-size: 21px !important;
+    line-height: 1.25 !important;
+    margin-bottom: 10px !important;
+  }
+  .course-meta {
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+  }
+  .course-meta-pill {
+    padding: 5px 12px !important;
+    font-size: 12.5px !important;
+  }
+  .course-action-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    margin-top: 14px !important;
+  }
+  .course-progress-note {
+    text-align: center !important;
+    font-size: 13px !important;
+  }
+  .course-continue-btn,
+  .course-panel.glass-course-card .continue-btn {
+    width: 100% !important;
+    padding: 12px 20px !important;
+    font-size: 14.5px !important;
+  }
+}
+
+/* 2. Small Tablet / Phablet Breakpoint: 481px to 768px */
+@media (min-width: 481px) and (max-width: 768px) {
+  .course-panel.glass-course-card {
+    padding: 22px 24px !important;
+    border-radius: 24px !important;
+  }
+  .course-content-futuristic,
+  .course-panel.glass-course-card .course-content {
+    grid-template-columns: 1fr !important;
+    gap: 22px !important;
+  }
+  .human-progress-container {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .human-progress-svg {
+    width: 210px !important;
+    max-width: 210px !important;
+    height: 245px !important;
+  }
+  .course-main-title {
+    font-size: 25px !important;
+    line-height: 1.22 !important;
+    margin-bottom: 12px !important;
+  }
+  .course-meta {
+    gap: 10px !important;
+  }
+  .course-meta-pill {
+    padding: 6px 14px !important;
+    font-size: 13px !important;
+  }
+  .course-action-row {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+  }
+  .course-continue-btn,
+  .course-panel.glass-course-card .continue-btn {
+    padding: 13px 28px !important;
+    font-size: 15px !important;
+  }
+}
+
+/* 3. Tablet Breakpoint: 769px to 1024px */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .course-panel.glass-course-card {
+    padding: 24px 28px !important;
+    border-radius: 26px !important;
+  }
+  .course-content-futuristic,
+  .course-panel.glass-course-card .course-content {
+    grid-template-columns: 210px minmax(0, 1fr) !important;
+    gap: 28px !important;
+  }
+  .human-progress-container {
+    width: 210px !important;
+  }
+  .human-progress-svg {
+    width: 210px !important;
+    max-width: 210px !important;
+    height: 245px !important;
+  }
+  .course-main-title {
+    font-size: 27px !important;
+    line-height: 1.22 !important;
+  }
+  .course-meta {
+    gap: 10px !important;
+  }
+  .course-meta-pill {
+    padding: 6px 14px !important;
+    font-size: 13.5px !important;
+  }
+  .course-continue-btn,
+  .course-panel.glass-course-card .continue-btn {
+    padding: 14px 30px !important;
+    font-size: 15px !important;
+  }
+}
+
+/* 4. Small Desktop / Laptop Breakpoint: 1025px to 1280px */
+@media (min-width: 1025px) and (max-width: 1280px) {
+  .course-panel.glass-course-card {
+    padding: 26px 32px !important;
+    border-radius: 28px !important;
+  }
+  .course-content-futuristic,
+  .course-panel.glass-course-card .course-content {
+    grid-template-columns: 240px minmax(0, 1fr) !important;
+    gap: 34px !important;
+  }
+  .human-progress-container {
+    width: 240px !important;
+  }
+  .human-progress-svg {
+    width: 240px !important;
+    max-width: 240px !important;
+    height: 280px !important;
+  }
+  .course-main-title {
+    font-size: 30px !important;
+    line-height: 1.2 !important;
+  }
+  .course-meta {
+    gap: 12px !important;
+  }
+  .course-meta-pill {
+    padding: 7px 15px !important;
+    font-size: 14px !important;
+  }
+  .course-continue-btn,
+  .course-panel.glass-course-card .continue-btn {
+    padding: 14px 34px !important;
+    font-size: 15.5px !important;
+  }
+}
+
+/* 5. Standard Desktop Monitor Breakpoint: 1281px to 1536px */
+@media (min-width: 1281px) and (max-width: 1536px) {
+  .course-panel.glass-course-card {
+    padding: 30px 36px !important;
+    border-radius: 30px !important;
+  }
+  .course-content-futuristic,
+  .course-panel.glass-course-card .course-content {
+    grid-template-columns: 260px minmax(0, 1fr) !important;
+    gap: 38px !important;
+  }
+  .human-progress-container {
+    width: 260px !important;
+  }
+  .human-progress-svg {
+    width: 260px !important;
+    max-width: 260px !important;
+    height: 300px !important;
+  }
+  .course-main-title {
+    font-size: 33px !important;
+    line-height: 1.2 !important;
+  }
+  .course-meta {
+    gap: 14px !important;
+  }
+  .course-meta-pill {
+    padding: 8px 16px !important;
+    font-size: 14.5px !important;
+  }
+  .course-continue-btn,
+  .course-panel.glass-course-card .continue-btn {
+    padding: 15px 38px !important;
+    font-size: 16px !important;
+    border-radius: 15px !important;
+  }
+}
+
+/* 6. Large Widescreen Breakpoint: 1537px to 1919px */
+@media (min-width: 1537px) and (max-width: 1919px) {
+  .course-panel.glass-course-card {
+    padding: 34px 42px !important;
+    border-radius: 32px !important;
+  }
+  .course-content-futuristic,
+  .course-panel.glass-course-card .course-content {
+    grid-template-columns: 280px minmax(0, 1fr) !important;
+    gap: 42px !important;
+  }
+  .human-progress-container {
+    width: 280px !important;
+  }
+  .human-progress-svg {
+    width: 280px !important;
+    max-width: 280px !important;
+    height: 320px !important;
+  }
+  .course-main-title {
+    font-size: 35px !important;
+    line-height: 1.18 !important;
+  }
+  .course-meta {
+    gap: 16px !important;
+  }
+  .course-meta-pill {
+    padding: 9px 18px !important;
+    font-size: 15px !important;
+  }
+  .course-continue-btn,
+  .course-panel.glass-course-card .continue-btn {
+    padding: 16px 42px !important;
+    font-size: 16.5px !important;
+    border-radius: 16px !important;
+  }
+}
+
+/* 7. Ultra-wide & 4K Breakpoint: >= 1920px */
+@media (min-width: 1920px) {
+  .course-panel.glass-course-card {
+    padding: 38px 46px !important;
+    border-radius: 36px !important;
+  }
+  .course-content-futuristic,
+  .course-panel.glass-course-card .course-content {
+    grid-template-columns: 310px minmax(0, 1fr) !important;
+    gap: 48px !important;
+  }
+  .human-progress-container {
+    width: 310px !important;
+  }
+  .human-progress-svg {
+    width: 310px !important;
+    max-width: 310px !important;
+    height: 355px !important;
+  }
+  .course-main-title {
+    font-size: 38px !important;
+    line-height: 1.16 !important;
+  }
+  .course-meta {
+    gap: 18px !important;
+  }
+  .course-meta-pill {
+    padding: 10px 20px !important;
+    font-size: 16px !important;
+  }
+  .course-continue-btn,
+  .course-panel.glass-course-card .continue-btn {
+    padding: 18px 46px !important;
+    font-size: 17.5px !important;
+    border-radius: 18px !important;
   }
 }
 

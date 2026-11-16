@@ -259,23 +259,31 @@ const Home = React.memo(function Home(p){
             <div className="panel-title flex items-center gap-2.5">
               <Icon name="book"/>Current course
             </div>
-            <button className="quiet-btn grid place-items-center" aria-label="View courses" onClick={()=>go("courses")}>↗</button>
           </div>
           {activeCourse?(
             <div className="course-content course-content-futuristic p-6">
               <HumanProgressAvatar progress={progressPercent || 4} />
               <div className="course-info flex flex-col flex-1 min-w-0 gap-3">
-                <h2 className="text-xl font-bold leading-snug">{activeCourse.title}</h2>
-                <div className="course-meta flex flex-wrap items-center gap-3 text-sm text-learnos-muted">
-                  <span>{activeCourse.target_weeks||activeCourse.durationWeeks||12} Weeks</span>
-                  <span>{lessons.length || 14} Lessons</span>
-                  <span>{activeCourse.current_level||activeCourse.currentLevel||"Beginner"}</span>
+                <h2 className="course-main-title">{activeCourse.title}</h2>
+                <div className="course-meta">
+                  <span className="course-meta-pill">
+                    <Icon name="calendar" size={15}/>
+                    <span>{activeCourse.target_weeks||activeCourse.durationWeeks||12} Weeks</span>
+                  </span>
+                  <span className="course-meta-pill">
+                    <Icon name="book" size={15}/>
+                    <span>{lessons.length || 14} Lessons</span>
+                  </span>
+                  <span className="course-meta-pill">
+                    <Icon name="spark" size={15}/>
+                    <span>{activeCourse.current_level||activeCourse.currentLevel||"Beginner"}</span>
+                  </span>
                 </div>
-                <div className="course-action-row flex items-center justify-between gap-4 mt-2">
-                  <p className="course-progress-note text-sm text-learnos-muted">
+                <div className="course-action-row">
+                  <p className="course-progress-note">
                     {done || 1} of {stats.total || 26} planned sessions complete
                   </p>
-                  <button className="continue-btn" onClick={()=>nextTask?openLesson(nextTask.lesson_id):go("course")}>
+                  <button className="continue-btn course-continue-btn" onClick={()=>nextTask?openLesson(nextTask.lesson_id):go("course")}>
                     Continue ↗
                   </button>
                 </div>
