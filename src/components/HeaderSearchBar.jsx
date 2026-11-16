@@ -3,10 +3,11 @@ import React, { useState, useRef, useEffect } from "react";
 /**
  * HeaderSearchBar
  * 
- * Animated glassmorphic search bar for the Drizzlearn topbar.
- * Resting state: Only the circular frosted glass search icon button is visible.
- * Active state: Clicking the icon smoothly slides out the elongated glass pill
- *               input matching the iridescent translucent design.
+ * Animated glassmorphic search bar for Drizzlearn topbar.
+ * - Desktop: The search input slides out smoothly to the left of the circular button.
+ * - Mobile: Clicking search opens a sleek frosted glass pop-up overlay so it doesn't
+ *   cramp the topbar or hide the logo.
+ * - Zero on-click highlight border / outline ring.
  */
 export function HeaderSearchBar({
   queryText,
@@ -15,15 +16,22 @@ export function HeaderSearchBar({
   placeholder = "Search..."
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const inputRef = useRef(null);
+  const desktopInputRef = useRef(null);
+  const mobileInputRef = useRef(null);
   const containerRef = useRef(null);
+  const mobilePopupRef = useRef(null);
 
   // Auto-close on click outside if the search input is empty
   useEffect(() => {
     if (!isOpen) return;
 
     const handleOutsideClick = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+      // For desktop
+      const isInsideDesktop = containerRef.current && containerRef.current.contains(e.target);
+      // For mobile popup
+      const isInsideMobile = mobilePopupRef.current && mobilePopupRef.current.contains(e.target);
+
+      if (!isInsideDesktop && !isInsideMobile) {
         if (!queryText.trim()) {
           setIsOpen(false);
         }
@@ -43,8 +51,12 @@ export function HeaderSearchBar({
     if (!isOpen) {
       setIsOpen(true);
       setTimeout(() => {
-        inputRef.current?.focus();
-      }, 60);
+        if (window.innerWidth <= 768) {
+          mobileInputRef.current?.focus();
+        } else {
+          desktopInputRef.current?.focus();
+        }
+      }, 70);
     } else {
       if (queryText.trim()) {
         onSubmit?.(e);
@@ -57,89 +69,166 @@ export function HeaderSearchBar({
   const handleKeyDown = (e) => {
     if (e.key === "Escape") {
       setIsOpen(false);
-      inputRef.current?.blur();
+      desktopInputRef.current?.blur();
+      mobileInputRef.current?.blur();
     }
   };
 
   const handleClear = (e) => {
     e.stopPropagation();
     setQueryText("");
-    inputRef.current?.focus();
+    if (window.innerWidth <= 768) {
+      mobileInputRef.current?.focus();
+    } else {
+      desktopInputRef.current?.focus();
+    }
   };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
     if (!isOpen) {
       setIsOpen(true);
-      setTimeout(() => inputRef.current?.focus(), 60);
+      setTimeout(() => {
+        if (window.innerWidth <= 768) {
+          mobileInputRef.current?.focus();
+        } else {
+          desktopInputRef.current?.focus();
+        }
+      }, 70);
       return;
     }
     if (queryText.trim()) {
       onSubmit?.(e);
+      // On mobile, close popup on submit
+      if (window.innerWidth <= 768) {
+        setIsOpen(false);
+      }
     }
   };
 
   return (
-    <form
-      ref={containerRef}
-      className={`header-animated-search flex items-center relative ${isOpen ? "is-open" : "is-collapsed"}`}
-      onSubmit={handleFormSubmit}
-      role="search"
-      aria-expanded={isOpen}
-    >
-      {/* Sliding Glass Capsule Input Container */}
-      <div className="search-slide-wrapper">
-        <div className="glass-search-input-pill flex items-center">
-          <input
-            ref={inputRef}
-            type="search"
-            value={queryText}
-            onChange={(e) => setQueryText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            aria-label="Search lessons and tools"
-            className="glass-search-input flex-1 min-w-0"
-            tabIndex={isOpen ? 0 : -1}
+    <>
+      <form
+        ref={containerRef}
+        className={`header-animated-search flex items-center relative ${isOpen ? "is-open" : "is-collapsed"}`}
+        onSubmit={handleFormSubmit}
+        role="search"
+        aria-expanded={isOpen}
+      >
+        {/* Desktop Sliding Glass Capsule Input Container (Hidden on mobile via CSS) */}
+        <div className="search-slide-wrapper desktop-search-slider">
+          <div className="glass-search-input-pill flex items-center">
+            <input
+              ref={desktopInputRef}
+              type="search"
+              value={queryText}
+              onChange={(e) => setQueryText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              aria-label="Search lessons and tools"
+              className="glass-search-input flex-1 min-w-0"
+              tabIndex={isOpen ? 0 : -1}
+            />
+            {queryText && (
+              <button
+                type="button"
+                onClick={handleClear}
+                className="search-clear-btn shrink-0"
+                aria-label="Clear search"
+                title="Clear search"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Circular Frosted Glass Search Button */}
+        <button
+          type="button"
+          onClick={handleToggle}
+          className={`glass-search-trigger-btn shrink-0 flex items-center justify-center ${isOpen ? "is-active" : ""}`}
+          aria-label={isOpen ? (queryText.trim() ? "Submit search" : "Close search") : "Open search bar"}
+          title={isOpen ? (queryText.trim() ? "Search" : "Close search") : "Search lessons and tools"}
+        >
+          <svg
+            className="search-icon-svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="10.8" cy="10.8" r="6.8" />
+            <line x1="21" y1="21" x2="15.8" y2="15.8" />
+          </svg>
+        </button>
+      </form>
+
+      {/* Mobile Search Pop-up Feature Overlay (Active on screens <= 768px) */}
+      {isOpen && (
+        <div className="mobile-search-popup-root md:hidden fixed inset-0 z-50 flex flex-col justify-start pt-3 px-4">
+          {/* Backdrop Scrim */}
+          <div
+            className="mobile-search-scrim fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity"
+            onClick={() => setIsOpen(false)}
+            aria-hidden="true"
           />
-          {queryText && (
+
+          {/* Floating Frosted Glass Search Popup Card */}
+          <div
+            ref={mobilePopupRef}
+            className="mobile-search-popup-card relative z-10 w-full max-w-lg mx-auto flex items-center gap-2.5 p-2 rounded-2xl"
+          >
+            <form onSubmit={handleFormSubmit} className="flex-1 flex items-center min-w-0">
+              <div className="glass-search-input-pill mobile-popup-pill flex items-center flex-1 w-full">
+                <svg className="w-4 h-4 text-cyan-400 mr-2 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="10.8" cy="10.8" r="6.8" />
+                  <line x1="21" y1="21" x2="15.8" y2="15.8" />
+                </svg>
+                <input
+                  ref={mobileInputRef}
+                  type="search"
+                  value={queryText}
+                  onChange={(e) => setQueryText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Search lessons, tools, notes..."
+                  aria-label="Search lessons and tools"
+                  className="glass-search-input flex-1 min-w-0"
+                  autoFocus
+                />
+                {queryText && (
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    className="search-clear-btn shrink-0"
+                    aria-label="Clear search"
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </form>
+
+            {/* Cancel Button */}
             <button
               type="button"
-              onClick={handleClear}
-              className="search-clear-btn shrink-0"
-              aria-label="Clear search"
-              title="Clear search"
+              onClick={() => setIsOpen(false)}
+              className="mobile-search-cancel-btn shrink-0 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
             >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              Cancel
             </button>
-          )}
+          </div>
         </div>
-      </div>
-
-      {/* Circular Frosted Glass Search Button */}
-      <button
-        type="button"
-        onClick={handleToggle}
-        className={`glass-search-trigger-btn shrink-0 flex items-center justify-center ${isOpen ? "is-active" : ""}`}
-        aria-label={isOpen ? (queryText.trim() ? "Submit search" : "Close search") : "Open search bar"}
-        title={isOpen ? (queryText.trim() ? "Search" : "Close search") : "Search lessons and tools"}
-      >
-        <svg
-          className="search-icon-svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="10.8" cy="10.8" r="6.8" />
-          <line x1="21" y1="21" x2="15.8" y2="15.8" />
-        </svg>
-      </button>
-    </form>
+      )}
+    </>
   );
 }
 

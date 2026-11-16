@@ -540,9 +540,9 @@ export default function App(){
                 </svg>
               </div>
 
-              {/* Layer 2: Hanging Paper Tag Card with left-to-right transparent fade */}
+              {/* Layer 2: Hanging Paper Tag Card with white DRIZZ + cyan LEARN */}
               <div className="hanging-card-tag flex items-center">
-                <div className="brand-name tracking-wider">Drizzlearn</div>
+                <span className="brand-logo-text"><span className="brand-text-drizz">DRIZZ</span><span className="brand-text-learn">LEARN</span></span>
               </div>
 
               {/* Layer 3: Front prong of paperclip (sits OVER the front face of the card) */}

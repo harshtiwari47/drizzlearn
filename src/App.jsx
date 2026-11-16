@@ -45,6 +45,7 @@ import {
   GenerationProgressCard
 } from "./components/common.jsx";
 import { HeaderSearchBar } from "./components/HeaderSearchBar.jsx";
+import { MobileNavDrawer } from "./components/MobileNavDrawer.jsx";
 import {
   HomePage,
   Home,
@@ -347,7 +348,7 @@ function PageContent(props){
 }
 
 export default function App(){
-  const [data,setData]=useState(loadSaved),[user,setUser]=useState(loadCachedUser),[remote,setRemote]=useState(()=>Boolean(loadCachedUser())),[page,setPage]=useState(initialPage),[routeParams,setRouteParams]=useState(()=>initialRoute().params),[routeQuery,setRouteQuery]=useState(()=>initialRoute().query),[toast,setToast]=useState(""),[busy,setBusy]=useState(false),[queryText,setQueryText]=useState(""),[searchResults,setSearchResults]=useState(null),[modal,setModal]=useState(null),[activeLessonId,setActiveLessonId]=useState(()=>initialRoute().params?.lessonId||null),[proposal,setProposal]=useState(null),[courseFilter,setCourseFilter]=useState("all"),[mobileMoreOpen,setMobileMoreOpen]=useState(false),[generatingCourseId,setGeneratingCourseId]=useState(null);
+  const [data,setData]=useState(loadSaved),[user,setUser]=useState(loadCachedUser),[remote,setRemote]=useState(()=>Boolean(loadCachedUser())),[page,setPage]=useState(initialPage),[routeParams,setRouteParams]=useState(()=>initialRoute().params),[routeQuery,setRouteQuery]=useState(()=>initialRoute().query),[toast,setToast]=useState(""),[busy,setBusy]=useState(false),[queryText,setQueryText]=useState(""),[searchResults,setSearchResults]=useState(null),[modal,setModal]=useState(null),[activeLessonId,setActiveLessonId]=useState(()=>initialRoute().params?.lessonId||null),[proposal,setProposal]=useState(null),[courseFilter,setCourseFilter]=useState("all"),[mobileMoreOpen,setMobileMoreOpen]=useState(false),[mobileDrawerOpen,setMobileDrawerOpen]=useState(false),[generatingCourseId,setGeneratingCourseId]=useState(null);
   const [loginMode,setLoginMode]=useState(initialLoginMode),[authError,setAuthError]=useState(""),[authMessage,setAuthMessage]=useState(""),[returnPage,setReturnPage]=useState("home");
   const [generationProgress,setGenerationProgress]=useState(null);
   const [generationError,setGenerationError]=useState("");
@@ -859,7 +860,22 @@ export default function App(){
       {(() => {
         const headerElement = (
           <header className="topbar flex items-center justify-between gap-3.5 mb-7 sticky top-0 z-30" aria-label="Header navigation">
-            <div className="header-brand-wrap flex items-center">
+            <div className="header-brand-wrap flex items-center gap-2">
+              {/* Mobile Navigation Drawer Hamburger Toggle Button */}
+              <button
+                type="button"
+                className="mobile-drawer-btn shrink-0"
+                onClick={() => setMobileDrawerOpen(true)}
+                aria-label="Open navigation menu"
+                title="Menu"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
+
               <a href="#/" className="header-brand hanging-paperclip-brand flex items-center text-inherit no-underline cursor-pointer" onClick={e=>{if(!shouldInterceptNavClick(e))return;e.preventDefault();go("home");}} aria-label="Drizzlearn Home">
                 {/* Hanging Paperclip Tag Container */}
                 <div className="hanging-clip-anchor relative">
@@ -878,9 +894,9 @@ export default function App(){
                     </svg>
                   </div>
 
-                  {/* Layer 2: Hanging Paper Tag Card with left-to-right transparent fade */}
+                  {/* Layer 2: Hanging Paper Tag Card with white DRIZZ + cyan LEARN */}
                   <div className="hanging-card-tag flex items-center">
-                    <div className="brand-name tracking-wider">Drizzlearn</div>
+                    <span className="brand-logo-text"><span className="brand-text-drizz">DRIZZ</span><span className="brand-text-learn">LEARN</span></span>
                   </div>
 
                   {/* Layer 3: Front prong of paperclip (sits OVER the front face of the card) */}
@@ -936,6 +952,17 @@ export default function App(){
     </main>
     {toast&&<div className="toast show fixed z-50" role="status" aria-live="polite">{toast}</div>}
     {modal&&<Modal modal={modal} onClose={()=>{if(!deletingCourseId){setDeleteCourseError("");setModal(null);}}} onApprove={()=>approveProposal(true)} onDeleteCourse={deleteCourse} deletingCourse={Boolean(deletingCourseId)} deleteCourseError={deleteCourseError} loginMode={loginMode} setLoginMode={setLoginMode} authSubmit={authSubmit} authError={authError} authMessage={authMessage} setAuthError={setAuthError} setAuthMessage={setAuthMessage} logout={logout} authBusy={authBusy} />}
+    <MobileNavDrawer
+      isOpen={mobileDrawerOpen}
+      onClose={() => setMobileDrawerOpen(false)}
+      primaryNavItems={primaryNavItems}
+      toolNavItems={toolNavItems}
+      activeNav={activeNav}
+      go={go}
+      user={user}
+      settings={data.settings}
+      openAccount={openAccount}
+    />
   </div>;
 }
 
