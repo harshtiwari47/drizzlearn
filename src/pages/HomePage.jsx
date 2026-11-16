@@ -168,7 +168,7 @@ const Home = React.memo(function Home(p){
 
       {/* Hero Headline & Generator Row */}
       <section className="hero flex flex-col items-center text-center gap-6 mb-7" id="generator">
-        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
+        <h1 className="hero-headline text-4xl sm:text-5xl font-extrabold tracking-tight">
           What do you want to <span className="text-primary-gradient">learn?</span>
         </h1>
         <form
@@ -177,18 +177,20 @@ const Home = React.memo(function Home(p){
             e.preventDefault();
             const value=new FormData(e.currentTarget).get("topic");
             sessionStorage.setItem("learnos.goal.prefill",String(value||""));
-            p.setModalState(null);
+            p.setModalState?.(null);
             go("goal");
           }}
         >
-          <span className="spark pl-3" aria-hidden="true">✦</span>
-          <input
-            name="topic"
-            defaultValue={activeCourse?.title||"Mastering English Tenses for Daily Communication"}
-            aria-label="Topic to learn"
-            placeholder="What do you want to learn?"
-            className="flex-1"
-          />
+          <div className="generate-input-box flex items-center gap-2 flex-1 min-w-0">
+            <span className="spark pl-3" aria-hidden="true">✦</span>
+            <input
+              name="topic"
+              defaultValue=""
+              aria-label="Topic to learn"
+              placeholder="Enter a topic or skill (e.g. Python for AI, Spanish, Astrophysics)..."
+              className="generate-input flex-1"
+            />
+          </div>
           <button className="primary-btn flex items-center gap-1.5" type="submit" disabled={p.busy}>
             {p.busy?<><span className="btn-spinner"/> Generating…</>:<>Generate course <span>↗</span></>}
           </button>
