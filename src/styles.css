@@ -18086,7 +18086,12 @@ body:has(.app-shell-create-course-page) {
   max-width: 1240px !important;
   margin: 0 auto !important;
   padding: 0 !important;
-  background: #100F0D !important;
+  background:
+    radial-gradient(ellipse 800px 500px at 85% 10%, rgba(242, 140, 69, 0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 650px 550px at 10% 50%, rgba(92, 57, 38, 0.12) 0%, transparent 70%),
+    #100F0D !important;
+  position: relative !important;
+  min-height: 100vh !important;
 }
 
 body:has(.workspace-proposal-page),
@@ -18105,71 +18110,119 @@ body:has(.workspace-proposal-page),
   box-sizing: border-box;
 }
 
-/* Back navigation & page status */
-.proposal-v2-top-bar {
+/* Ambient gradient glows in background */
+.proposal-v2-container::before {
+  content: '';
+  position: absolute;
+  top: 40px;
+  right: 5%;
+  width: 580px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(242, 140, 69, 0.09) 0%, rgba(231, 180, 119, 0.03) 45%, transparent 70%);
+  pointer-events: none;
+  filter: blur(48px);
+  z-index: 0;
+}
+
+.proposal-v2-container::after {
+  content: '';
+  position: absolute;
+  top: 520px;
+  left: -2%;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(92, 57, 38, 0.14) 0%, rgba(57, 39, 29, 0.06) 50%, transparent 75%);
+  pointer-events: none;
+  filter: blur(56px);
+  z-index: 0;
+}
+
+/* Circular back button navigation */
+.proposal-v2-nav-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
+  position: relative;
+  z-index: 2;
 }
 
-.proposal-v2-back-btn {
+.proposal-v2-back-nav {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 9999px;
-  background: #191713;
-  border: 1px solid #393129;
-  color: #A69B8E;
-  font-size: 13px;
-  font-weight: 600;
+  gap: 14px;
+  background: transparent;
+  border: none;
+  padding: 0;
   cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
+  color: #A69B8E;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.proposal-v2-back-btn:hover {
-  background: #242019;
-  border-color: #5C3926;
-  color: #F4EFE8;
-  transform: translateX(-2px);
-}
-
-.proposal-v2-status-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  background: rgba(242, 140, 69, 0.08);
-  border: 1px solid rgba(242, 140, 69, 0.25);
-  color: #E7B477;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.proposal-v2-status-dot {
-  width: 7px;
-  height: 7px;
+.proposal-v2-circle-back-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
-  background: #F28C45;
-  box-shadow: 0 0 8px rgba(242, 140, 69, 0.6);
+  background: rgba(25, 23, 19, 0.85);
+  border: 1px solid #393129;
+  color: #E7B477;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(231, 180, 119, 0.15);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Bento Hero Header Card */
+.proposal-v2-circle-back-icon svg {
+  transition: transform 0.22s ease;
+}
+
+.proposal-v2-back-text {
+  font-family: var(--font-body, 'Manrope', sans-serif);
+  font-size: 14px;
+  font-weight: 700;
+  color: #F4EFE8;
+  letter-spacing: -0.01em;
+  transition: color 0.2s ease;
+}
+
+.proposal-v2-back-nav:hover .proposal-v2-circle-back-icon {
+  background: #242019;
+  border-color: #F28C45;
+  color: #FFFFFF;
+  box-shadow: 0 6px 22px rgba(242, 140, 69, 0.3), inset 0 1px 0 rgba(242, 140, 69, 0.3);
+  transform: translateY(-1.5px) scale(1.05);
+}
+
+.proposal-v2-back-nav:hover .proposal-v2-circle-back-icon svg {
+  transform: translateX(-3px);
+  color: #F28C45;
+}
+
+.proposal-v2-back-nav:hover .proposal-v2-back-text {
+  color: #F28C45;
+}
+
+.proposal-v2-back-nav:active .proposal-v2-circle-back-icon {
+  transform: scale(0.95);
+}
+
+/* Bento Hero Header Card with Glass Blur */
 .proposal-v2-hero-card {
-  background: linear-gradient(145deg, #191713 0%, #151310 100%);
-  border: 1px solid #393129;
+  background: rgba(25, 23, 19, 0.72) !important;
+  backdrop-filter: blur(20px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  border: 1px solid rgba(231, 180, 119, 0.14) !important;
   border-radius: 20px;
   padding: 32px 36px;
   margin-bottom: 24px;
   position: relative;
+  z-index: 1;
   overflow: hidden;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(244, 239, 232, 0.05) !important;
 }
 
 .proposal-v2-hero-card::before {
@@ -18179,7 +18232,7 @@ body:has(.workspace-proposal-page),
   right: 0;
   width: 380px;
   height: 380px;
-  background: radial-gradient(circle at 100% 0%, rgba(242, 140, 69, 0.08) 0%, rgba(92, 57, 38, 0.05) 50%, transparent 75%);
+  background: radial-gradient(circle at 100% 0%, rgba(242, 140, 69, 0.1) 0%, rgba(92, 57, 38, 0.06) 50%, transparent 75%);
   pointer-events: none;
 }
 
@@ -18306,19 +18359,25 @@ body:has(.workspace-proposal-page),
 }
 
 .proposal-v2-bento-card {
-  background: #191713;
-  border: 1px solid #393129;
+  background: rgba(25, 23, 19, 0.7) !important;
+  backdrop-filter: blur(16px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(130%) !important;
+  border: 1px solid rgba(57, 49, 41, 0.85) !important;
   border-radius: 18px;
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
   position: relative;
-  transition: border-color 0.2s ease;
+  z-index: 1;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(231, 180, 119, 0.05) !important;
+  transition: all 0.25s ease;
 }
 
 .proposal-v2-bento-card:hover {
-  border-color: rgba(242, 140, 69, 0.35);
+  border-color: rgba(242, 140, 69, 0.4) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(242, 140, 69, 0.1) !important;
 }
 
 .proposal-v2-card-header {
@@ -18493,10 +18552,13 @@ body:has(.workspace-proposal-page),
 }
 
 .proposal-v2-assumption-bullet {
-  color: #F28C45;
-  font-weight: 800;
-  font-size: 14px;
-  line-height: 1.3;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #F28C45;
+  margin-top: 7px;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(242, 140, 69, 0.5);
 }
 
 /* ==========================================================================
@@ -18505,14 +18567,18 @@ body:has(.workspace-proposal-page),
    ========================================================================== */
 
 .proposal-v2-roadmap-container {
-  background: #191713;
-  border: 1px solid #393129;
+  background: rgba(25, 23, 19, 0.72) !important;
+  backdrop-filter: blur(20px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  border: 1px solid rgba(231, 180, 119, 0.14) !important;
   border-radius: 20px;
   padding: 30px;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(244, 239, 232, 0.05) !important;
 }
 
 .proposal-v2-roadmap-header {
@@ -18657,15 +18723,18 @@ body:has(.workspace-proposal-page),
   flex-shrink: 0;
 }
 
-/* Active Module Spotlight Card */
+/* Active Module Spotlight Card with Glass Blur */
 .proposal-v2-module-spotlight {
-  background: #242019;
-  border: 1px solid #393129;
+  background: rgba(36, 32, 25, 0.65) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(92, 57, 38, 0.6) !important;
   border-radius: 16px;
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(231, 180, 119, 0.05) !important;
 }
 
 .proposal-v2-module-header {
@@ -18747,7 +18816,7 @@ body:has(.workspace-proposal-page),
   border-radius: 0 8px 8px 0;
 }
 
-/* Lesson Cards inside Active Module */
+/* Lesson Cards inside Active Module with Glass Blur */
 .proposal-v2-lessons-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
@@ -18755,21 +18824,24 @@ body:has(.workspace-proposal-page),
 }
 
 .proposal-v2-lesson-card {
-  background: #191713;
-  border: 1px solid #393129;
+  background: rgba(25, 23, 19, 0.75) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(57, 49, 41, 0.85) !important;
   border-radius: 14px;
   padding: 18px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
   transition: all 0.2s ease;
 }
 
 .proposal-v2-lesson-card:hover {
-  border-color: #5C3926;
+  border-color: #5C3926 !important;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
 }
 
 .proposal-v2-lesson-top {
@@ -18841,21 +18913,22 @@ body:has(.workspace-proposal-page),
   font-weight: 600;
 }
 
-/* Sticky / Floating Action Bar */
+/* Sticky / Floating Action Bar with Glass Blur */
 .proposal-v2-action-bar {
   position: sticky;
   bottom: 24px;
   margin-top: 36px;
-  background: rgba(25, 23, 19, 0.88);
-  backdrop-filter: blur(16px);
-  border: 1px solid #393129;
+  background: rgba(25, 23, 19, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+  border: 1px solid rgba(231, 180, 119, 0.18) !important;
   border-radius: 16px;
   padding: 14px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(244, 239, 232, 0.06) !important;
   z-index: 40;
 }
 
@@ -18863,6 +18936,35 @@ body:has(.workspace-proposal-page),
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.proposal-v2-param-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #A69B8E;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 6px 0;
+}
+
+.proposal-v2-param-link:hover {
+  color: #F4EFE8;
+  transform: translateX(-2px);
+}
+
+.proposal-v2-param-link svg {
+  color: #E7B477;
+  transition: transform 0.2s ease;
+}
+
+.proposal-v2-param-link:hover svg {
+  transform: translateX(-2px);
+  color: #F28C45;
 }
 
 .proposal-v2-action-right {

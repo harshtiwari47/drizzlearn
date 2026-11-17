@@ -169,21 +169,19 @@ export function ProposalPage(p) {
 
   return (
     <div className="proposal-v2-container">
-      {/* Top Navigation & Status */}
-      <div className="proposal-v2-top-bar">
+      {/* Top Navigation Bar with Circular Back Button */}
+      <div className="proposal-v2-nav-bar">
         <button
           type="button"
-          className="proposal-v2-back-btn"
+          className="proposal-v2-back-nav"
           onClick={() => p.go("courses")}
+          aria-label="Back to courses"
         >
-          <Icon name="arrow-left" size={15} />
-          <span>Back to courses</span>
+          <span className="proposal-v2-circle-back-icon">
+            <Icon name="arrow-left" size={18} />
+          </span>
+          <span className="proposal-v2-back-text">Back to courses</span>
         </button>
-
-        <div className="proposal-v2-status-tag">
-          <span className="proposal-v2-status-dot" />
-          <span>Curriculum Blueprint · Reviewing</span>
-        </div>
       </div>
 
       {/* Hero Bento Header Card */}
@@ -338,7 +336,10 @@ export function ProposalPage(p) {
                   <span>Revising curriculum…</span>
                 </>
               ) : (
-                <span>Request revisions ↗</span>
+                <>
+                  <Icon name="spark" size={14} />
+                  <span>Request revisions</span>
+                </>
               )}
             </button>
 
@@ -368,7 +369,7 @@ export function ProposalPage(p) {
               "Pacing calibrated for consistent daily practice intervals."
             ]).map((item, idx) => (
               <li key={idx} className="proposal-v2-assumption-item">
-                <span className="proposal-v2-assumption-bullet">›</span>
+                <span className="proposal-v2-assumption-bullet" aria-hidden="true" />
                 <span>{item}</span>
               </li>
             ))}
@@ -382,7 +383,7 @@ export function ProposalPage(p) {
           <div className="proposal-v2-roadmap-title-area">
             <h2 className="proposal-v2-roadmap-title">
               <Icon name="book" size={20} />
-              <span>Interactive Learning Roadmap</span>
+              <span>Course Roadmap</span>
             </h2>
             <span className="proposal-v2-roadmap-subtitle">
               Follow the connected milestones from foundational concepts to capstone execution.
@@ -395,14 +396,14 @@ export function ProposalPage(p) {
               className={`proposal-v2-view-btn ${viewMode === "milestone" ? "active" : ""}`}
               onClick={() => setViewMode("milestone")}
             >
-              Milestone View
+              By Module
             </button>
             <button
               type="button"
               className={`proposal-v2-view-btn ${viewMode === "all" ? "active" : ""}`}
               onClick={() => setViewMode("all")}
             >
-              Full Blueprint
+              All Lessons
             </button>
           </div>
         </div>
@@ -551,10 +552,11 @@ export function ProposalPage(p) {
         <div className="proposal-v2-action-left">
           <button
             type="button"
-            className="text-xs text-[#A69B8E] hover:text-[#F4EFE8] transition-colors bg-transparent border-none cursor-pointer"
+            className="proposal-v2-param-link"
             onClick={() => p.go("create/course")}
           >
-            ← Change goal parameters
+            <Icon name="arrow-left" size={14} />
+            <span>Change goal parameters</span>
           </button>
         </div>
 
@@ -599,7 +601,10 @@ export function ProposalPage(p) {
                 <span>Approving blueprint…</span>
               </>
             ) : (
-              <span>Approve & start learning ↗</span>
+              <>
+                <span>Approve & start learning</span>
+                <Icon name="arrow-right" size={15} />
+              </>
             )}
           </button>
         </div>
