@@ -17649,6 +17649,7 @@ body:has(.app-shell-create-course-page) {
   max-width: 1100px !important;
   margin: 0 auto !important;
   padding: 16px 24px 0 !important;
+  animation: none !important; /* Replaced with deliberate smooth entrance animations */
 }
 
 .workspace-create-course-page .create-course-page-container {
@@ -17662,9 +17663,21 @@ body:has(.app-shell-create-course-page) {
   display: none !important;
 }
 
-/* Page Header & Circular Large Back Button */
+/* Page Header & Circular Large Back Button with Smooth Entrance Animation */
 .create-course-header {
   margin-bottom: 24px !important;
+  animation: create-course-header-enter 0.75s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+@keyframes create-course-header-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .create-course-title-row {
@@ -17738,7 +17751,7 @@ body:has(.app-shell-create-course-page) {
   line-height: 1.5 !important;
 }
 
-/* Main Form Card - Deep Emerald Glass Surface with Dynamic Cursor Green Glow */
+/* Main Form Card - Deep Emerald Glass Surface with Smooth Entrance & Dynamic Cursor Glow */
 .create-course-form-card {
   position: relative !important;
   overflow: hidden !important;
@@ -17758,9 +17771,23 @@ body:has(.app-shell-create-course-page) {
   --mouse-x: 50%;
   --mouse-y: 50%;
   --spotlight-opacity: 0;
+  animation: create-course-card-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both !important;
 }
 
-/* Green Light Glow Near Cursor (Inner Radial Spotlight) */
+@keyframes create-course-card-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(26px) scale(0.985);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Green Light Glow Near Cursor (Smooth Inner Radial Spotlight) */
 .create-course-form-card::before {
   content: "" !important;
   position: absolute !important;
@@ -17769,13 +17796,14 @@ body:has(.app-shell-create-course-page) {
   border-radius: inherit !important;
   background: radial-gradient(
     520px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(38, 121, 78, 0.45) 0%,
-    rgba(17, 95, 56, 0.28) 32%,
+    rgba(38, 121, 78, 0.48) 0%,
+    rgba(17, 95, 56, 0.3) 30%,
     rgba(214, 230, 154, 0.09) 55%,
     transparent 75%
   ) !important;
   opacity: var(--spotlight-opacity, 0) !important;
-  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 0.4s ease !important;
+  will-change: transform, opacity !important;
   z-index: 1 !important;
 }
 
@@ -17798,7 +17826,8 @@ body:has(.app-shell-create-course-page) {
   -webkit-mask-composite: xor !important;
   mask-composite: exclude !important;
   opacity: var(--spotlight-opacity, 0) !important;
-  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 0.4s ease !important;
+  will-change: transform, opacity !important;
   z-index: 1 !important;
 }
 

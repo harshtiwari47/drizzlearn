@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from "react";
+import React, { useRef, useState, useMemo, useEffect } from "react";
 import { Icon, GenerationProgressCard } from "../components/common.jsx";
 
 function readGoalDraft() {
@@ -13,6 +13,9 @@ export { readGoalDraft };
 
 function CreateCoursePage(props) {
   const formRef = useRef(null);
+  const targetPos = useRef({ x: 0, y: 0, opacity: 0 });
+  const currentPos = useRef({ x: 0, y: 0, opacity: 0 });
+  const rafId = useRef(null);
 
   const [topic, setTopic] = useState(() => sessionStorage.getItem("learnos.goal.prefill") || readGoalDraft().topic || "");
   const [outcome, setOutcome] = useState(() => readGoalDraft().desiredOutcome || "");
@@ -52,19 +55,68 @@ function CreateCoursePage(props) {
     }
   };
 
+  // Smooth entrance sweep and fluid damped cursor-following spotlight loop
+  useEffect(() => {
+    let mounted = true;
+    const form = formRef.current;
+    if (!form) return;
+
+    // Initial position on mount (gentle introductory glide across the card surface)
+    const rect = form.getBoundingClientRect();
+    const initialWidth = rect.width || 800;
+    const initialHeight = rect.height || 450;
+    currentPos.current = { x: initialWidth * 0.15, y: initialHeight * 0.2, opacity: 0 };
+    targetPos.current = { x: initialWidth * 0.5, y: initialHeight * 0.42, opacity: 0.75 };
+
+    const timer = setTimeout(() => {
+      if (!mounted) return;
+      targetPos.current.opacity = 0.55;
+    }, 200);
+
+    const updateLoop = () => {
+      if (!mounted) return;
+      // Damped spring / lerp easing for silky smooth cursor follow
+      const speed = 0.12;
+      currentPos.current.x += (targetPos.current.x - currentPos.current.x) * speed;
+      currentPos.current.y += (targetPos.current.y - currentPos.current.y) * speed;
+      currentPos.current.opacity += (targetPos.current.opacity - currentPos.current.opacity) * 0.08;
+
+      if (form) {
+        form.style.setProperty("--mouse-x", `${currentPos.current.x.toFixed(2)}px`);
+        form.style.setProperty("--mouse-y", `${currentPos.current.y.toFixed(2)}px`);
+        form.style.setProperty("--spotlight-opacity", currentPos.current.opacity.toFixed(3));
+      }
+
+      rafId.current = requestAnimationFrame(updateLoop);
+    };
+
+    rafId.current = requestAnimationFrame(updateLoop);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+    };
+  }, []);
+
   const handleMouseMove = (e) => {
     if (!formRef.current) return;
     const rect = formRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    formRef.current.style.setProperty("--mouse-x", `${x}px`);
-    formRef.current.style.setProperty("--mouse-y", `${y}px`);
-    formRef.current.style.setProperty("--spotlight-opacity", "1");
+    targetPos.current.x = e.clientX - rect.left;
+    targetPos.current.y = e.clientY - rect.top;
+    targetPos.current.opacity = 1;
+  };
+
+  const handleMouseEnter = (e) => {
+    if (!formRef.current) return;
+    const rect = formRef.current.getBoundingClientRect();
+    targetPos.current.x = e.clientX - rect.left;
+    targetPos.current.y = e.clientY - rect.top;
+    targetPos.current.opacity = 1;
   };
 
   const handleMouseLeave = () => {
-    if (!formRef.current) return;
-    formRef.current.style.setProperty("--spotlight-opacity", "0");
+    targetPos.current.opacity = 0;
   };
 
   return (
@@ -98,12 +150,13 @@ function CreateCoursePage(props) {
         </div>
       </div>
 
-      {/* Main Responsive Form Card with Interactive Cursor Green Glow */}
+      {/* Main Responsive Form Card with Smooth Interactive Cursor Green Glow */}
       <form
         ref={formRef}
         className="create-course-form-card"
         onSubmit={handleSubmit}
         onMouseMove={handleMouseMove}
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         <div className="create-course-columns-grid">
