@@ -178,10 +178,15 @@ function CreateCoursePage(props) {
 
         {/* Field 5: Target Date */}
         <div className="create-course-field">
-          <label htmlFor="course-date" className="create-course-label flex items-center justify-between">
-            <span>Target date</span>
+          <div className="flex items-center justify-between">
+            <label htmlFor="course-date" className="create-course-label">
+              Target date
+            </label>
             <span className="optional-label">Optional</span>
-          </label>
+          </div>
+          <p className="create-course-field-hint">
+            Set a completion deadline to pace your lessons and daily study blocks.
+          </p>
           <input
             id="course-date"
             type="date"
