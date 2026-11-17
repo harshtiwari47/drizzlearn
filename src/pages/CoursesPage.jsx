@@ -416,34 +416,21 @@ function CoursesPage(props) {
             <div className="showcase-center-moving-glow" aria-hidden="true" />
             <div className="showcase-ambient-glow" aria-hidden="true" />
 
-            {/* Box Header Controls - Navigation Arrows */}
-            <div className="showcase-top-controls flex items-center justify-end relative z-10 px-4 pt-2 pb-1">
-              <div className="flex items-center gap-2 ml-auto">
-                <button
-                  type="button"
-                  className="showcase-nav-arrow"
-                  disabled={visible.length <= 1}
-                  onClick={handlePrev}
-                  aria-label="Previous course"
-                  title="Previous course"
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  className="showcase-nav-arrow"
-                  disabled={visible.length <= 1}
-                  onClick={handleNext}
-                  aria-label="Next course"
-                  title="Next course"
-                >
-                  ›
-                </button>
-              </div>
-            </div>
-
             {/* 3D Fanned Card Deck Arena */}
             <div className="courses-3d-stage relative flex items-center justify-center">
+              {/* Left Side Navigation Arrow */}
+              <button
+                type="button"
+                className="showcase-side-nav-arrow is-prev"
+                disabled={visible.length <= 1}
+                onClick={handlePrev}
+                aria-label="Previous course"
+                title="Previous course"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
               {/* Left Card: Prev Course or Ghost Card */}
               {prevCourse && prevCourse.id !== centerCourse.id ? (
                 <ShowcaseCard
@@ -491,6 +478,20 @@ function CoursesPage(props) {
               ) : visible.length <= 2 ? (
                 <GhostShowcaseCard position="right" go={go} />
               ) : null}
+
+              {/* Right Side Navigation Arrow */}
+              <button
+                type="button"
+                className="showcase-side-nav-arrow is-next"
+                disabled={visible.length <= 1}
+                onClick={handleNext}
+                aria-label="Next course"
+                title="Next course"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
             </div>
 
             {/* Bottom Indicator Dots */}
