@@ -19051,28 +19051,480 @@ body:has(.workspace-proposal-page),
   color: #fecdd3;
 }
 
-/* Responsive adjustments */
-@media (max-width: 900px) {
-  .proposal-v2-col-4,
-  .proposal-v2-col-6,
-  .proposal-v2-col-8 {
+/* ==========================================================================
+   Smooth Flow Animations & Micro-Interactions
+   ========================================================================== */
+
+@keyframes proposalFlowFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.985);
+  }
+  60% {
+    opacity: 0.9;
+    transform: translateY(-2px) scale(1.002);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes proposalBarSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes proposalNodePulse {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(242, 140, 69, 0.25), 0 0 0 0 rgba(242, 140, 69, 0.35);
+  }
+  50% {
+    box-shadow: 0 6px 22px rgba(242, 140, 69, 0.45), 0 0 0 5px rgba(242, 140, 69, 0);
+  }
+}
+
+/* Staggered entry sequence for initial appearance */
+.proposal-v2-nav-bar {
+  animation: proposalFlowFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.04s;
+}
+
+.proposal-v2-hero-card {
+  animation: proposalFlowFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.1s;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s ease;
+}
+
+.proposal-v2-hero-card:hover {
+  border-color: rgba(242, 140, 69, 0.35) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5), 0 0 32px rgba(242, 140, 69, 0.08), inset 0 1px 0 rgba(244, 239, 232, 0.08) !important;
+}
+
+.proposal-v2-bento-grid > :nth-child(1) {
+  animation: proposalFlowFadeIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.18s;
+}
+
+.proposal-v2-bento-grid > :nth-child(2) {
+  animation: proposalFlowFadeIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.26s;
+}
+
+.proposal-v2-bento-grid > :nth-child(3) {
+  animation: proposalFlowFadeIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.34s;
+}
+
+.proposal-v2-roadmap-container {
+  animation: proposalFlowFadeIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.42s;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s ease;
+}
+
+.proposal-v2-roadmap-container:hover {
+  border-color: rgba(242, 140, 69, 0.28) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5), 0 0 28px rgba(242, 140, 69, 0.06), inset 0 1px 0 rgba(244, 239, 232, 0.07) !important;
+}
+
+.proposal-v2-action-bar {
+  animation: proposalBarSlideUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.5s;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s ease,
+              border-color 0.25s ease;
+}
+
+/* Bento card hover and active transitions */
+.proposal-v2-bento-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.3s ease;
+}
+
+.proposal-v2-bento-card:hover {
+  transform: translateY(-4px) scale(1.008);
+  border-color: rgba(242, 140, 69, 0.45) !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.5), 0 0 28px rgba(242, 140, 69, 0.1), inset 0 1px 0 rgba(231, 180, 119, 0.12) !important;
+}
+
+.proposal-v2-bento-card:active {
+  transform: translateY(-1px) scale(0.995);
+  transition-duration: 0.1s;
+}
+
+/* Metric chip hover and active transitions */
+.proposal-v2-metric-chip {
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.proposal-v2-metric-chip:hover {
+  transform: translateY(-2px);
+  border-color: rgba(231, 180, 119, 0.4);
+  background: #2a251e;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.proposal-v2-metric-chip:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* Milestone nodes interactive flow */
+.proposal-v2-milestone-node {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.proposal-v2-milestone-node:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: #5C3926;
+  background: #2c271f;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(231, 180, 119, 0.1);
+}
+
+.proposal-v2-milestone-node:active {
+  transform: scale(0.97);
+  transition-duration: 0.08s;
+}
+
+.proposal-v2-milestone-node.active {
+  animation: proposalNodePulse 3s infinite ease-in-out;
+}
+
+/* Lesson cards hover and active */
+.proposal-v2-lesson-card {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease,
+              background 0.25s ease;
+}
+
+.proposal-v2-lesson-card:hover {
+  transform: translateY(-3px) scale(1.015);
+  border-color: rgba(231, 180, 119, 0.35) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 18px rgba(92, 57, 38, 0.2) !important;
+}
+
+.proposal-v2-lesson-card:active {
+  transform: translateY(0) scale(0.99);
+  transition-duration: 0.1s;
+}
+
+/* Button micro-interactions */
+.proposal-v2-primary-btn:active:not(:disabled) {
+  transform: scale(0.96) !important;
+  transition-duration: 0.08s;
+}
+
+.proposal-v2-secondary-btn:active:not(:disabled) {
+  transform: scale(0.96) !important;
+  transition-duration: 0.08s;
+}
+
+.proposal-v2-danger-btn:active:not(:disabled) {
+  transform: scale(0.96) !important;
+  transition-duration: 0.08s;
+}
+
+.proposal-v2-refine-btn:active:not(:disabled) {
+  transform: scale(0.96) !important;
+  transition-duration: 0.08s;
+}
+
+.proposal-v2-view-btn:active {
+  transform: scale(0.95);
+  transition-duration: 0.08s;
+}
+
+/* ==========================================================================
+   Multi-Breakpoint Responsive Architecture (480px, 768px, 1024px, 1280px, 1536px, 1920px)
+   ========================================================================== */
+
+/* 1920px+ — Full HD & Ultrawide Displays */
+@media (min-width: 1920px) {
+  .workspace-proposal-page {
+    max-width: 1560px !important;
+  }
+  .proposal-v2-container {
+    max-width: 1520px;
+    padding: 40px 36px 140px;
+  }
+  .proposal-v2-container::before {
+    width: 880px;
+    height: 720px;
+    right: 10%;
+    filter: blur(80px);
+  }
+  .proposal-v2-container::after {
+    width: 800px;
+    height: 800px;
+    left: -5%;
+    filter: blur(90px);
+  }
+  .proposal-v2-hero-card {
+    padding: 38px 46px;
+  }
+  .proposal-v2-title-input {
+    font-size: 38px;
+  }
+  .proposal-v2-summary-textarea {
+    font-size: 16px;
+  }
+  .proposal-v2-lessons-grid {
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  }
+}
+
+/* 1536px to 1919px — Large Desktop & 2K */
+@media (min-width: 1536px) and (max-width: 1919px) {
+  .workspace-proposal-page {
+    max-width: 1400px !important;
+  }
+  .proposal-v2-container {
+    max-width: 1380px;
+    padding: 32px 28px 120px;
+  }
+  .proposal-v2-container::before {
+    width: 720px;
+    height: 580px;
+    filter: blur(64px);
+  }
+  .proposal-v2-container::after {
+    width: 650px;
+    height: 650px;
+    filter: blur(72px);
+  }
+  .proposal-v2-title-input {
+    font-size: 34px;
+  }
+  .proposal-v2-lessons-grid {
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  }
+}
+
+/* 1025px to 1280px — Standard Desktop */
+@media (max-width: 1280px) {
+  .workspace-proposal-page {
+    padding: 0 16px !important;
+  }
+  .proposal-v2-container {
+    padding: 24px 12px 100px;
+  }
+}
+
+/* 769px to 1024px — Tablet Landscape & Compact Laptops */
+@media (max-width: 1024px) {
+  .proposal-v2-bento-grid {
+    gap: 16px;
+  }
+  .proposal-v2-col-4 {
+    grid-column: span 6;
+  }
+  .proposal-v2-bento-card:nth-child(3) {
     grid-column: span 12;
   }
   .proposal-v2-hero-card {
-    padding: 24px;
+    padding: 28px 26px;
+  }
+  .proposal-v2-title-input {
+    font-size: 28px;
+  }
+  .proposal-v2-lessons-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+/* 481px to 768px — Tablet Portrait */
+@media (max-width: 768px) {
+  .proposal-v2-col-4,
+  .proposal-v2-col-6,
+  .proposal-v2-col-8,
+  .proposal-v2-bento-card:nth-child(3) {
+    grid-column: span 12;
+  }
+  .proposal-v2-hero-card {
+    padding: 22px 20px;
+    border-radius: 16px;
   }
   .proposal-v2-title-input {
     font-size: 24px;
+    margin-left: -6px;
+  }
+  .proposal-v2-summary-textarea {
+    font-size: 14px;
+    margin-left: -6px;
+  }
+  .proposal-v2-metrics-strip {
+    gap: 8px;
+  }
+  .proposal-v2-metric-chip {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .proposal-v2-roadmap-container {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+  .proposal-v2-roadmap-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .proposal-v2-view-switcher {
+    width: 100%;
+    display: flex;
+  }
+  .proposal-v2-view-btn {
+    flex: 1;
+    text-align: center;
+  }
+  .proposal-v2-lessons-grid {
+    grid-template-columns: 1fr;
   }
   .proposal-v2-action-bar {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
+    padding: 14px 18px;
+    bottom: 14px;
+  }
+  .proposal-v2-action-left {
+    justify-content: center;
   }
   .proposal-v2-action-right {
-    justify-content: stretch;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
   }
   .proposal-v2-action-right button {
-    flex: 1;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Up to 480px — Mobile Devices */
+@media (max-width: 480px) {
+  .proposal-v2-container {
+    padding: 14px 8px 120px;
+  }
+  .proposal-v2-nav-bar {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .proposal-v2-circle-back-icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+  .proposal-v2-back-text {
+    font-size: 13px;
+  }
+  .proposal-v2-hero-card {
+    padding: 18px 14px;
+    border-radius: 14px;
+  }
+  .proposal-v2-title-input {
+    font-size: 20px;
+    line-height: 1.25;
+    padding: 4px 6px;
+  }
+  .proposal-v2-summary-textarea {
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 4px 6px;
+  }
+  .proposal-v2-metrics-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .proposal-v2-metric-chip {
+    padding: 6px 8px;
+    font-size: 11px;
+    justify-content: flex-start;
+  }
+  .proposal-v2-bento-card {
+    padding: 18px 14px;
+    border-radius: 14px;
+  }
+  .proposal-v2-roadmap-container {
+    padding: 16px 12px;
+    border-radius: 14px;
+  }
+  .proposal-v2-roadmap-title {
+    font-size: 18px;
+  }
+  .proposal-v2-roadmap-subtitle {
+    font-size: 12px;
+  }
+  .proposal-v2-milestones-rail {
+    gap: 8px;
+    padding: 8px 2px;
+  }
+  .proposal-v2-milestone-node {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .proposal-v2-node-number {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+  .proposal-v2-node-title {
+    font-size: 12px;
+    max-width: 130px;
+  }
+  .proposal-v2-module-spotlight {
+    padding: 16px 12px;
+    border-radius: 12px;
+  }
+  .proposal-v2-module-title-input {
+    font-size: 17px;
+  }
+  .proposal-v2-module-obj-input {
+    font-size: 13px;
+  }
+  .proposal-v2-lesson-card {
+    padding: 14px 12px;
+    border-radius: 12px;
+  }
+  .proposal-v2-action-bar {
+    bottom: 8px;
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+  .proposal-v2-primary-btn,
+  .proposal-v2-secondary-btn,
+  .proposal-v2-danger-btn {
+    min-height: 44px;
+    font-size: 13px;
+    padding: 10px 16px;
+  }
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .proposal-v2-nav-bar,
+  .proposal-v2-hero-card,
+  .proposal-v2-bento-grid > *,
+  .proposal-v2-roadmap-container,
+  .proposal-v2-action-bar,
+  .proposal-v2-bento-card,
+  .proposal-v2-lesson-card,
+  .proposal-v2-milestone-node {
+    animation: none !important;
+    transition: none !important;
   }
 }
 
