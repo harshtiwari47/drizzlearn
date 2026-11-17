@@ -117,14 +117,10 @@ function ShowcaseCard({
 
       {/* Card Header with Category Pill, Status Badge & Art */}
       <div className="showcase-card-header flex items-center justify-between relative px-6 pt-5 pb-3">
-        <div className="card-header-art-layer" aria-hidden="true">
-          <CardHeaderGraphic isProposal={isProposal} />
-        </div>
-
         <div className="flex items-center gap-2 relative z-10">
           {isProposal && (
             <span className="showcase-cat-pill flex items-center gap-1.5">
-              <span className="cat-spark text-cyan-400 text-xs">✦</span>
+              <span className="cat-spark text-amber-300 text-xs">✦</span>
               <span>DRAFT PLAN</span>
             </span>
           )}
@@ -185,7 +181,7 @@ function ShowcaseCard({
         <div className="showcase-progress-section flex flex-col gap-1.5 mt-auto pt-3">
           <div className="flex items-center justify-between text-xs font-semibold">
             <span className="text-slate-400 font-medium">Course Progress</span>
-            <span className={`progress-value ${percent > 0 ? "text-cyan-400" : "text-white"}`}>
+            <span className={`progress-value ${percent > 0 ? "text-amber-300" : "text-white"}`}>
               {percent}%
             </span>
           </div>
@@ -473,13 +469,13 @@ function CoursesPage(props) {
                 <Icon name="book" />
                 <span>All Courses</span>
               </div>
-              <span className="directory-count-badge text-xs font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/20">
+              <span className="directory-count-badge text-xs font-bold px-2.5 py-0.5 rounded-full bg-yellow-500/10 text-yellow-300 border border-yellow-500/20">
                 {visible.length} available
               </span>
             </div>
 
             {/* Search Filter Input */}
-            <div className="directory-search-wrap px-4 py-3 border-b border-white/[0.06] bg-black/20">
+            <div className="directory-search-wrap px-4 py-3 border-b border-white/[0.06] bg-black/25">
               <div className="relative flex items-center w-full">
                 <span className="absolute left-3 text-slate-400 pointer-events-none">
                   <Icon name="search" size={14} />
@@ -489,7 +485,7 @@ function CoursesPage(props) {
                   placeholder="Search courses by title or topic..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="directory-search-input w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 transition-colors"
+                  className="directory-search-input w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-slate-500 focus:outline-none focus:border-yellow-400/50 transition-colors"
                 />
                 {searchQuery && (
                   <button
@@ -524,39 +520,29 @@ function CoursesPage(props) {
                     role="button"
                     aria-label={`View details for ${course.title}`}
                   >
-                    {/* Left: Status Indicator & Info */}
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="row-item-status-icon flex-shrink-0 grid place-items-center">
-                        <span
-                          className={`w-2.5 h-2.5 rounded-full ${
-                            isProposal ? "bg-purple-400 shadow-[0_0_8px_#a855f7]" : "bg-emerald-400 shadow-[0_0_8px_#10b981]"
-                          }`}
-                        />
-                      </div>
-
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <strong className="row-item-title text-sm font-bold text-white truncate group-hover:text-cyan-300">
-                          {course.title}
-                        </strong>
-                        <div className="row-item-meta flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
-                          <span className="text-cyan-400 font-semibold">{course.current_level || "Beginner"}</span>
-                          <span>•</span>
-                          <span>{course.target_weeks || 8} wks</span>
-                          <span>•</span>
-                          <span>{all.length} lessons</span>
-                        </div>
+                    {/* Left: Info (no dots) */}
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <strong className="row-item-title text-sm font-bold text-white truncate group-hover:text-yellow-200">
+                        {course.title}
+                      </strong>
+                      <div className="row-item-meta flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
+                        <span className="text-amber-300 font-semibold">{course.current_level || "Beginner"}</span>
+                        <span>•</span>
+                        <span>{course.target_weeks || 8} wks</span>
+                        <span>•</span>
+                        <span>{all.length} lessons</span>
                       </div>
                     </div>
 
                     {/* Right: Progress Indicator & Action Arrow */}
                     <div className="row-item-right flex items-center gap-3 flex-shrink-0">
                       <div className="flex flex-col items-end">
-                        <span className={`text-xs font-bold ${percent > 0 ? "text-cyan-400" : "text-slate-400"}`}>
+                        <span className={`text-xs font-bold ${percent > 0 ? "text-amber-300" : "text-slate-400"}`}>
                           {percent}%
                         </span>
                         <div className="w-12 h-1 rounded-full bg-white/[0.08] overflow-hidden mt-1">
                           <div
-                            className="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 rounded-full"
+                            className="h-full bg-gradient-to-r from-amber-400 to-yellow-300 rounded-full"
                             style={{ width: `${percent}%` }}
                           />
                         </div>
