@@ -747,6 +747,20 @@ function parseMarkdownToHtml(text){
 
 export { parseMarkdownToHtml };
 
+function mergeStreamProgress(prev, frame, fallback = "Crafting your customized course…") {
+  const rawPercent = Number(frame?.percent);
+  const nextPercent = Number.isFinite(rawPercent) ? Math.max(0, Math.min(100, Math.round(rawPercent))) : (prev?.percent ?? 5);
+  return {
+    stage: frame?.stage || prev?.stage || "initializing",
+    percent: Math.max(prev?.percent ?? 0, nextPercent),
+    message: frame?.message || prev?.message || fallback,
+    model: frame?.model ?? prev?.model ?? "",
+    provider: frame?.provider ?? prev?.provider ?? "",
+  };
+}
+
+export { mergeStreamProgress };
+
 function GenerationProgressCard({progress,fallbackMessage="Crafting your customized course…",ariaLabel="Course generation progress",note=""}){
   const rawPercent=Number(progress?.percent);
   const percent=Number.isFinite(rawPercent)?Math.max(0,Math.min(100,Math.round(rawPercent))):0;

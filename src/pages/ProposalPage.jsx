@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { Icon, Panel, minuteLabel } from "../components/common.jsx";
+import React, { useState, useMemo, useEffect } from "react";
+import { Icon, Panel, minuteLabel, EmptyState, GenerationProgressCard, mergeStreamProgress } from "../components/common.jsx";
 
 function ProposalPage(p){
   const course=p.proposal||p.activeCourse;
