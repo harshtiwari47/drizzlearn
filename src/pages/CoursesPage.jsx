@@ -364,11 +364,12 @@ function CoursesPage(props) {
               BOX 1 (LEFT): 3D PERSPECTIVE CARD SHOWCASE (Image 3 style)
               ======================================================== */}
           <section className="panel courses-showcase-box flex flex-col relative overflow-hidden" aria-label="Featured Course 3D Showcase">
-            {/* Ambient Background Glow Layer */}
+            {/* Animated Moving Color Aura at Center */}
+            <div className="showcase-center-moving-glow" aria-hidden="true" />
             <div className="showcase-ambient-glow" aria-hidden="true" />
 
             {/* Box Header */}
-            <div className="panel-head flex items-center justify-between relative z-10 px-5 pt-4 pb-2">
+            <div className="panel-head flex items-center justify-between relative z-10 px-4 pt-3 pb-2">
               <div className="panel-title flex items-center gap-2.5">
                 <Icon name="spark" />
                 <span>Featured Deck</span>
