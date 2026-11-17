@@ -122,16 +122,25 @@ function ShowcaseCard({
         </div>
 
         <div className="flex items-center gap-2 relative z-10">
-          <span className="showcase-cat-pill flex items-center gap-1.5">
-            <span className="cat-spark text-cyan-400 text-xs">✦</span>
-            <span>{isProposal ? "DRAFT PLAN" : "LEARNING PATH"}</span>
-          </span>
+          {isProposal && (
+            <span className="showcase-cat-pill flex items-center gap-1.5">
+              <span className="cat-spark text-cyan-400 text-xs">✦</span>
+              <span>DRAFT PLAN</span>
+            </span>
+          )}
         </div>
 
-        <span className={`showcase-status-badge relative z-10 ${isProposal ? "proposal" : "active"}`}>
-          <span className="status-dot" />
-          {isProposal ? "PROPOSAL" : "ACTIVE"}
-        </span>
+        {isProposal ? (
+          <span className="showcase-status-badge proposal relative z-10">
+            <span className="status-dot" />
+            PROPOSAL
+          </span>
+        ) : course.status === "suspended" ? (
+          <span className="showcase-status-badge suspended relative z-10">
+            <span className="status-dot" />
+            SUSPENDED
+          </span>
+        ) : null}
       </div>
 
       {/* Card Body */}
@@ -221,26 +230,11 @@ function ShowcaseCard({
             </button>
           )}
 
-          <div className="flex items-center gap-2 ml-auto">
-            <button
-              type="button"
-              className="showcase-more-btn grid place-items-center cursor-pointer"
-              aria-label={`View roadmap for ${course.title}`}
-              title="View roadmap"
-              disabled={!isCenter}
-              onClick={(e) => {
-                e.stopPropagation();
-                updateData?.(x => ({ ...x, activeCourseId: course.id }));
-                if (isProposal) setProposal?.(course);
-                go(isProposal ? "proposal" : "course", { params: { courseId: course.id } });
-              }}
-            >
-              ⋯
-            </button>
-            {confirmDeleteCourse && (
+          {confirmDeleteCourse && (
+            <div className="flex items-center ml-auto">
               <button
                 type="button"
-                className="showcase-delete-btn flex items-center gap-1.5 cursor-pointer"
+                className="showcase-delete-icon-btn grid place-items-center cursor-pointer"
                 aria-label={`Delete ${course.title}`}
                 title="Delete course"
                 disabled={!isCenter || deletingCourseId === course.id}
@@ -249,11 +243,10 @@ function ShowcaseCard({
                   confirmDeleteCourse(course);
                 }}
               >
-                <Icon name="trash" size={13} />
-                <span>Delete</span>
+                <Icon name="trash" size={15} />
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </article>
