@@ -127,6 +127,7 @@ const Home = React.memo(function Home(p){
   const [roadmapView, setRoadmapView] = useState("auto");
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [hoveredNodeIndex, setHoveredNodeIndex] = useState(null);
 
   // Normalize roadmap blocks so whether a course has 1 module or multiple modules,
   // each step along the learning path is rendered as an interactive block!
@@ -249,19 +250,19 @@ const Home = React.memo(function Home(p){
     
     if (totalBlocks === 1) {
       const x0 = startX;
-      const y0 = 205;
-      const d = `M ${Math.max(20, x0 - 60)} ${y0} C ${x0 - 25} ${y0}, ${x0 - 25} ${y0}, ${x0} ${y0} C ${x0 + 40} ${y0}, ${x0 + 80} 140, ${x0 + 150} 120`;
+      const y0 = 250;
+      const d = `M ${Math.max(20, x0 - 60)} ${y0} C ${x0 - 25} ${y0}, ${x0 - 25} ${y0}, ${x0} ${y0} C ${x0 + 40} ${y0}, ${x0 + 80} 160, ${x0 + 150} 140`;
       return { mainPathD: d, glowPathD: d };
     }
 
-    let d = `M ${Math.max(20, startX - 60)} 205`;
-    d += ` C ${startX - 30} 205, ${startX - 30} 205, ${startX} 205`;
+    let d = `M ${Math.max(20, startX - 60)} 250`;
+    d += ` C ${startX - 30} 250, ${startX - 30} 250, ${startX} 250`;
 
     for (let i = 0; i < totalBlocks - 1; i++) {
       const xCurr = startX + i * blockSpacing;
-      const yCurr = i % 2 === 0 ? 205 : 95;
+      const yCurr = i % 2 === 0 ? 250 : 95;
       const xNext = startX + (i + 1) * blockSpacing;
-      const yNext = (i + 1) % 2 === 0 ? 205 : 95;
+      const yNext = (i + 1) % 2 === 0 ? 250 : 95;
       const dx = xNext - xCurr;
       const cp1x = xCurr + dx * 0.45;
       const cp1y = yCurr;
@@ -271,7 +272,7 @@ const Home = React.memo(function Home(p){
     }
 
     const lastX = startX + (totalBlocks - 1) * blockSpacing;
-    const lastY = (totalBlocks - 1) % 2 === 0 ? 205 : 95;
+    const lastY = (totalBlocks - 1) % 2 === 0 ? 250 : 95;
     const exitX = Math.min(totalTrackWidth - 20, lastX + 90);
     d += ` C ${lastX + 40} ${lastY}, ${exitX - 25} ${lastY}, ${exitX} ${lastY}`;
 
@@ -589,7 +590,7 @@ const Home = React.memo(function Home(p){
               >
                 <div
                   className="futuristic-map-arena relative"
-                  style={{ width: `${totalTrackWidth}px`, minWidth: "100%", height: "315px" }}
+                  style={{ width: `${totalTrackWidth}px`, minWidth: "100%", height: "360px" }}
                 >
                   {/* Background Matrix Grid */}
                   <div
@@ -606,8 +607,8 @@ const Home = React.memo(function Home(p){
                   {/* Connecting Vector Conduit SVG Canvas */}
                   <svg
                     className="futuristic-map-svg-canvas"
-                    viewBox={`0 0 ${totalTrackWidth} 315`}
-                    style={{ width: `${totalTrackWidth}px`, height: "315px" }}
+                    viewBox={`0 0 ${totalTrackWidth} 360`}
+                    style={{ width: `${totalTrackWidth}px`, height: "360px" }}
                     fill="none"
                     preserveAspectRatio="none"
                     aria-hidden="true"
@@ -652,7 +653,7 @@ const Home = React.memo(function Home(p){
                   {/* Floating Island Nodes Layer */}
                   <div
                     className="futuristic-nodes-layer"
-                    style={{ width: `${totalTrackWidth}px`, height: "315px" }}
+                    style={{ width: `${totalTrackWidth}px`, height: "360px" }}
                   >
                     {roadmapBlocks.map((block, i) => {
                       const complete = block.isDone;
@@ -667,7 +668,7 @@ const Home = React.memo(function Home(p){
                       ];
                       const islandTheme = islandThemes[i % islandThemes.length];
                       const x = startX + i * blockSpacing;
-                      const y = i % 2 === 0 ? 205 : 95;
+                      const y = i % 2 === 0 ? 250 : 95;
                       const isUpper = i % 2 === 1;
 
                       // Smart horizontal alignment for hover card to avoid edge clipping
@@ -678,8 +679,16 @@ const Home = React.memo(function Home(p){
                       return (
                         <div
                           key={block.id || i}
-                          className={`futuristic-island-anchor ${isUpper ? "node-pos-upper" : "node-pos-lower"}`}
-                          style={{ left: `${x}px`, top: `${y}px` }}
+                          className={`futuristic-island-anchor ${isUpper ? "node-pos-upper" : "node-pos-lower"} ${hoveredNodeIndex === i ? "is-hovered" : ""}`}
+                          style={{
+                            left: `${x}px`,
+                            top: `${y}px`,
+                            zIndex: hoveredNodeIndex === i ? 999999 : 10
+                          }}
+                          onMouseEnter={() => setHoveredNodeIndex(i)}
+                          onMouseLeave={() => setHoveredNodeIndex(null)}
+                          onFocus={() => setHoveredNodeIndex(i)}
+                          onBlur={() => setHoveredNodeIndex(null)}
                         >
                           <div
                             className={`futuristic-island-block ${islandTheme} ${complete ? "is-complete" : isActive ? "is-active" : "is-locked"}`}
@@ -720,6 +729,7 @@ const Home = React.memo(function Home(p){
                             {/* Floating Interactive Hover Card */}
                             <div
                               className={`futuristic-hover-card ${isUpper ? "card-placement-below" : "card-placement-above"} ${hAlignClass}`}
+                              style={{ zIndex: 1000000 }}
                               onClick={(e) => e.stopPropagation()}
                             >
                               <div className="card-pointer-caret" />
