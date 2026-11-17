@@ -18082,6 +18082,18 @@ body:has(.app-shell-create-course-page) {
    - Typography & borders: Primary (#F4EFE8), Muted (#A69B8E), Border (#393129)
    ========================================================================== */
 
+.workspace-proposal-page {
+  max-width: 1240px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  background: #100F0D !important;
+}
+
+body:has(.workspace-proposal-page),
+.app-shell:has(.workspace-proposal-page) {
+  background: #100F0D !important;
+}
+
 .proposal-v2-container {
   width: 100%;
   max-width: 1220px;

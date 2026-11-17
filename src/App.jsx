@@ -332,9 +332,11 @@ function PageContent(props){
   if(page==="home")return <Home {...common} />;
   const routeContext=getRouteContext({page,routeParams,routeQuery,activeCourse,activeLesson,proposalCourse:proposal||activeCourse,pageTitle:titles[page]||"Workspace",knownTitles:titles});
   const isCreatePage = page === "goal" || page === "create-course" || page === "create/course";
-  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""}`}>
-    {!isCreatePage && <PageContextBar context={routeContext} go={go}/>}
-    {!isCreatePage && (
+  const isProposalPage = page === "proposal";
+  const isDedicatedFlow = isCreatePage || isProposalPage;
+  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""}`}>
+    {!isDedicatedFlow && <PageContextBar context={routeContext} go={go}/>}
+    {!isDedicatedFlow && (
       <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""} ${page==="goal"?"page-heading-goal":""}`}>
         <div>{page==="lesson"&&<span className="eyebrow">{activeLesson?.moduleTitle||"Learning session"}</span>}<h1>{page==="lesson"?activeLesson?.title||"Lesson":titles[page]||"Drizzlearn"}</h1></div>
         {page==="courses"&&<button className="primary-btn" onClick={()=>go("create-course")}><Icon name="plus" size={14}/>Create a course</button>}
