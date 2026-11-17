@@ -17316,27 +17316,46 @@ body:has(.app-shell-course-page) {
 .footer-brand-header {
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 
-.footer-brand-mark {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: rgba(0, 229, 255, 0.08);
-  border: 1px solid rgba(0, 229, 255, 0.25);
-  color: #00e5ff;
-  box-shadow: 0 0 16px rgba(0, 229, 255, 0.2);
+.footer-brand-link {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
 }
 
-.footer-brand-title {
+.footer-brand-link:hover {
+  transform: translateY(-1px);
+  opacity: 0.92;
+}
+
+.footer-brand-logo-text {
   font-family: var(--font-display, 'Space Grotesk', sans-serif);
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  color: #f8fafc;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+.footer-brand-drizz {
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.footer-brand-learn {
+  background: linear-gradient(135deg, #a5f3fc 0%, #00e5ff 60%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.45));
 }
 
 .footer-brand-desc {
@@ -17345,27 +17364,6 @@ body:has(.app-shell-course-page) {
   color: #94a3b8;
   margin: 0;
   max-width: 360px;
-}
-
-.footer-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 12px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 12px;
-  color: #cbd5e1;
-  width: fit-content;
-}
-
-.footer-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #34d399;
-  box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
 }
 
 /* Columns 2 & 3: Nav Columns */

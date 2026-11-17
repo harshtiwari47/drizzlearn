@@ -33,22 +33,22 @@ export function AppFooter({ go }) {
           {/* Column 1: Brand & Philosophy */}
           <div className="footer-col-brand">
             <div className="footer-brand-header">
-              <span className="footer-brand-mark" aria-hidden="true">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m12 3 9 5-9 5-9-5zM3 12l9 5 9-5M3 16l9 5 9-5" />
-                </svg>
-              </span>
-              <span className="footer-brand-title">DRIZZLEARN</span>
+              <button
+                type="button"
+                onClick={() => handleNav("home")}
+                className="footer-brand-link"
+                aria-label="Drizzlearn Home"
+              >
+                <span className="footer-brand-logo-text">
+                  <span className="footer-brand-drizz">DRIZZ</span>
+                  <span className="footer-brand-learn">LEARN</span>
+                </span>
+              </button>
             </div>
 
             <p className="footer-brand-desc">
               A calm, structured workspace for curious minds. Build demonstrated capabilities through personalized roadmaps, spaced repetition, and deliberate daily practice.
             </p>
-
-            <div className="footer-status-pill">
-              <span className="footer-status-dot" aria-hidden="true" />
-              <span>Offline-ready & cloud synced</span>
-            </div>
           </div>
 
           {/* Column 2: Workspace Links */}
