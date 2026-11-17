@@ -15722,9 +15722,34 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 .showcase-ambient-glow {
   position: absolute !important;
   inset: 0 !important;
-  background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.1) 0%, rgba(168, 85, 247, 0.06) 50%, transparent 80%) !important;
+  background: transparent !important;
   pointer-events: none !important;
   z-index: 1 !important;
+}
+
+/* App Shell Course Page: Deep Black with minimal yellow radial gradient circle */
+.app-shell.app-shell-course-page,
+.app-shell[data-page="courses"],
+.app-shell[data-page="course"] {
+  background-color: #030303 !important;
+  background-image: radial-gradient(
+    circle 540px at 50% 30%,
+    rgba(250, 204, 21, 0.16) 0%,
+    rgba(234, 179, 8, 0.08) 35%,
+    rgba(161, 98, 7, 0.02) 60%,
+    transparent 72%
+  ) !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+  transition: background 0.4s ease !important;
+}
+
+body[data-page="courses"],
+body[data-page="course"],
+body:has(.app-shell-course-page) {
+  background-color: #030303 !important;
+  background: #030303 !important;
 }
 
 /* 3D Perspective Deck Stage */

@@ -508,7 +508,9 @@ export default function App(){
     </>;
   }
 
-  return <div className="app-shell flex min-h-screen relative">
+  const isCoursePage = page === "courses" || page === "course";
+
+  return <div className={`app-shell flex min-h-screen relative ${isCoursePage ? "app-shell-course-page" : ""}`} data-page={page}>
     <SnowfallOverlay />
     {(syncing||activeRequests>0||busy)&&<div className="global-progress-bar" role="progressbar" aria-label="Loading workspace data"/>}
     <aside className="sidebar sticky top-0 h-screen flex flex-col overflow-hidden" aria-label="Main navigation">

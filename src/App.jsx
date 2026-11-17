@@ -453,6 +453,16 @@ export default function App(){
   useEffect(()=>{
     recordBehavior("page_view",{page,courseId:routeParams?.courseId||null,lessonId:routeParams?.lessonId||null});
   },[page,routeParams?.courseId,routeParams?.lessonId]);
+  useEffect(() => {
+    if (page === "courses" || page === "course") {
+      document.body.setAttribute("data-page", page);
+    } else {
+      document.body.removeAttribute("data-page");
+    }
+    return () => {
+      document.body.removeAttribute("data-page");
+    };
+  }, [page]);
   useEffect(()=>{
     if(typeof window==="undefined")return;
     let userActive=false;
@@ -856,7 +866,9 @@ export default function App(){
     </>;
   }
 
-  return <div className="app-shell flex min-h-screen relative">
+  const isCoursePage = page === "courses" || page === "course";
+
+  return <div className={`app-shell flex min-h-screen relative ${isCoursePage ? "app-shell-course-page" : ""}`} data-page={page}>
     <SnowfallOverlay />
     {(syncing||activeRequests>0||busy)&&<div className="global-progress-bar" role="progressbar" aria-label="Loading workspace data"/>}
     <aside className="sidebar sticky top-0 h-screen flex flex-col overflow-hidden" aria-label="Main navigation">
