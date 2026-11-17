@@ -724,6 +724,7 @@ const Home = React.memo(function Home(p){
                             {/* Floating Interactive Hover Card */}
                             <div
                               className={`futuristic-hover-card ${isUpper ? "card-placement-below" : "card-placement-above"} ${hAlignClass}`}
+                              style={{ zIndex: 99999 }}
                               onClick={(e) => e.stopPropagation()}
                             >
                               <div className="card-pointer-caret" />

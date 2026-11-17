@@ -11198,7 +11198,7 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   visibility: hidden !important;
   pointer-events: none !important;
   transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s !important;
-  z-index: 1000000 !important;
+  z-index: 99999 !important;
 }
 
 /* Card Bottom Pointer Caret */
@@ -11449,7 +11449,7 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 .futuristic-island-anchor:hover .futuristic-hover-card,
 .futuristic-island-anchor:focus-within .futuristic-hover-card,
 .futuristic-hover-card:hover {
-  z-index: 1000000 !important;
+  z-index: 99999 !important;
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
