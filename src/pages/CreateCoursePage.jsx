@@ -71,10 +71,31 @@ function CreateCoursePage(props) {
     <div className="create-course-page-container">
       {/* Page Header */}
       <div className="create-course-header">
-        <h1 className="create-course-title">Create a course</h1>
-        <p className="create-course-subtitle">
-          Define what you want to learn to build your structured roadmap.
-        </p>
+        <div className="create-course-title-row">
+          <button
+            type="button"
+            className="create-course-circle-back-btn"
+            onClick={() => {
+              if (props.go) {
+                props.go("courses");
+              } else if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.location.href = "/courses";
+              }
+            }}
+            aria-label="Back to courses"
+            title="Back to My Courses"
+          >
+            <Icon name="arrowLeft" size={22} />
+          </button>
+          <div className="create-course-title-wrap">
+            <h1 className="create-course-title">Create a course</h1>
+            <p className="create-course-subtitle">
+              Define what you want to learn to build your structured roadmap.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Main Responsive Form Card with Interactive Cursor Green Glow */}

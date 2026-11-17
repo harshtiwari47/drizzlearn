@@ -17662,9 +17662,62 @@ body:has(.app-shell-create-course-page) {
   display: none !important;
 }
 
-/* Page Header */
+/* Page Header & Circular Large Back Button */
 .create-course-header {
   margin-bottom: 24px !important;
+}
+
+.create-course-title-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+}
+
+.create-course-circle-back-btn {
+  display: grid !important;
+  place-items: center !important;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  border-radius: 50% !important;
+  background: rgba(14, 38, 26, 0.78) !important;
+  border: 1px solid rgba(207, 221, 208, 0.3) !important; /* Border: #CFDDD0 */
+  color: #D6E69A !important; /* Lime accent: #D6E69A */
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(207, 221, 208, 0.25) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  cursor: pointer !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  flex-shrink: 0 !important;
+  padding: 0 !important;
+}
+
+.create-course-circle-back-btn svg {
+  transition: transform 0.22s ease !important;
+}
+
+.create-course-circle-back-btn:hover {
+  background: linear-gradient(135deg, rgba(38, 121, 78, 0.6) 0%, rgba(17, 95, 56, 0.75) 100%) !important;
+  border-color: #D6E69A !important; /* Lime: #D6E69A */
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 26px rgba(17, 95, 56, 0.55), inset 0 1px 0 rgba(214, 230, 154, 0.45) !important;
+  transform: translateY(-1.5px) scale(1.05) !important;
+}
+
+.create-course-circle-back-btn:hover svg {
+  transform: translateX(-3px) !important;
+  color: #FFFFFF !important;
+}
+
+.create-course-circle-back-btn:active {
+  transform: scale(0.95) !important;
+}
+
+.create-course-title-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
 }
 
 .create-course-title {
