@@ -11201,61 +11201,6 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   z-index: 1000000 !important;
 }
 
-/* Portal Hover Card (z-index above all, zero overflow clipping) */
-.futuristic-portal-card,
-.futuristic-hover-card.futuristic-portal-card,
-div.futuristic-portal-card {
-  position: fixed !important;
-  display: block !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
-  transform: none !important;
-  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.85), 0 0 36px rgba(108, 207, 246, 0.35) !important;
-  border: 1px solid rgba(108, 207, 246, 0.5) !important;
-  background: rgba(3, 18, 20, 0.97) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  animation: portalCardFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  z-index: 99999999 !important;
-}
-
-@keyframes portalCardFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96) translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.futuristic-portal-card .card-pointer-caret {
-  position: absolute !important;
-  width: 0 !important;
-  height: 0 !important;
-  pointer-events: none !important;
-}
-
-.futuristic-portal-card.card-placement-above .card-pointer-caret {
-  top: 100% !important;
-  bottom: auto !important;
-  border-left: 8px solid transparent !important;
-  border-right: 8px solid transparent !important;
-  border-top: 8px solid rgba(3, 18, 20, 0.97) !important;
-  border-bottom: none !important;
-}
-
-.futuristic-portal-card.card-placement-below .card-pointer-caret {
-  top: auto !important;
-  bottom: 100% !important;
-  border-left: 8px solid transparent !important;
-  border-right: 8px solid transparent !important;
-  border-bottom: 8px solid rgba(3, 18, 20, 0.97) !important;
-  border-top: none !important;
-}
-
 /* Card Bottom Pointer Caret */
 .card-pointer-caret {
   position: absolute !important;
@@ -11397,7 +11342,6 @@ div.futuristic-portal-card {
 .roadmap-scroll-container {
   width: 100% !important;
   overflow-x: auto !important;
-  overflow-y: hidden !important;
   scroll-behavior: smooth !important;
   -webkit-overflow-scrolling: touch !important;
   scrollbar-width: thin !important;
