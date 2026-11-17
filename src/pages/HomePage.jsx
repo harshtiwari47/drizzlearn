@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Icon, Panel, EmptyState, FeatureCard, Stat, pendingTasksCount } from "../components/common.jsx";
 import { AmbientFocusStation } from "../components/AmbientFocusStation.jsx";
 import { DiaryTodoSection } from "../components/DiaryTodoSection.jsx";
@@ -127,7 +128,81 @@ const Home = React.memo(function Home(p){
   const [roadmapView, setRoadmapView] = useState("auto");
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-  const [hoveredNodeIndex, setHoveredNodeIndex] = useState(null);
+  const [hoveredNode, setHoveredNode] = useState(null);
+  const hideCardTimeoutRef = useRef(null);
+
+  const handleNodeHover = useCallback((block, index, element, isActive) => {
+    if (hideCardTimeoutRef.current) {
+      clearTimeout(hideCardTimeoutRef.current);
+      hideCardTimeoutRef.current = null;
+    }
+    const rect = element.getBoundingClientRect();
+    const isUpper = index % 2 === 1;
+    const complete = block.isDone;
+
+    setHoveredNode({
+      block,
+      index,
+      rect,
+      isUpper,
+      complete,
+      isActive: Boolean(isActive),
+      targetLessonId: block.targetLessonId
+    });
+  }, []);
+
+  const handleNodeLeave = useCallback(() => {
+    hideCardTimeoutRef.current = setTimeout(() => {
+      setHoveredNode(null);
+    }, 140);
+  }, []);
+
+  const handleCardEnter = useCallback(() => {
+    if (hideCardTimeoutRef.current) {
+      clearTimeout(hideCardTimeoutRef.current);
+      hideCardTimeoutRef.current = null;
+    }
+  }, []);
+
+  const handleCardLeave = useCallback(() => {
+    hideCardTimeoutRef.current = setTimeout(() => {
+      setHoveredNode(null);
+    }, 140);
+  }, []);
+
+  useEffect(() => {
+    if (!hoveredNode) return;
+    const handleReposition = () => {
+      const el = document.querySelector(`[data-roadmap-node="${hoveredNode.index}"]`);
+      if (el) {
+        const scrollContainer = roadmapScrollRef.current;
+        const newRect = el.getBoundingClientRect();
+        if (scrollContainer) {
+          const cRect = scrollContainer.getBoundingClientRect();
+          if (newRect.right < cRect.left || newRect.left > cRect.right) {
+            setHoveredNode(null);
+            return;
+          }
+        }
+        setHoveredNode(prev => (prev ? { ...prev, rect: newRect } : null));
+      }
+    };
+
+    window.addEventListener("scroll", handleReposition, { passive: true });
+    window.addEventListener("resize", handleReposition, { passive: true });
+    const scrollContainer = roadmapScrollRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener("scroll", handleReposition, { passive: true });
+    }
+
+    return () => {
+      window.removeEventListener("scroll", handleReposition);
+      window.removeEventListener("resize", handleReposition);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener("scroll", handleReposition);
+      }
+    };
+  }, [hoveredNode]);
 
   // Normalize roadmap blocks so whether a course has 1 module or multiple modules,
   // each step along the learning path is rendered as an interactive block!
@@ -671,30 +746,30 @@ const Home = React.memo(function Home(p){
                       const y = i % 2 === 0 ? 250 : 95;
                       const isUpper = i % 2 === 1;
 
-                      // Smart horizontal alignment for hover card to avoid edge clipping
-                      const isNearLeft = x < 160;
-                      const isNearRight = x > totalTrackWidth - 160;
-                      const hAlignClass = isNearLeft ? "card-align-left" : isNearRight ? "card-align-right" : "card-align-center";
-
                       return (
                         <div
                           key={block.id || i}
-                          className={`futuristic-island-anchor ${isUpper ? "node-pos-upper" : "node-pos-lower"} ${hoveredNodeIndex === i ? "is-hovered" : ""}`}
+                          data-roadmap-node={i}
+                          className={`futuristic-island-anchor ${isUpper ? "node-pos-upper" : "node-pos-lower"} ${hoveredNode?.index === i ? "is-hovered" : ""}`}
                           style={{
                             left: `${x}px`,
                             top: `${y}px`,
-                            zIndex: hoveredNodeIndex === i ? 999999 : 10
+                            zIndex: hoveredNode?.index === i ? 999999 : 10
                           }}
-                          onMouseEnter={() => setHoveredNodeIndex(i)}
-                          onMouseLeave={() => setHoveredNodeIndex(null)}
-                          onFocus={() => setHoveredNodeIndex(i)}
-                          onBlur={() => setHoveredNodeIndex(null)}
+                          onMouseEnter={(e) => handleNodeHover(block, i, e.currentTarget, isActive)}
+                          onMouseLeave={handleNodeLeave}
+                          onFocus={(e) => handleNodeHover(block, i, e.currentTarget, isActive)}
+                          onBlur={handleNodeLeave}
                         >
                           <div
                             className={`futuristic-island-block ${islandTheme} ${complete ? "is-complete" : isActive ? "is-active" : "is-locked"}`}
                             tabIndex={0}
                             role="button"
                             aria-label={`Level ${block.levelNumber}: ${block.title}`}
+                            onMouseEnter={(e) => handleNodeHover(block, i, e.currentTarget, isActive)}
+                            onMouseLeave={handleNodeLeave}
+                            onFocus={(e) => handleNodeHover(block, i, e.currentTarget, isActive)}
+                            onBlur={handleNodeLeave}
                             onClick={() => block.targetLessonId && openLesson(block.targetLessonId)}
                             onKeyDown={(e) => {
                               if (e.key === "Enter" || e.key === " ") {
@@ -725,33 +800,6 @@ const Home = React.memo(function Home(p){
                                 {complete ? "Mastered ✓" : isActive ? "Current level" : `Level ${block.levelNumber}`}
                               </span>
                             </div>
-
-                            {/* Floating Interactive Hover Card */}
-                            <div
-                              className={`futuristic-hover-card ${isUpper ? "card-placement-below" : "card-placement-above"} ${hAlignClass}`}
-                              style={{ zIndex: 1000000 }}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <div className="card-pointer-caret" />
-                              <div className="flex items-center justify-between gap-2 mb-1.5">
-                                <span className="card-stage-chip">STAGE {block.levelNumber}</span>
-                                <span className={`card-badge ${complete ? "badge-complete" : isActive ? "badge-active" : "badge-locked"}`}>
-                                  {complete ? "Mastered" : isActive ? "In Progress" : "Locked"}
-                                </span>
-                              </div>
-                              <h4 className="card-quest-title">{block.title}</h4>
-                              <p className="card-quest-desc">{block.objective}</p>
-                              <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-white/[0.08]">
-                                <button
-                                  type="button"
-                                  className="card-action-btn text-xs font-bold text-cyan-300 hover:text-cyan-200 cursor-pointer flex items-center gap-1"
-                                  onClick={() => block.targetLessonId && openLesson(block.targetLessonId)}
-                                >
-                                  {complete ? "Review ↗" : isActive ? "Continue ↗" : "Start ↗"}
-                                </button>
-                              </div>
-                            </div>
-
                           </div>
                         </div>
                       );
@@ -759,6 +807,102 @@ const Home = React.memo(function Home(p){
                   </div>
                 </div>
               </div>
+
+              {/* Floating Portal Hover Card - Attached directly to document.body with z-index above all */}
+              {hoveredNode && typeof document !== "undefined" && createPortal(
+                (() => {
+                  const { block, index, rect, isUpper, complete, isActive, targetLessonId } = hoveredNode;
+                  const cardWidth = 268;
+                  const nodeCenterX = rect.left + rect.width / 2;
+
+                  // Viewport-safe horizontal clamping
+                  const minCenterX = 16 + cardWidth / 2;
+                  const maxCenterX = window.innerWidth - 16 - cardWidth / 2;
+                  const clampedCenterX = Math.max(minCenterX, Math.min(maxCenterX, nodeCenterX));
+                  const cardLeft = clampedCenterX - cardWidth / 2;
+
+                  // Caret offset pointing at the node
+                  const caretLeft = Math.max(18, Math.min(cardWidth - 18, nodeCenterX - cardLeft));
+
+                  // Determine vertical placement:
+                  // If upper node -> place below.
+                  // If lower node -> place above.
+                  // If above would get closer than 16px to top of window, flip below!
+                  const estimatedHeight = 220;
+                  const placeBelow = isUpper || (rect.top - estimatedHeight < 16);
+
+                  const cardStyle = {
+                    position: "fixed",
+                    left: `${cardLeft}px`,
+                    width: `${cardWidth}px`,
+                    zIndex: 99999999,
+                    pointerEvents: "auto",
+                    opacity: 1,
+                    visibility: "visible",
+                    display: "block",
+                    ...(placeBelow
+                      ? { top: `${rect.bottom + 10}px` }
+                      : { bottom: `${window.innerHeight - rect.top + 10}px` })
+                  };
+
+                  return (
+                    <div
+                      className="futuristic-portal-card-overlay"
+                      style={{
+                        position: "fixed",
+                        inset: 0,
+                        pointerEvents: "none",
+                        zIndex: 99999999,
+                      }}
+                    >
+                      <div
+                        className={`futuristic-hover-card futuristic-portal-card ${placeBelow ? "card-placement-below" : "card-placement-above"}`}
+                        style={cardStyle}
+                        onMouseEnter={handleCardEnter}
+                        onMouseLeave={handleCardLeave}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div
+                          className="card-pointer-caret"
+                          style={{
+                            left: `${caretLeft}px`,
+                            transform: "translateX(-50%)",
+                          }}
+                        />
+                        <div className="card-top-row flex items-center justify-between gap-2 mb-1.5">
+                          <span className="card-stage-chip">STAGE {block.levelNumber}</span>
+                          <span
+                            className={`card-badge ${
+                              complete
+                                ? "badge-complete"
+                                : isActive
+                                ? "badge-active"
+                                : "badge-locked"
+                            }`}
+                          >
+                            {complete ? "Mastered" : isActive ? "In Progress" : "Locked"}
+                          </span>
+                        </div>
+                        <h4 className="card-quest-title">{block.title}</h4>
+                        <p className="card-quest-desc">{block.objective}</p>
+                        <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-white/[0.08]">
+                          <button
+                            type="button"
+                            className="card-action-btn text-xs font-bold text-cyan-300 hover:text-cyan-200 cursor-pointer flex items-center gap-1"
+                            onClick={() => {
+                              targetLessonId && openLesson(targetLessonId);
+                              setHoveredNode(null);
+                            }}
+                          >
+                            {complete ? "Review ↗" : isActive ? "Continue ↗" : "Start ↗"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })(),
+                document.body
+              )}
 
               {/* Interactive Footer Navigation Bar for Mobile and Desktop context */}
               <div className="roadmap-footer-helper flex items-center justify-between px-3 sm:px-4 py-2 border-t border-white/[0.06] bg-black/25 text-xs text-slate-400">
