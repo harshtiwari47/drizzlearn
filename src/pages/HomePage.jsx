@@ -509,11 +509,6 @@ const Home = React.memo(function Home(p){
             <div className="panel-title flex items-center gap-2.5 flex-wrap">
               <Icon name="spark"/>
               <span>Learning roadmap</span>
-              {totalBlocks > 0 && (
-                <span className="roadmap-count-badge font-mono text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/25">
-                  {completedBlocksCount}/{totalBlocks} Mastered
-                </span>
-              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -575,11 +570,11 @@ const Home = React.memo(function Home(p){
             <div className="futuristic-map-wrapper relative w-full overflow-hidden rounded-2xl border border-cyan-500/15">
               {/* Left/Right Edge Fade Overlays indicating scrollable content */}
               <div
-                className={`roadmap-edge-fade-left absolute left-0 top-0 bottom-0 w-12 z-20 pointer-events-none transition-opacity duration-200 ${canScrollLeft ? "opacity-100" : "opacity-0"}`}
+                className={`roadmap-edge-fade-left absolute left-0 top-0 bottom-0 w-12 z-[5] pointer-events-none transition-opacity duration-200 ${canScrollLeft ? "opacity-100" : "opacity-0"}`}
                 aria-hidden="true"
               />
               <div
-                className={`roadmap-edge-fade-right absolute right-0 top-0 bottom-0 w-12 z-20 pointer-events-none transition-opacity duration-200 ${canScrollRight ? "opacity-100" : "opacity-0"}`}
+                className={`roadmap-edge-fade-right absolute right-0 top-0 bottom-0 w-12 z-[5] pointer-events-none transition-opacity duration-200 ${canScrollRight ? "opacity-100" : "opacity-0"}`}
                 aria-hidden="true"
               />
 
@@ -587,7 +582,7 @@ const Home = React.memo(function Home(p){
               <div
                 ref={roadmapScrollRef}
                 onScroll={updateScrollButtons}
-                className="roadmap-scroll-container w-full overflow-x-auto overflow-y-hidden select-none"
+                className="roadmap-scroll-container relative z-10 w-full overflow-x-auto overflow-y-hidden select-none"
                 tabIndex={0}
                 role="region"
                 aria-label="Interactive Learning Roadmap Track"
@@ -711,7 +706,6 @@ const Home = React.memo(function Home(p){
                                 )}
                                 {isActive && <span className="platform-radar-ring" />}
                               </div>
-                              <span className="island-level-pill">LVL {block.levelNumber}</span>
                             </div>
 
                             <div className="island-label-box">
@@ -737,8 +731,7 @@ const Home = React.memo(function Home(p){
                               </div>
                               <h4 className="card-quest-title">{block.title}</h4>
                               <p className="card-quest-desc">{block.objective}</p>
-                              <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-white/[0.08]">
-                                <span className="card-xp-tag">+{block.estimatedMinutes * 10} XP</span>
+                              <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-white/[0.08]">
                                 <button
                                   type="button"
                                   className="card-action-btn text-xs font-bold text-cyan-300 hover:text-cyan-200 cursor-pointer flex items-center gap-1"
@@ -760,18 +753,11 @@ const Home = React.memo(function Home(p){
               {/* Interactive Footer Navigation Bar for Mobile and Desktop context */}
               <div className="roadmap-footer-helper flex items-center justify-between px-3 sm:px-4 py-2 border-t border-white/[0.06] bg-black/25 text-xs text-slate-400">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-[11px] text-cyan-400 font-mono font-bold shrink-0">
-                    LVL {activeBlockIndex + 1}/{totalBlocks}
-                  </span>
-                  <span className="text-slate-600 shrink-0">•</span>
                   <span className="text-[11px] text-slate-300 truncate font-medium">
                     {roadmapBlocks[activeBlockIndex]?.title || "Active Level"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="hidden sm:inline text-[11px] text-slate-500">
-                    Scroll or drag to explore path
-                  </span>
                   <button
                     type="button"
                     onClick={centerOnActiveBlock}

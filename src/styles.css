@@ -11438,12 +11438,26 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   position: absolute !important;
   transform: translate(-50%, -50%) !important;
   pointer-events: auto !important;
-  transition: z-index 0.2s ease !important;
+  z-index: 15 !important;
 }
 
 .futuristic-island-anchor:hover,
 .futuristic-island-anchor:focus-within {
-  z-index: 80 !important;
+  z-index: 999999 !important;
+}
+
+.futuristic-island-anchor:hover .futuristic-island-block,
+.futuristic-island-anchor:focus-within .futuristic-island-block {
+  z-index: 999999 !important;
+}
+
+.futuristic-island-anchor:hover .futuristic-hover-card,
+.futuristic-island-anchor:focus-within .futuristic-hover-card,
+.futuristic-hover-card:hover {
+  z-index: 1000000 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 /* Smart Hover Card Placements */
@@ -11553,70 +11567,6 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   .futuristic-map-arena {
     height: 295px !important;
   }
-}
-
-/* When any anchor is hovered, elevate its stacking context above all neighbor nodes */
-.futuristic-island-anchor:hover,
-.futuristic-island-anchor:focus-within {
-  z-index: 9999 !important;
-}
-
-.futuristic-island-block {
-  z-index: 10 !important;
-}
-
-.futuristic-island-anchor:hover .futuristic-island-block,
-.futuristic-island-anchor:focus-within .futuristic-island-block {
-  z-index: 9999 !important;
-}
-
-/* The floating mission briefing card */
-.futuristic-hover-card {
-  z-index: 10000 !important;
-  pointer-events: auto !important;
-}
-
-
-/* ==========================================================================
-   Futuristic Hover Card: Gradient Mesh & Backdrop Blur & Proper Spacing
-   ========================================================================== */
-
-.futuristic-hover-card {
-  position: absolute !important;
-  bottom: calc(100% + 18px) !important;
-  left: 50% !important;
-  transform: translateX(-50%) translateY(8px) !important;
-  width: 290px !important;
-  padding: 18px 20px !important;
-  border-radius: 18px !important;
-  /* Slightly transparent multi-color radiant gradient mesh */
-  background: 
-    radial-gradient(circle at 15% 15%, rgba(108, 207, 246, 0.22) 0%, transparent 45%),
-    radial-gradient(circle at 85% 25%, rgba(168, 85, 247, 0.20) 0%, transparent 45%),
-    radial-gradient(circle at 50% 85%, rgba(16, 185, 129, 0.16) 0%, transparent 50%),
-    linear-gradient(145deg, rgba(7, 24, 28, 0.72) 0%, rgba(3, 14, 16, 0.82) 100%) !important;
-  border: 1px solid rgba(108, 207, 246, 0.35) !important;
-  backdrop-filter: blur(24px) saturate(1.4) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(1.4) !important;
-  box-shadow: 0 24px 52px rgba(0, 0, 0, 0.75), 0 0 28px rgba(108, 207, 246, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s !important;
-  z-index: 10000 !important;
-}
-
-/* Caret indicator at bottom */
-.card-pointer-caret {
-  position: absolute !important;
-  top: 100% !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  width: 0 !important;
-  height: 0 !important;
-  border-left: 9px solid transparent !important;
-  border-right: 9px solid transparent !important;
-  border-top: 9px solid rgba(5, 18, 22, 0.85) !important;
 }
 
 /* Card typography & spacing */
