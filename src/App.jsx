@@ -58,7 +58,8 @@ const PracticePage = lazy(() => import("./pages/PracticePage.jsx").then(m => ({ 
 const ProgressPage = lazy(() => import("./pages/ProgressPage.jsx").then(m => ({ default: m.ProgressPage })));
 const TutorPage = lazy(() => import("./pages/TutorPage.jsx").then(m => ({ default: m.TutorPage })));
 const SettingsPage = lazy(() => import("./pages/SettingsPage.jsx").then(m => ({ default: m.SettingsPage })));
-const GoalPage = lazy(() => import("./pages/GoalPage.jsx").then(m => ({ default: m.GoalPage })));
+const CreateCoursePage = lazy(() => import("./pages/CreateCoursePage.jsx").then(m => ({ default: m.CreateCoursePage })));
+const GoalPage = CreateCoursePage;
 const ProposalPage = lazy(() => import("./pages/ProposalPage.jsx").then(m => ({ default: m.ProposalPage })));
 const CoursePage = lazy(() => import("./pages/CoursePage.jsx").then(m => ({ default: m.CoursePage })));
 const LessonPage = lazy(() => import("./pages/LessonPage.jsx").then(m => ({ default: m.LessonPage })));
@@ -327,12 +328,18 @@ function RouteSuspenseFallback() {
 function PageContent(props){
   const {page,routeParams,routeQuery,data,activeCourse,lessons,activeLesson,dueCards,nextTask,stats,progressPercent,pendingTasks,proposal,busy,go,openLesson}=props;
   const common={...props};
-  const titles={courses:"My Courses",today:"Today’s plan","study-together":"Study Together",notes:"Notes",flashcards:"Flashcards",practice:"Practice",progress:"Your progress",tutor:"AI Tutor",settings:"Settings",goal:"Build a learning plan",proposal:"Your course proposal",course:"Course roadmap",lesson:"Lesson workspace",search:"Search results",verify:"Verify your email", "reset-password":"Choose a new password",verified:"Email verified",login:"Account",signup:"Create account",auth:"Account"};
+  const titles={courses:"My Courses",today:"Today’s plan","study-together":"Study Together",notes:"Notes",flashcards:"Flashcards",practice:"Practice",progress:"Your progress",tutor:"AI Tutor",settings:"Settings","create-course":"Create a course","create/course":"Create a course",goal:"Create a course",proposal:"Your course proposal",course:"Course roadmap",lesson:"Lesson workspace",search:"Search results",verify:"Verify your email", "reset-password":"Choose a new password",verified:"Email verified",login:"Account",signup:"Create account",auth:"Account"};
   if(page==="home")return <Home {...common} />;
   const routeContext=getRouteContext({page,routeParams,routeQuery,activeCourse,activeLesson,proposalCourse:proposal||activeCourse,pageTitle:titles[page]||"Workspace",knownTitles:titles});
-  return <div className="workspace-page">
+  const isCreatePage = page === "goal" || page === "create-course" || page === "create/course";
+  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""}`}>
     <PageContextBar context={routeContext} go={go}/>
-    <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""} ${page==="goal"?"page-heading-goal":""}`}><div>{page==="lesson"&&<span className="eyebrow">{activeLesson?.moduleTitle||"Learning session"}</span>}<h1>{page==="lesson"?activeLesson?.title||"Lesson":titles[page]||"Drizzlearn"}</h1></div>{page==="courses"&&<button className="primary-btn" onClick={()=>go("goal")}><Icon name="plus" size={14}/>Create a course</button>}</div>
+    {!isCreatePage && (
+      <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""} ${page==="goal"?"page-heading-goal":""}`}>
+        <div>{page==="lesson"&&<span className="eyebrow">{activeLesson?.moduleTitle||"Learning session"}</span>}<h1>{page==="lesson"?activeLesson?.title||"Lesson":titles[page]||"Drizzlearn"}</h1></div>
+        {page==="courses"&&<button className="primary-btn" onClick={()=>go("create-course")}><Icon name="plus" size={14}/>Create a course</button>}
+      </div>
+    )}
     <Suspense fallback={<RouteSuspenseFallback />}>
       {page==="courses"&&<CoursesPage {...common}/>}
       {page==="today"&&<TodayPage {...common}/>}
@@ -343,7 +350,7 @@ function PageContent(props){
       {page==="progress"&&<ProgressPage {...common}/>}
       {page==="tutor"&&<TutorPage {...common}/>}
       {page==="settings"&&<SettingsPage {...common}/>}
-      {page==="goal"&&<GoalPage {...common}/>}
+      {isCreatePage&&<CreateCoursePage {...common}/>}
       {page==="proposal"&&<ProposalPage {...common}/>}
       {page==="course"&&<CoursePage {...common}/>}
       {page==="lesson"&&<LessonPage {...common}/>}
@@ -352,7 +359,7 @@ function PageContent(props){
       {page==="reset-password"&&<ResetPasswordPage {...common}/>}
       {(page==="login"||page==="signup"||page==="auth")&&<LoginPage {...common}/>}
       {page==="verified"&&<EmptyState title="Your email is verified" body="Your Drizzlearn account is ready. Go back to your workspace and keep learning." action="Go to home" onAction={()=>go("home")}/>}
-      {!titles[page]&&<EmptyState title="This page is ready for your next course" body="Create a learning goal to start building your workspace." action="Create a course" onAction={()=>go("goal")}/>}
+      {!titles[page]&&<EmptyState title="This page is ready for your next course" body="Create a learning goal to start building your workspace." action="Create a course" onAction={()=>go("create-course")}/>}
     </Suspense>
   </div>;
 }
@@ -867,8 +874,9 @@ export default function App(){
   }
 
   const isCoursePage = page === "courses" || page === "course";
+  const isCreateCoursePage = page === "create-course" || page === "create/course" || page === "goal";
 
-  return <div className={`app-shell flex min-h-screen relative ${isCoursePage ? "app-shell-course-page" : ""}`} data-page={page}>
+  return <div className={`app-shell flex min-h-screen relative ${isCoursePage ? "app-shell-course-page" : ""} ${isCreateCoursePage ? "app-shell-create-course-page" : ""}`} data-page={page}>
     <SnowfallOverlay />
     {(syncing||activeRequests>0||busy)&&<div className="global-progress-bar" role="progressbar" aria-label="Loading workspace data"/>}
     <aside className="sidebar sticky top-0 h-screen flex flex-col overflow-hidden" aria-label="Main navigation">

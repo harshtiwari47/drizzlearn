@@ -12,7 +12,9 @@ const PAGE_TITLES = {
   progress: "Your Progress — Drizzlearn",
   tutor: "AI Tutor — Drizzlearn",
   settings: "Settings — Drizzlearn",
-  goal: "Build a Learning Plan — Drizzlearn",
+  "create-course": "Create Course — Drizzlearn",
+  "create/course": "Create Course — Drizzlearn",
+  goal: "Create Course — Drizzlearn",
   search: "Search Results — Drizzlearn",
   login: "Sign In — Drizzlearn",
   signup: "Create Account — Drizzlearn",
@@ -36,7 +38,9 @@ const PAGE_DESCRIPTIONS = {
   progress: "Track your completed sessions, checkpoint evidence, and retention mastery across all courses.",
   tutor: "Engage with your personalized AI tutor for explanations, hints, quizzes, and code reviews.",
   settings: "Customize your learner profile, weekly study budget, and notification preferences.",
-  goal: "Define your dream learning goal and generate a comprehensive AI course roadmap.",
+  "create-course": "Define your subject and capability to generate a structured AI course roadmap on Drizzlearn.",
+  "create/course": "Define your subject and capability to generate a structured AI course roadmap on Drizzlearn.",
+  goal: "Define your subject and capability to generate a structured AI course roadmap on Drizzlearn.",
   login: "Sign in to your Drizzlearn account to sync your courses, notes, and study progress.",
   signup: "Create your free Drizzlearn account and start learning with your personalized AI study companion.",
 };
@@ -135,6 +139,10 @@ export function parseLocation(loc = typeof window !== "undefined" ? window.locat
 
   if (segments.length === 0) {
     page = "home";
+  } else if (segments[0] === "create" && (segments[1] === "course" || segments.length === 1)) {
+    page = "create-course";
+  } else if (segments[0] === "goal") {
+    page = "create-course";
   } else if (segments[0] === "courses" && segments.length >= 2) {
     params.courseId = segments[1];
     page = segments[2] === "proposal" ? "proposal" : "course";
@@ -202,6 +210,8 @@ export function buildPath(target, { params = {}, query = {} } = {}) {
       mergedQuery.set("room", String(params.roomCode).trim().toUpperCase());
     } else if (pathPart === "practice" && params?.lessonId) {
       pathname = `/practice/${encodeURIComponent(params.lessonId)}`;
+    } else if (pathPart === "create-course" || pathPart === "create/course" || pathPart === "goal") {
+      pathname = "/create/course";
     } else {
       pathname = `/${pathPart.replace(/^\/+/, "")}`;
     }
@@ -266,6 +276,8 @@ const NAV_SECTION_MAP = {
   course: "courses",
   proposal: "courses",
   lesson: "courses",
+  "create-course": "courses",
+  "create/course": "courses",
   goal: "courses",
   today: "today",
   "study-together": "study-together",
@@ -340,19 +352,19 @@ export function getRouteContext({
       breadcrumbs: [
         { label: "Home", page: "home" },
         { label: "My Courses", page: "courses" },
-        { label: "Build a learning plan", page: "goal" },
+        { label: "Create a course", page: "create-course" },
         { label: draftTitle, current: true },
       ],
     };
   }
 
-  if (page === "goal") {
+  if (page === "goal" || page === "create-course" || page === "create/course") {
     return {
       back: { label: "Back to My Courses", page: "courses" },
       breadcrumbs: [
         { label: "Home", page: "home" },
         { label: "My Courses", page: "courses" },
-        { label: "Build a learning plan", current: true },
+        { label: "Create a course", current: true },
       ],
     };
   }

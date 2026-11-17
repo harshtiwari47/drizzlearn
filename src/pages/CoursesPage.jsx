@@ -131,14 +131,14 @@ const GhostShowcaseCard = React.memo(function GhostShowcaseCard({ position, go }
   return (
     <article
       className={`showcase-card showcase-ghost-card ${isLeft ? "is-left" : "is-right"} flex flex-col items-center justify-center p-6 text-center cursor-pointer`}
-      onClick={() => go("goal")}
+      onClick={() => go("create-course")}
       tabIndex={0}
       role="button"
-      aria-label="Create another learning goal"
+      aria-label="Create another learning course"
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          go("goal");
+          go("create-course");
         }
       }}
     >
@@ -850,8 +850,8 @@ function CoursesPage(props) {
         <EmptyState
           title="No courses found"
           body="Write down the capability you want to build. Sign in to generate a course plan with lessons and practice."
-          action="Create a learning goal"
-          onAction={() => go("goal")}
+          action="Create a course"
+          onAction={() => go("create-course")}
         />
       )}
     </div>
