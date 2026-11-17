@@ -15776,15 +15776,12 @@ body:has(.app-shell-course-page) {
   z-index: 5 !important;
 }
 
-/* Card Entrance Slide Animations */
+/* Card Entrance Slide Animations - Silky, deliberate, and premium easing */
 @keyframes showcaseSlideInCenter {
   0% {
     opacity: 0;
-    transform: translate3d(0, 60px, -150px) scale(0.86);
-    filter: blur(10px);
-  }
-  60% {
-    filter: blur(0);
+    transform: translate3d(0, 48px, -120px) scale(0.92);
+    filter: blur(8px);
   }
   100% {
     opacity: 1;
@@ -15796,8 +15793,8 @@ body:has(.app-shell-course-page) {
 @keyframes showcaseSlideInLeft {
   0% {
     opacity: 0;
-    transform: translate3d(-65%, 50px, -180px) rotateY(24deg) scale(0.74);
-    filter: blur(10px);
+    transform: translate3d(-55%, 35px, -140px) rotateY(18deg) scale(0.78);
+    filter: blur(8px);
   }
   100% {
     opacity: 0.65;
@@ -15809,8 +15806,8 @@ body:has(.app-shell-course-page) {
 @keyframes showcaseSlideInRight {
   0% {
     opacity: 0;
-    transform: translate3d(65%, 50px, -180px) rotateY(-24deg) scale(0.74);
-    filter: blur(10px);
+    transform: translate3d(55%, 35px, -140px) rotateY(-18deg) scale(0.78);
+    filter: blur(8px);
   }
   100% {
     opacity: 0.65;
@@ -15863,7 +15860,7 @@ body:has(.app-shell-course-page) {
               inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
   cursor: default !important;
   pointer-events: auto !important;
-  animation: showcaseSlideInCenter 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: showcaseSlideInCenter 1.15s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .showcase-card.is-center:hover {
@@ -15880,7 +15877,7 @@ body:has(.app-shell-course-page) {
   opacity: 0.65 !important;
   filter: brightness(0.8) blur(0.2px) !important;
   cursor: pointer !important;
-  animation: showcaseSlideInLeft 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both;
+  animation: showcaseSlideInLeft 1.25s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
 
 .showcase-card.is-left:hover {
@@ -15899,7 +15896,7 @@ body:has(.app-shell-course-page) {
   opacity: 0.65 !important;
   filter: brightness(0.8) blur(0.2px) !important;
   cursor: pointer !important;
-  animation: showcaseSlideInRight 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both;
+  animation: showcaseSlideInRight 1.25s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
 
 .showcase-card.is-right:hover {
@@ -16258,9 +16255,9 @@ body:has(.app-shell-course-page) {
 .course-list-row-item {
   background: rgba(20, 20, 20, 0.5) !important;
   border: 1px solid rgba(255, 255, 255, 0.05) !important;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1) !important;
   position: relative !important;
-  animation: listRowSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: listRowSlideIn 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes listRowSlideIn {
@@ -16294,6 +16291,37 @@ body:has(.app-shell-course-page) {
   box-shadow: 0 0 8px rgba(250, 204, 21, 0.6) !important;
 }
 
+/* All Courses Directory Header Logo-matched Cyan Styling */
+.courses-directory-icon-wrap {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 9px !important;
+  background: rgba(0, 229, 255, 0.12) !important;
+  border: 1px solid rgba(0, 229, 255, 0.35) !important;
+  color: #00e5ff !important;
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.35) !important;
+  display: grid !important;
+  place-items: center !important;
+  flex-shrink: 0 !important;
+  transition: all 0.25s ease !important;
+}
+
+.courses-directory-box:hover .courses-directory-icon-wrap {
+  background: rgba(0, 229, 255, 0.18) !important;
+  border-color: rgba(0, 229, 255, 0.55) !important;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.5) !important;
+  transform: scale(1.05) !important;
+}
+
+.courses-directory-title {
+  color: #00e5ff !important;
+  font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+  text-shadow: 0 0 14px rgba(0, 229, 255, 0.55), 0 0 2px rgba(0, 229, 255, 0.8) !important;
+}
+
 /* Unique Milestone Progress Module */
 .unique-progress-card {
   background: rgba(255, 255, 255, 0.025) !important;
@@ -16316,11 +16344,182 @@ body:has(.app-shell-course-page) {
   display: none !important;
 }
 
-/* Responsive Breakpoints */
-@media (max-width: 768px) {
+/* ==========================================================================
+   COMPREHENSIVE BREAKPOINT RESPONSIVENESS: 480px, 768px, 1024px, 1280px, 1536px, 1920px
+   ========================================================================== */
+
+/* Breakpoint 1: 1920px+ (Ultra-wide / FHD+ / 1440p / 4K) */
+@media (min-width: 1920px) {
+  .courses-two-box-layout {
+    grid-template-columns: minmax(0, 1.35fr) minmax(420px, 1fr) !important;
+    gap: 56px !important;
+  }
+  .courses-3d-stage {
+    min-height: 580px !important;
+  }
+  .showcase-card {
+    width: 410px !important;
+  }
+  .showcase-side-nav-arrow {
+    width: 46px !important;
+    height: 46px !important;
+  }
+  .showcase-side-nav-arrow.is-prev {
+    left: 20px !important;
+  }
+  .showcase-side-nav-arrow.is-next {
+    right: 20px !important;
+  }
+  .course-list-styled-container {
+    max-height: 640px !important;
+  }
+}
+
+/* Breakpoint 2: 1536px to 1919px (Standard 2K / 15-16" High-Res Display) */
+@media (min-width: 1536px) and (max-width: 1919px) {
+  .courses-two-box-layout {
+    grid-template-columns: minmax(0, 1.3fr) minmax(380px, 0.95fr) !important;
+    gap: 48px !important;
+  }
+  .courses-3d-stage {
+    min-height: 550px !important;
+  }
+  .showcase-card {
+    width: 390px !important;
+  }
+  .course-list-styled-container {
+    max-height: 590px !important;
+  }
+  .showcase-side-nav-arrow {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  .showcase-side-nav-arrow.is-prev {
+    left: 16px !important;
+  }
+  .showcase-side-nav-arrow.is-next {
+    right: 16px !important;
+  }
+}
+
+/* Breakpoint 3: 1280px to 1535px (Standard Desktop / 13-14" Laptops) */
+@media (min-width: 1280px) and (max-width: 1535px) {
+  .courses-two-box-layout {
+    grid-template-columns: minmax(0, 1.25fr) minmax(350px, 1fr) !important;
+    gap: 36px !important;
+  }
+  .courses-3d-stage {
+    min-height: 530px !important;
+  }
+  .showcase-card {
+    width: 375px !important;
+  }
+  .course-list-styled-container {
+    max-height: 550px !important;
+  }
+}
+
+/* Breakpoint 4: 1024px to 1279px (Small Laptops / iPad Pro Landscape) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .courses-two-box-layout {
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 1fr) !important;
+    gap: 28px !important;
+  }
+  .courses-3d-stage {
+    min-height: 500px !important;
+    padding: 20px 16px !important;
+  }
+  .showcase-card {
+    width: min(355px, 92%) !important;
+    border-radius: 26px !important;
+  }
+  .showcase-card.is-left {
+    transform: translate3d(-34%, 0, -70px) rotateY(10deg) scale(0.85) !important;
+    opacity: 0.55 !important;
+  }
+  .showcase-card.is-right {
+    transform: translate3d(34%, 0, -70px) rotateY(-10deg) scale(0.85) !important;
+    opacity: 0.55 !important;
+  }
+  .showcase-side-nav-arrow {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .showcase-side-nav-arrow.is-prev {
+    left: 8px !important;
+  }
+  .showcase-side-nav-arrow.is-next {
+    right: 8px !important;
+  }
+  .course-list-styled-container {
+    max-height: 520px !important;
+  }
+}
+
+/* Breakpoint 5: 768px to 1023px (Tablet Portrait / Surface) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .courses-two-box-layout {
+    grid-template-columns: 1fr !important;
+    gap: 36px !important;
+  }
+  .courses-showcase-box,
+  .courses-directory-box {
+    max-width: 660px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+  }
+  .courses-3d-stage {
+    min-height: 500px !important;
+    padding: 20px 16px !important;
+  }
+  .showcase-card {
+    width: min(370px, 90%) !important;
+  }
+  .showcase-card.is-left {
+    transform: translate3d(-38%, 0, -85px) rotateY(13deg) scale(0.84) !important;
+    opacity: 0.55 !important;
+  }
+  .showcase-card.is-right {
+    transform: translate3d(38%, 0, -85px) rotateY(-13deg) scale(0.84) !important;
+    opacity: 0.55 !important;
+  }
+  .showcase-side-nav-arrow {
+    width: 42px !important;
+    height: 42px !important;
+  }
+  .showcase-side-nav-arrow.is-prev {
+    left: 10px !important;
+  }
+  .showcase-side-nav-arrow.is-next {
+    right: 10px !important;
+  }
+  .course-list-styled-container {
+    max-height: 500px !important;
+  }
+}
+
+/* Breakpoint 6: 480px to 767px (Large Phones Landscape / Phablets) */
+@media (min-width: 480px) and (max-width: 767px) {
+  .courses-two-box-layout {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
   .courses-3d-stage {
     min-height: 480px !important;
-    padding: 20px 10px !important;
+    padding: 18px 12px !important;
+  }
+  .showcase-card {
+    width: min(340px, 94%) !important;
+    border-radius: 24px !important;
+  }
+  .showcase-card.is-left {
+    transform: translate3d(-46%, 0, -100px) rotateY(16deg) scale(0.8) !important;
+    opacity: 0.4 !important;
+  }
+  .showcase-card.is-right {
+    transform: translate3d(46%, 0, -100px) rotateY(-16deg) scale(0.8) !important;
+    opacity: 0.4 !important;
   }
   .showcase-side-nav-arrow {
     width: 38px !important;
@@ -16333,36 +16532,114 @@ body:has(.app-shell-course-page) {
   .showcase-side-nav-arrow.is-next {
     right: 6px !important;
   }
-  .showcase-card {
-    width: min(340px, 92%) !important;
-  }
-  .showcase-card.is-left {
-    transform: translate3d(-52%, 0, -120px) rotateY(20deg) scale(0.78) !important;
-    opacity: 0.35 !important;
-  }
-  .showcase-card.is-right {
-    transform: translate3d(52%, 0, -120px) rotateY(-20deg) scale(0.78) !important;
-    opacity: 0.35 !important;
+  .course-list-styled-container {
+    max-height: 460px !important;
   }
 }
 
-@media (max-width: 480px) {
+/* Breakpoint 7: < 480px (Mobile Portrait - iPhone, Galaxy, Pixel) */
+@media (max-width: 479px) {
+  .courses-page-container {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    gap: 18px !important;
+  }
+  .courses-two-box-layout {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  .filter-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .filter-row > div:first-child {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 4px !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .filter-row > div:first-child::-webkit-scrollbar {
+    display: none !important;
+  }
+  .filter-chip {
+    flex-shrink: 0 !important;
+    min-height: 32px !important;
+    padding: 4px 12px !important;
+    font-size: 12px !important;
+  }
   .courses-3d-stage {
-    min-height: 460px !important;
+    min-height: 440px !important;
+    padding: 10px 4px !important;
   }
   .showcase-card {
-    width: min(310px, 95%) !important;
+    width: min(315px, 96%) !important;
+    border-radius: 20px !important;
+  }
+  .showcase-card-header {
+    padding: 16px 16px 6px !important;
+  }
+  .showcase-card-body {
+    padding: 4px 16px 16px !important;
+    gap: 10px !important;
   }
   .showcase-card-title {
     font-size: 17px !important;
+    line-height: 1.3 !important;
+  }
+  .showcase-card-desc {
+    -webkit-line-clamp: 2 !important;
+    font-size: 11.5px !important;
+  }
+  .showcase-chips-row {
+    gap: 6px !important;
+  }
+  .showcase-chip {
+    padding: 3px 8px !important;
+    font-size: 11px !important;
   }
   .showcase-card.is-left {
-    transform: translate3d(-58%, 0, -130px) rotateY(24deg) scale(0.72) !important;
-    opacity: 0.25 !important;
+    transform: translate3d(-54%, 0, -120px) rotateY(20deg) scale(0.72) !important;
+    opacity: 0.18 !important;
+    pointer-events: none !important;
   }
   .showcase-card.is-right {
-    transform: translate3d(58%, 0, -130px) rotateY(-24deg) scale(0.72) !important;
-    opacity: 0.25 !important;
+    transform: translate3d(54%, 0, -120px) rotateY(-20deg) scale(0.72) !important;
+    opacity: 0.18 !important;
+    pointer-events: none !important;
+  }
+  .showcase-side-nav-arrow {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+    font-size: 15px !important;
+  }
+  .showcase-side-nav-arrow.is-prev {
+    left: 2px !important;
+  }
+  .showcase-side-nav-arrow.is-next {
+    right: 2px !important;
+  }
+  .course-list-styled-container {
+    max-height: 400px !important;
+    padding: 10px !important;
+    gap: 8px !important;
+  }
+  .course-list-row-item {
+    padding: 10px 12px !important;
+    border-radius: 14px !important;
+  }
+  .row-item-title {
+    font-size: 13px !important;
+  }
+  .unique-radial-meter {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .unique-radial-meter svg {
+    width: 40px !important;
+    height: 40px !important;
   }
 }
 
