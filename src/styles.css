@@ -17644,9 +17644,143 @@ body:has(.app-shell-create-course-page) {
   padding: 0 16px 64px !important;
 }
 
-.workspace-page:has(.create-course-page-container) {
+.workspace-page:has(.create-course-page-container),
+.workspace-create-course-page {
   max-width: 740px !important;
   margin: 0 auto !important;
+  padding: 16px 16px 0 !important;
+}
+
+.workspace-create-course-page .create-course-page-container {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* ==========================================================================
+   DRIZZLEARN BREADCRUMB & CONTEXT BAR (/create/course) - EMERALD GLASS UI
+   ========================================================================== */
+
+.app-shell-create-course-page .page-context-bar,
+.workspace-create-course-page .page-context-bar {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 12px 18px !important;
+  margin: 0 0 28px 0 !important;
+  padding: 0 !important;
+}
+
+/* Modern Back Button (Emerald Glass Pill with Lime Icon) */
+.app-shell-create-course-page .page-back-btn,
+.workspace-create-course-page .page-back-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 36px !important;
+  padding: 6px 16px !important;
+  border-radius: 9999px !important;
+  background: rgba(14, 38, 26, 0.72) !important;
+  border: 1px solid rgba(207, 221, 208, 0.28) !important;
+  color: #E5EFE6 !important;
+  font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(207, 221, 208, 0.18) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.app-shell-create-course-page .page-back-btn svg,
+.workspace-create-course-page .page-back-btn svg {
+  color: #D6E69A !important; /* Lime: #D6E69A arrow */
+  flex-shrink: 0 !important;
+  transition: transform 0.2s ease !important;
+}
+
+.app-shell-create-course-page .page-back-btn:hover,
+.workspace-create-course-page .page-back-btn:hover {
+  background: linear-gradient(135deg, rgba(38, 121, 78, 0.45) 0%, rgba(17, 95, 56, 0.55) 100%) !important;
+  border-color: #26794E !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 20px rgba(17, 95, 56, 0.45), inset 0 1px 0 rgba(214, 230, 154, 0.4) !important;
+  transform: translateY(-1.5px) !important;
+}
+
+.app-shell-create-course-page .page-back-btn:hover svg,
+.workspace-create-course-page .page-back-btn:hover svg {
+  transform: translateX(-3px) !important;
+  color: #FFFFFF !important;
+}
+
+/* Breadcrumb Navigation Trail */
+.app-shell-create-course-page .page-breadcrumb,
+.workspace-create-course-page .page-breadcrumb {
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+}
+
+.app-shell-create-course-page .page-breadcrumb-list,
+.workspace-create-course-page .page-breadcrumb-list {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.app-shell-create-course-page .page-breadcrumb-item,
+.workspace-create-course-page .page-breadcrumb-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+}
+
+/* Breadcrumb Link (Home, My Courses) */
+.app-shell-create-course-page .page-breadcrumb-link,
+.workspace-create-course-page .page-breadcrumb-link {
+  color: #A8C5A8 !important; /* Sage: #A8C5A8 */
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  transition: all 0.18s ease !important;
+}
+
+.app-shell-create-course-page .page-breadcrumb-link:hover,
+.workspace-create-course-page .page-breadcrumb-link:hover {
+  color: #D6E69A !important; /* Lime: #D6E69A */
+  background: rgba(17, 95, 56, 0.25) !important;
+}
+
+/* Breadcrumb Separator (Chevron >) */
+.app-shell-create-course-page .page-breadcrumb-sep,
+.workspace-create-course-page .page-breadcrumb-sep {
+  display: inline-flex !important;
+  align-items: center !important;
+  color: rgba(168, 197, 168, 0.45) !important;
+  flex-shrink: 0 !important;
+}
+
+/* Current Page (Create a course) */
+.app-shell-create-course-page .page-breadcrumb-current,
+.workspace-create-course-page .page-breadcrumb-current {
+  color: #F3F7F1 !important; /* Off-white: #F3F7F1 */
+  font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
+  font-weight: 700 !important;
+  padding: 4px 10px !important;
+  border-radius: 8px !important;
+  background: rgba(207, 221, 208, 0.08) !important;
+  border: 1px solid rgba(207, 221, 208, 0.18) !important;
+  white-space: nowrap !important;
 }
 
 /* Page Header */
