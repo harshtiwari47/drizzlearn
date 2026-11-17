@@ -182,10 +182,7 @@ export function ProposalPage(p) {
             <Icon name="arrowLeft" size={20} />
           </button>
           <div className="proposal-v2-title-wrap">
-            <div className="proposal-v2-heading-row">
-              <h1 className="proposal-v2-page-title">Course Proposal</h1>
-              <span className="proposal-v2-status-pill">Pending Review</span>
-            </div>
+            <h1 className="proposal-v2-page-title">Course Proposal</h1>
             <p className="proposal-v2-page-subtitle">
               Review and refine your custom curriculum before approving.
             </p>
