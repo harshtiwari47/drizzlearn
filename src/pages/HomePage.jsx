@@ -728,7 +728,7 @@ const Home = React.memo(function Home(p){
                               onClick={(e) => e.stopPropagation()}
                             >
                               <div className="card-pointer-caret" />
-                              <div className="card-top-row flex items-center justify-between gap-2 mb-1.5">
+                              <div className="card-top-row flex items-center justify-between gap-2 mb-1">
                                 <span className="card-stage-chip">STAGE {block.levelNumber}</span>
                                 <span
                                   className={`card-badge ${
@@ -744,7 +744,7 @@ const Home = React.memo(function Home(p){
                               </div>
                               <h4 className="card-quest-title">{block.title}</h4>
                               <p className="card-quest-desc">{block.objective}</p>
-                              <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-white/[0.08]">
+                              <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-white/[0.08]">
                                 <button
                                   type="button"
                                   className="card-action-btn text-xs font-bold text-cyan-300 hover:text-cyan-200 cursor-pointer flex items-center gap-1"
