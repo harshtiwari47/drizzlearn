@@ -140,6 +140,7 @@ async function handleProposalStreamOrJson(req, res, work, { status = 200, resour
       writeLine({ type: "complete", course: result });
     }
   } catch (error) {
+    console.error("[api stream error]:", error);
     const formatted = formatStreamError(error);
     writeLine({
       type: "error",

@@ -766,13 +766,13 @@ async function agentCourseDraft(candidates, goal, { memory = [], previousPlan = 
   let preferredKey = null;
   let outline = null;
   let outlineLessonCount = 0;
-  let lastOutlineRes = null;
+  let outlineRes = null;
   const maxOutlineAttempts = Math.min(3, Math.max(2, candidates.length));
   let outlineCandidates = candidates;
 
   for (let attempt = 1; attempt <= maxOutlineAttempts; attempt++) {
     try {
-      const outlineRes = await chat(outlineCandidates, {
+      outlineRes = await chat(outlineCandidates, {
         stageName: attempt === 1 ? "outline" : `outline_retry_${attempt}`,
         deadline,
         maxTokens: 2400,
@@ -788,7 +788,6 @@ async function agentCourseDraft(candidates, goal, { memory = [], previousPlan = 
           { role: "user", content: JSON.stringify(context) },
         ],
       });
-      lastOutlineRes = outlineRes;
       failoverCount += outlineRes.failoverCount;
       preferredKey = outlineRes.candidateKey;
 
@@ -848,8 +847,8 @@ async function agentCourseDraft(candidates, goal, { memory = [], previousPlan = 
       break;
     } catch (err) {
       if (attempt >= maxOutlineAttempts) {
-        if (err && !err.failedCandidateKey && lastOutlineRes?.candidateKey) {
-          err.failedCandidateKey = lastOutlineRes.candidateKey;
+        if (err && !err.failedCandidateKey && outlineRes?.candidateKey) {
+          err.failedCandidateKey = outlineRes.candidateKey;
         }
         throw err;
       }
@@ -864,8 +863,8 @@ async function agentCourseDraft(candidates, goal, { memory = [], previousPlan = 
     stage: "outline_ready",
     percent: 25,
     message: `Curriculum outline ready (${outline.modules.length} modules, ${outlineLessonCount} lessons).`,
-    model: outlineRes.model,
-    provider: outlineRes.provider,
+    model: outlineRes?.model,
+    provider: outlineRes?.provider,
   });
 
   const useClassicDraft =
@@ -973,8 +972,8 @@ async function agentCourseDraft(candidates, goal, { memory = [], previousPlan = 
   const builtModules = new Array(totalModules);
   let nextModuleIndex = 0;
   let completedModules = 0;
-  let lastModelUsed = outlineRes.model;
-  let lastProviderUsed = outlineRes.provider;
+  let lastModelUsed = outlineRes?.model || candidates[0]?.model || null;
+  let lastProviderUsed = outlineRes?.provider || candidates[0]?.name || null;
 
   const generateSingleModule = async (module, moduleIndex) => {
     const modulePosition = Number(module.position) || moduleIndex + 1;
