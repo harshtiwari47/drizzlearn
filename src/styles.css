@@ -17596,14 +17596,27 @@ body:has(.app-shell-course-page) {
 }
 
 /* ==========================================================================
-   DRIZZLEARN COURSE CREATION (/create/course) - SIMPLE & STRAIGHTFORWARD
-   Palette:
-   Primary: #115F38, #0B472B, #26794E
-   Secondary & Accent: #A8C5A8, #D6E69A, #DDA96D
-   Dark surfaces & typography: #0b1410, #102018, #F3F7F1, #CFDDD0
+   DRIZZLEARN COURSE CREATION (/create/course) - THEME PALETTE (DARK MODE)
+   1. Primary colors:
+      - Primary: #115F38
+      - Primary dark: #0B472B
+      - Primary light: #26794E
+   2. Background & surfaces:
+      - Dark ambient background: #07130c (per "Make sure taking dark color as a background")
+      - Surface & text highlights: #FFFFFF
+      - Soft surface: #E5EFE6
+      - Off-white text: #F3F7F1
+   3. Secondary & accent colors:
+      - Sage: #A8C5A8
+      - Lime: #D6E69A
+      - Warm amber: #DDA96D
+   4. Typography & borders:
+      - Heading (deep spruce base): #183126
+      - Muted text: #63766A
+      - Border: #CFDDD0
    ========================================================================== */
 
-/* Dark Mode App Shell with subtle emerald ambient lighting */
+/* Dark Mode App Shell with Rich Emerald & Lime/Amber Ambient Glow */
 .app-shell.app-shell-create-course-page,
 .app-shell[data-page="create-course"],
 .app-shell[data-page="create/course"],
@@ -17612,9 +17625,11 @@ body[data-page="create-course"],
 body[data-page="create/course"],
 body[data-page="goal"],
 body:has(.app-shell-create-course-page) {
-  background-color: #0b1410 !important;
+  background-color: #07130c !important; /* Deep dark forest night background */
   background-image: 
-    radial-gradient(circle 900px at 50% 12%, rgba(17, 95, 56, 0.22) 0%, rgba(11, 20, 16, 0.6) 45%, transparent 80%) !important;
+    radial-gradient(circle 900px at 50% 10%, rgba(17, 95, 56, 0.34) 0%, rgba(11, 71, 43, 0.18) 45%, transparent 80%),
+    radial-gradient(circle 500px at 15% 25%, rgba(214, 230, 154, 0.07) 0%, transparent 60%),
+    radial-gradient(circle 500px at 85% 65%, rgba(221, 169, 109, 0.06) 0%, transparent 60%) !important;
   background-attachment: fixed !important;
   background-repeat: no-repeat !important;
   background-size: cover !important;
@@ -17641,80 +17656,98 @@ body:has(.app-shell-create-course-page) {
 
 .create-course-title {
   font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-  font-size: clamp(26px, 3.2vw, 34px) !important;
+  font-size: clamp(28px, 3.5vw, 36px) !important;
   font-weight: 800 !important;
   letter-spacing: -0.03em !important;
   color: #F3F7F1 !important;
-  margin: 0 0 6px 0 !important;
+  margin: 0 0 8px 0 !important;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5) !important;
 }
 
 .create-course-subtitle {
-  font-size: 14px !important;
-  color: #A8C5A8 !important;
-  opacity: 0.9 !important;
+  font-size: 14.5px !important;
+  color: #A8C5A8 !important; /* Sage */
+  opacity: 0.95 !important;
   margin: 0 !important;
   line-height: 1.5 !important;
 }
 
-/* Main Form Card */
+/* Main Form Card - Deep Emerald Glass Surface */
 .create-course-form-card {
-  background: rgba(14, 25, 19, 0.78) !important;
-  border: 1px solid rgba(168, 197, 168, 0.2) !important;
+  background: linear-gradient(165deg, rgba(24, 49, 38, 0.88) 0%, rgba(17, 95, 56, 0.38) 45%, rgba(11, 71, 43, 0.78) 100%) !important;
+  border: 1px solid rgba(207, 221, 208, 0.32) !important; /* Border: #CFDDD0 */
   border-radius: 24px !important;
-  padding: clamp(20px, 3.5vw, 32px) !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(207, 221, 208, 0.12) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
+  padding: clamp(22px, 3.8vw, 36px) !important;
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.7),
+    0 0 35px rgba(17, 95, 56, 0.25),
+    inset 0 1px 0 rgba(207, 221, 208, 0.45),
+    inset 0 0 24px rgba(17, 95, 56, 0.15) !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 20px !important;
+  gap: 22px !important;
 }
 
 /* Form Fields */
 .create-course-field {
   display: flex !important;
   flex-direction: column !important;
-  gap: 7px !important;
+  gap: 8px !important;
 }
 
 .create-course-label {
   font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
   font-size: 13.5px !important;
   font-weight: 700 !important;
-  color: #CFDDD0 !important;
+  color: #E5EFE6 !important; /* Soft surface off-white */
   letter-spacing: -0.01em !important;
+}
+
+.optional-label {
+  color: #D6E69A !important; /* Lime */
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  background: rgba(214, 230, 154, 0.12) !important;
+  border: 1px solid rgba(214, 230, 154, 0.3) !important;
+  padding: 2px 8px !important;
+  border-radius: 9999px !important;
+  letter-spacing: 0.02em !important;
 }
 
 .create-course-input,
 .create-course-textarea,
 .create-course-select {
   width: 100% !important;
-  padding: 11px 14px !important;
-  border-radius: 12px !important;
-  background: rgba(9, 17, 12, 0.65) !important;
-  border: 1px solid rgba(168, 197, 168, 0.22) !important;
+  padding: 12px 16px !important;
+  border-radius: 14px !important;
+  background: rgba(11, 26, 18, 0.8) !important; /* Deep dark green well */
+  border: 1px solid rgba(207, 221, 208, 0.28) !important; /* Border: #CFDDD0 */
   color: #F3F7F1 !important;
-  font-size: 14px !important;
+  font-size: 14.5px !important;
   outline: none !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.22s ease !important;
 }
 
 .create-course-input:focus,
 .create-course-textarea:focus,
 .create-course-select:focus {
-  border-color: #26794E !important;
-  box-shadow: 0 0 0 3px rgba(38, 121, 78, 0.25) !important;
-  background: rgba(12, 22, 16, 0.85) !important;
+  border-color: #26794E !important; /* Primary light: #26794E */
+  box-shadow: 0 0 0 3px rgba(214, 230, 154, 0.3), 0 0 20px rgba(38, 121, 78, 0.35) !important; /* Lime glow */
+  background: rgba(14, 38, 26, 0.95) !important;
+  color: #FFFFFF !important;
 }
 
 .create-course-input::placeholder,
 .create-course-textarea::placeholder {
-  color: rgba(168, 197, 168, 0.45) !important;
+  color: rgba(168, 197, 168, 0.55) !important; /* Sage: #A8C5A8 */
 }
 
 .create-course-select option {
-  background: #0e1a14 !important;
+  background: #0B472B !important; /* Primary dark: #0B472B */
   color: #F3F7F1 !important;
+  padding: 8px !important;
 }
 
 .create-course-grid-two {
@@ -17735,28 +17768,40 @@ body:has(.app-shell-create-course-page) {
   align-items: center !important;
   justify-content: space-between !important;
   gap: 16px !important;
-  padding-top: 16px !important;
-  border-top: 1px solid rgba(168, 197, 168, 0.16) !important;
-  margin-top: 4px !important;
+  padding-top: 18px !important;
+  border-top: 1px solid rgba(207, 221, 208, 0.2) !important; /* Border: #CFDDD0 */
+  margin-top: 6px !important;
 }
 
-@media (max-width: 540px) {
+@media (max-width: 560px) {
   .create-course-submit-row {
     flex-direction: column !important;
     align-items: stretch !important;
+    gap: 14px !important;
   }
 }
 
 .study-budget-badge {
   display: flex !important;
   align-items: center !important;
-  gap: 8px !important;
+  gap: 9px !important;
+  padding: 8px 14px !important;
+  border-radius: 12px !important;
+  background: rgba(221, 169, 109, 0.12) !important; /* Warm amber soft glow */
+  border: 1px solid rgba(221, 169, 109, 0.32) !important; /* Warm amber border */
   font-size: 13px !important;
-  color: #A8C5A8 !important;
+  color: #E5EFE6 !important; /* Soft surface */
+}
+
+.study-budget-badge .budget-icon {
+  color: #DDA96D !important; /* Warm amber: #DDA96D */
+  display: flex !important;
+  align-items: center !important;
 }
 
 .study-budget-badge strong {
-  color: #F3F7F1 !important;
+  color: #D6E69A !important; /* Lime: #D6E69A */
+  font-weight: 700 !important;
 }
 
 .create-course-submit-btn {
@@ -17764,40 +17809,44 @@ body:has(.app-shell-create-course-page) {
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
-  padding: 10px 24px !important;
+  padding: 11px 26px !important;
   border-radius: 9999px !important;
-  background: linear-gradient(135deg, #115F38 0%, #0B472B 100%) !important;
+  background: linear-gradient(135deg, #26794E 0%, #115F38 60%, #0B472B 100%) !important; /* Primary light -> Primary -> Primary dark */
   color: #FFFFFF !important;
-  border: 1px solid #26794E !important;
+  border: 1px solid #D6E69A !important; /* Lime: #D6E69A border */
   font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-  font-size: 13.5px !important;
+  font-size: 14px !important;
   font-weight: 700 !important;
   letter-spacing: 0.01em !important;
-  box-shadow: 0 4px 18px rgba(17, 95, 56, 0.4), inset 0 1px 0 rgba(214, 230, 154, 0.3) !important;
+  box-shadow: 
+    0 4px 22px rgba(17, 95, 56, 0.55),
+    inset 0 1px 0 rgba(214, 230, 154, 0.5) !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
   white-space: nowrap !important;
 }
 
 .create-course-submit-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #26794E 0%, #115F38 100%) !important;
-  border-color: #D6E69A !important;
-  box-shadow: 0 6px 24px rgba(17, 95, 56, 0.55), inset 0 1px 0 #FFFFFF !important;
-  transform: translateY(-1px) !important;
+  background: linear-gradient(135deg, #2ea363 0%, #26794E 60%, #115F38 100%) !important;
+  border-color: #FFFFFF !important;
+  box-shadow: 
+    0 6px 30px rgba(38, 121, 78, 0.75),
+    inset 0 1px 0 #FFFFFF !important;
+  transform: translateY(-1.5px) !important;
 }
 
 .create-course-submit-btn:disabled {
-  opacity: 0.5 !important;
+  opacity: 0.45 !important;
   cursor: not-allowed !important;
   box-shadow: none !important;
 }
 
 /* Progress and Error States */
 .create-course-progress-wrap {
-  background: rgba(17, 95, 56, 0.14) !important;
-  border: 1px solid rgba(168, 197, 168, 0.25) !important;
+  background: rgba(17, 95, 56, 0.2) !important; /* Primary: #115F38 */
+  border: 1px solid rgba(214, 230, 154, 0.35) !important; /* Lime: #D6E69A */
   border-radius: 16px !important;
-  padding: 14px !important;
+  padding: 16px !important;
 }
 
 .create-course-error-row {
@@ -17806,27 +17855,33 @@ body:has(.app-shell-create-course-page) {
   gap: 10px !important;
   padding: 12px 14px !important;
   border-radius: 14px !important;
-  background: rgba(239, 68, 68, 0.1) !important;
-  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
   color: #fca5a5 !important;
   font-size: 13px !important;
 }
 
 .error-retry-btn {
-  padding: 5px 10px !important;
+  padding: 6px 12px !important;
   border-radius: 8px !important;
-  background: rgba(239, 68, 68, 0.2) !important;
+  background: rgba(239, 68, 68, 0.22) !important;
   color: #fecdd3 !important;
-  border: 1px solid rgba(239, 68, 68, 0.4) !important;
-  font-size: 11.5px !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.error-retry-btn:hover {
+  background: rgba(239, 68, 68, 0.35) !important;
+  color: #FFFFFF !important;
 }
 
 .error-dismiss-btn {
   background: transparent !important;
   border: none !important;
   color: #fca5a5 !important;
-  font-size: 11.5px !important;
+  font-size: 12px !important;
   cursor: pointer !important;
 }

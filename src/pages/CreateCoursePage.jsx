@@ -180,7 +180,7 @@ function CreateCoursePage(props) {
         <div className="create-course-field">
           <label htmlFor="course-date" className="create-course-label flex items-center justify-between">
             <span>Target date</span>
-            <span className="optional-label text-xs font-normal text-[#A8C5A8]">Optional</span>
+            <span className="optional-label">Optional</span>
           </label>
           <input
             id="course-date"
