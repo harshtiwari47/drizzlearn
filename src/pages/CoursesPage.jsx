@@ -177,19 +177,78 @@ function ShowcaseCard({
           </span>
         </div>
 
-        {/* Progress Bar Row */}
-        <div className="showcase-progress-section flex flex-col gap-1.5 mt-auto pt-3">
-          <div className="flex items-center justify-between text-xs font-semibold">
-            <span className="text-slate-400 font-medium">Course Progress</span>
-            <span className={`progress-value ${percent > 0 ? "text-amber-300" : "text-white"}`}>
-              {percent}%
-            </span>
-          </div>
-          <div className="progress-track w-full">
+        {/* Unique Curriculum Milestone Progression UI */}
+        <div className="showcase-unique-progress flex flex-col gap-2 mt-auto pt-3">
+          <div className="unique-progress-card p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center gap-3.5 relative overflow-hidden">
+            {/* Ambient Radial Core Light */}
             <div
-              className="progress-fill"
-              style={{ width: `${Math.max(percent, percent > 0 ? 4 : 0)}%` }}
+              className="absolute -right-4 -top-4 w-20 h-20 rounded-full bg-amber-400/[0.06] blur-xl pointer-events-none"
+              aria-hidden="true"
             />
+
+            {/* Micro Radial Gauge */}
+            <div className="unique-radial-meter relative flex-shrink-0 grid place-items-center w-12 h-12">
+              <svg className="w-12 h-12 -rotate-90" viewBox="0 0 44 44">
+                <circle
+                  cx="22"
+                  cy="22"
+                  r="18"
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.08)"
+                  strokeWidth="3.5"
+                />
+                <circle
+                  cx="22"
+                  cy="22"
+                  r="18"
+                  fill="none"
+                  stroke="#facc15"
+                  strokeWidth="3.5"
+                  strokeDasharray={113.1}
+                  strokeDashoffset={113.1 - (113.1 * Math.max(percent, percent > 0 ? 5 : 0)) / 100}
+                  strokeLinecap="round"
+                  className="transition-all duration-700 ease-out"
+                />
+              </svg>
+              <span className="absolute font-display font-extrabold text-[11px] text-amber-300">
+                {percent}%
+              </span>
+            </div>
+
+            {/* Milestone Info & Segmented Capsule Track */}
+            <div className="flex flex-col flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-1 mb-1.5">
+                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase font-display">
+                  Course Progress
+                </span>
+                <span className="text-[11px] font-semibold text-amber-300/90 truncate">
+                  {done > 0 ? `${done} / ${courseTasks.length || allLessons.length} lessons` : `${(course.modules || []).length || 6} modules`}
+                </span>
+              </div>
+
+              {/* Segmented Milestone Capsules Track */}
+              <div className="milestone-capsules-track flex items-center gap-1.5 w-full">
+                {Array.from({ length: Math.min((course.modules || []).length || 5, 8) }).map((_, idx, arr) => {
+                  const segPercent = ((idx + 1) / arr.length) * 100;
+                  const isComplete = percent >= segPercent;
+                  const isCurrent = !isComplete && (idx === 0 || percent >= ((idx) / arr.length) * 100);
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`milestone-capsule flex-1 h-2 rounded-full transition-all duration-300 ${
+                        isComplete
+                          ? "bg-amber-400 shadow-[0_0_8px_rgba(250,204,21,0.6)]"
+                          : isCurrent && percent > 0
+                          ? "bg-amber-400/40 border border-amber-300/60 animate-pulse"
+                          : "bg-white/[0.08]"
+                      }`}
+                      title={`Module ${idx + 1}`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -348,27 +407,18 @@ function CoursesPage(props) {
 
       {visible.length > 0 ? (
         /* TWO BOXED GRID LAYOUT */
-        <div className="courses-two-box-layout gap-6 items-start">
+        <div className="courses-two-box-layout items-start">
           {/* ========================================================
               BOX 1 (LEFT): 3D PERSPECTIVE CARD SHOWCASE (Image 3 style)
               ======================================================== */}
-          <section className="panel courses-showcase-box flex flex-col relative overflow-hidden" aria-label="Featured Course 3D Showcase">
+          <section className="panel courses-showcase-box flex flex-col relative" aria-label="Featured Course 3D Showcase">
             {/* Animated Moving Color Aura at Center */}
             <div className="showcase-center-moving-glow" aria-hidden="true" />
             <div className="showcase-ambient-glow" aria-hidden="true" />
 
-            {/* Box Header */}
-            <div className="panel-head flex items-center justify-between relative z-10 px-4 pt-3 pb-2">
-              <div className="panel-title flex items-center gap-2.5">
-                <Icon name="spark" />
-                <span>Featured Deck</span>
-                <span className="text-xs font-normal text-slate-400">
-                  ({activeIndex + 1} of {visible.length})
-                </span>
-              </div>
-
-              {/* Navigation Controls */}
-              <div className="flex items-center gap-2">
+            {/* Box Header Controls - Navigation Arrows */}
+            <div className="showcase-top-controls flex items-center justify-end relative z-10 px-4 pt-2 pb-1">
+              <div className="flex items-center gap-2 ml-auto">
                 <button
                   type="button"
                   className="showcase-nav-arrow"
@@ -513,6 +563,7 @@ function CoursesPage(props) {
                   <div
                     key={course.id || i}
                     className={`course-list-row-item ${isSelected ? "active-item" : ""} flex items-center justify-between gap-3 p-3.5 rounded-2xl cursor-pointer transition-all`}
+                    style={{ animationDelay: `${i * 0.05}s` }}
                     onMouseEnter={() => setActiveCourseId(course.id)}
                     onFocus={() => setActiveCourseId(course.id)}
                     onClick={() => setActiveCourseId(course.id)}

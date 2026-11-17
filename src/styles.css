@@ -15600,21 +15600,30 @@ select option { color: var(--color-text) !important; background: var(--color-sur
    DRIZZLEARN MODERN COURSES LIBRARY REDESIGN (TWO-BOX 3D GRID)
    ========================================================================== */
 .courses-page-container {
-  width: 100%;
+  width: 100% !important;
+  max-width: 1680px !important;
+  margin: 0 auto !important;
 }
 
-/* Two-Boxed Layout Grid */
+.workspace-page:has(.courses-page-container),
+.app-shell-course-page .workspace-page {
+  max-width: 1680px !important;
+  width: 100% !important;
+}
+
+/* Two-Boxed Layout Grid with generous gap */
 .courses-two-box-layout {
   display: grid !important;
-  grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.95fr) !important;
-  gap: 24px !important;
+  grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.95fr) !important;
+  gap: clamp(32px, 3.5vw, 56px) !important;
   align-items: start !important;
   width: 100% !important;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1080px) {
   .courses-two-box-layout {
     grid-template-columns: 1fr !important;
+    gap: 36px !important;
   }
 }
 
@@ -15629,6 +15638,7 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   border-radius: 24px !important;
   box-shadow: none !important;
   position: relative !important;
+  overflow: visible !important;
 }
 
 .courses-showcase-box .panel-head {
@@ -15756,14 +15766,57 @@ body:has(.app-shell-course-page) {
 .courses-3d-stage {
   perspective: 1200px !important;
   position: relative !important;
-  min-height: 520px !important;
+  min-height: 540px !important;
   width: 100% !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 24px 16px 28px !important;
-  overflow: hidden !important;
+  padding: 24px 30px !important;
+  overflow: visible !important;
   z-index: 5 !important;
+}
+
+/* Card Entrance Slide Animations */
+@keyframes showcaseSlideInCenter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 60px, -150px) scale(0.86);
+    filter: blur(10px);
+  }
+  60% {
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes showcaseSlideInLeft {
+  0% {
+    opacity: 0;
+    transform: translate3d(-65%, 50px, -180px) rotateY(24deg) scale(0.74);
+    filter: blur(10px);
+  }
+  100% {
+    opacity: 0.65;
+    transform: translate3d(-38%, 0, -80px) rotateY(12deg) scale(0.88);
+    filter: brightness(0.8) blur(0.2px);
+  }
+}
+
+@keyframes showcaseSlideInRight {
+  0% {
+    opacity: 0;
+    transform: translate3d(65%, 50px, -180px) rotateY(-24deg) scale(0.74);
+    filter: blur(10px);
+  }
+  100% {
+    opacity: 0.65;
+    transform: translate3d(38%, 0, -80px) rotateY(-12deg) scale(0.88);
+    filter: brightness(0.8) blur(0.2px);
+  }
 }
 
 /* Modern Showcase Card in 3D Space */
@@ -15776,7 +15829,7 @@ body:has(.app-shell-course-page) {
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
   backdrop-filter: blur(36px) !important;
   -webkit-backdrop-filter: blur(36px) !important;
-  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+  transition: transform 0.5s cubic-bezier(0.2, 0.85, 0.25, 1),
               opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1),
               border-color 0.35s ease,
@@ -15810,36 +15863,53 @@ body:has(.app-shell-course-page) {
               inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
   cursor: default !important;
   pointer-events: auto !important;
+  animation: showcaseSlideInCenter 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.showcase-card.is-center:hover {
+  transform: translate3d(0, -6px, 15px) scale(1.02) !important;
+  border-color: rgba(250, 204, 21, 0.35) !important;
+  box-shadow: 0 40px 90px -10px rgba(0, 0, 0, 0.95),
+              0 0 35px rgba(250, 204, 21, 0.12),
+              inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
 }
 
 .showcase-card.is-left {
-  transform: translate3d(-46%, 0, -110px) rotateY(16deg) scale(0.85) !important;
+  transform: translate3d(-38%, 0, -80px) rotateY(12deg) scale(0.88) !important;
   z-index: 10 !important;
-  opacity: 0.52 !important;
-  filter: brightness(0.72) blur(0.4px) !important;
+  opacity: 0.65 !important;
+  filter: brightness(0.8) blur(0.2px) !important;
   cursor: pointer !important;
+  animation: showcaseSlideInLeft 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both;
 }
 
 .showcase-card.is-left:hover {
-  transform: translate3d(-43%, 0, -60px) rotateY(11deg) scale(0.89) !important;
-  opacity: 0.85 !important;
-  filter: brightness(0.9) blur(0px) !important;
-  border-color: rgba(255, 255, 255, 0.22) !important;
+  transform: translate3d(-34%, -8px, -20px) rotateY(6deg) scale(0.94) !important;
+  opacity: 0.95 !important;
+  filter: brightness(1) blur(0px) !important;
+  border-color: rgba(250, 204, 21, 0.4) !important;
+  box-shadow: 0 35px 75px rgba(0, 0, 0, 0.9),
+              0 0 25px rgba(250, 204, 21, 0.12) !important;
+  z-index: 15 !important;
 }
 
 .showcase-card.is-right {
-  transform: translate3d(46%, 0, -110px) rotateY(-16deg) scale(0.85) !important;
+  transform: translate3d(38%, 0, -80px) rotateY(-12deg) scale(0.88) !important;
   z-index: 10 !important;
-  opacity: 0.52 !important;
-  filter: brightness(0.72) blur(0.4px) !important;
+  opacity: 0.65 !important;
+  filter: brightness(0.8) blur(0.2px) !important;
   cursor: pointer !important;
+  animation: showcaseSlideInRight 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both;
 }
 
 .showcase-card.is-right:hover {
-  transform: translate3d(43%, 0, -60px) rotateY(-11deg) scale(0.89) !important;
-  opacity: 0.85 !important;
-  filter: brightness(0.9) blur(0px) !important;
-  border-color: rgba(255, 255, 255, 0.22) !important;
+  transform: translate3d(34%, -8px, -20px) rotateY(-6deg) scale(0.94) !important;
+  opacity: 0.95 !important;
+  filter: brightness(1) blur(0px) !important;
+  border-color: rgba(250, 204, 21, 0.4) !important;
+  box-shadow: 0 35px 75px rgba(0, 0, 0, 0.9),
+              0 0 25px rgba(250, 204, 21, 0.12) !important;
+  z-index: 15 !important;
 }
 
 /* Ghost Showcase Card for Single-Course Balance */
@@ -16135,16 +16205,28 @@ body:has(.app-shell-course-page) {
 .course-list-row-item {
   background: rgba(20, 20, 20, 0.5) !important;
   border: 1px solid rgba(255, 255, 255, 0.05) !important;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
   position: relative !important;
+  animation: listRowSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes listRowSlideIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(24px, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 .course-list-row-item:hover,
 .course-list-row-item.active-item {
-  background: rgba(250, 204, 21, 0.07) !important;
-  border-color: rgba(250, 204, 21, 0.28) !important;
-  transform: translateX(4px) !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), 0 0 16px rgba(250, 204, 21, 0.08) !important;
+  background: rgba(250, 204, 21, 0.08) !important;
+  border-color: rgba(250, 204, 21, 0.32) !important;
+  transform: translateX(6px) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 18px rgba(250, 204, 21, 0.1) !important;
 }
 
 .course-list-row-item.active-item::before {
@@ -16157,6 +16239,24 @@ body:has(.app-shell-course-page) {
   background: #facc15 !important;
   border-radius: 0 4px 4px 0 !important;
   box-shadow: 0 0 8px rgba(250, 204, 21, 0.6) !important;
+}
+
+/* Unique Milestone Progress Module */
+.unique-progress-card {
+  background: rgba(255, 255, 255, 0.025) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  transition: all 0.25s ease !important;
+}
+
+.showcase-card.is-center:hover .unique-progress-card {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(250, 204, 21, 0.24) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+}
+
+.unique-radial-meter svg circle:last-of-type {
+  filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.55));
 }
 
 .row-item-status-icon {
