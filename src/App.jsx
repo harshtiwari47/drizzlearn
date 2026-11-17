@@ -1,4 +1,4 @@
-import React, { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import React, { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition, lazy, Suspense } from "react";
 import { AmbientFocusStation } from "./components/AmbientFocusStation.jsx";
 import { DiaryTodoSection } from "./components/DiaryTodoSection.jsx";
 import { SnowfallOverlay } from "./components/SnowfallOverlay.jsx";
@@ -47,28 +47,26 @@ import {
 import { HeaderSearchBar } from "./components/HeaderSearchBar.jsx";
 import { MobileNavDrawer } from "./components/MobileNavDrawer.jsx";
 import { AppFooter } from "./components/AppFooter.jsx";
-import {
-  HomePage,
-  Home,
-  CoursesPage,
-  TodayPage,
-  StudyTogetherPage,
-  NotesPage,
-  FlashcardsPage,
-  PracticePage,
-  ProgressPage,
-  TutorPage,
-  SettingsPage,
-  GoalPage,
-  ProposalPage,
-  CoursePage,
-  LessonPage,
-  SearchPage,
-  LoginPage,
-  VerifyPage,
-  ResetPasswordPage,
-  Modal
-} from "./pages";
+import { HomePage, Home } from "./pages/HomePage.jsx";
+
+const CoursesPage = lazy(() => import("./pages/CoursesPage.jsx").then(m => ({ default: m.CoursesPage })));
+const TodayPage = lazy(() => import("./pages/TodayPage.jsx").then(m => ({ default: m.TodayPage })));
+const StudyTogetherPage = lazy(() => import("./pages/StudyTogetherPage.jsx").then(m => ({ default: m.StudyTogetherPage })));
+const NotesPage = lazy(() => import("./pages/NotesPage.jsx").then(m => ({ default: m.NotesPage })));
+const FlashcardsPage = lazy(() => import("./pages/FlashcardsPage.jsx").then(m => ({ default: m.FlashcardsPage })));
+const PracticePage = lazy(() => import("./pages/PracticePage.jsx").then(m => ({ default: m.PracticePage })));
+const ProgressPage = lazy(() => import("./pages/ProgressPage.jsx").then(m => ({ default: m.ProgressPage })));
+const TutorPage = lazy(() => import("./pages/TutorPage.jsx").then(m => ({ default: m.TutorPage })));
+const SettingsPage = lazy(() => import("./pages/SettingsPage.jsx").then(m => ({ default: m.SettingsPage })));
+const GoalPage = lazy(() => import("./pages/GoalPage.jsx").then(m => ({ default: m.GoalPage })));
+const ProposalPage = lazy(() => import("./pages/ProposalPage.jsx").then(m => ({ default: m.ProposalPage })));
+const CoursePage = lazy(() => import("./pages/CoursePage.jsx").then(m => ({ default: m.CoursePage })));
+const LessonPage = lazy(() => import("./pages/LessonPage.jsx").then(m => ({ default: m.LessonPage })));
+const SearchPage = lazy(() => import("./pages/SearchPage.jsx").then(m => ({ default: m.SearchPage })));
+const LoginPage = lazy(() => import("./pages/LoginPage.jsx").then(m => ({ default: m.LoginPage })));
+const VerifyPage = lazy(() => import("./pages/VerifyPage.jsx").then(m => ({ default: m.VerifyPage })));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage.jsx").then(m => ({ default: m.ResetPasswordPage })));
+const Modal = lazy(() => import("./pages/LoginPage.jsx").then(m => ({ default: m.Modal })));
 
 const navItems = [
   ["home","Home","home"],["courses","My Courses","book"],["today","Today’s Plan","calendar"],
@@ -317,6 +315,15 @@ async function requestStream(path, options={}, onProgress){
 const prettyDate=(value,opts={weekday:"short",month:"short",day:"numeric"})=>value?new Intl.DateTimeFormat(undefined,opts).format(new Date(value)):"Not scheduled";
 const minuteLabel=(n)=>`${Number(n)||0} min`;
 
+function RouteSuspenseFallback() {
+  return (
+    <div className="route-suspense-fallback flex flex-col items-center justify-center p-12 min-h-[300px] text-center" role="status" aria-live="polite">
+      <div className="btn-spinner mb-3" style={{ width: "24px", height: "24px" }} />
+      <span className="text-sm text-slate-400">Loading view…</span>
+    </div>
+  );
+}
+
 function PageContent(props){
   const {page,routeParams,routeQuery,data,activeCourse,lessons,activeLesson,dueCards,nextTask,stats,progressPercent,pendingTasks,proposal,busy,go,openLesson}=props;
   const common={...props};
@@ -326,25 +333,27 @@ function PageContent(props){
   return <div className="workspace-page">
     <PageContextBar context={routeContext} go={go}/>
     <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""} ${page==="goal"?"page-heading-goal":""}`}><div>{page==="lesson"&&<span className="eyebrow">{activeLesson?.moduleTitle||"Learning session"}</span>}<h1>{page==="lesson"?activeLesson?.title||"Lesson":titles[page]||"Drizzlearn"}</h1></div>{page==="courses"&&<button className="primary-btn" onClick={()=>go("goal")}><Icon name="plus" size={14}/>Create a course</button>}</div>
-    {page==="courses"&&<CoursesPage {...common}/>}
-    {page==="today"&&<TodayPage {...common}/>}
-    {page==="study-together"&&<StudyTogetherPage {...common}/>}
-    {page==="notes"&&<NotesPage {...common}/>}
-    {page==="flashcards"&&<FlashcardsPage {...common}/>}
-    {page==="practice"&&<PracticePage {...common}/>}
-    {page==="progress"&&<ProgressPage {...common}/>}
-    {page==="tutor"&&<TutorPage {...common}/>}
-    {page==="settings"&&<SettingsPage {...common}/>}
-    {page==="goal"&&<GoalPage {...common}/>}
-    {page==="proposal"&&<ProposalPage {...common}/>}
-    {page==="course"&&<CoursePage {...common}/>}
-    {page==="lesson"&&<LessonPage {...common}/>}
-    {page==="search"&&<SearchPage {...common}/>}
-    {page==="verify"&&<VerifyPage {...common}/>}
-    {page==="reset-password"&&<ResetPasswordPage {...common}/>}
-    {(page==="login"||page==="signup"||page==="auth")&&<LoginPage {...common}/>}
-    {page==="verified"&&<EmptyState title="Your email is verified" body="Your Drizzlearn account is ready. Go back to your workspace and keep learning." action="Go to home" onAction={()=>go("home")}/>}
-    {!titles[page]&&<EmptyState title="This page is ready for your next course" body="Create a learning goal to start building your workspace." action="Create a course" onAction={()=>go("goal")}/>}
+    <Suspense fallback={<RouteSuspenseFallback />}>
+      {page==="courses"&&<CoursesPage {...common}/>}
+      {page==="today"&&<TodayPage {...common}/>}
+      {page==="study-together"&&<StudyTogetherPage {...common}/>}
+      {page==="notes"&&<NotesPage {...common}/>}
+      {page==="flashcards"&&<FlashcardsPage {...common}/>}
+      {page==="practice"&&<PracticePage {...common}/>}
+      {page==="progress"&&<ProgressPage {...common}/>}
+      {page==="tutor"&&<TutorPage {...common}/>}
+      {page==="settings"&&<SettingsPage {...common}/>}
+      {page==="goal"&&<GoalPage {...common}/>}
+      {page==="proposal"&&<ProposalPage {...common}/>}
+      {page==="course"&&<CoursePage {...common}/>}
+      {page==="lesson"&&<LessonPage {...common}/>}
+      {page==="search"&&<SearchPage {...common}/>}
+      {page==="verify"&&<VerifyPage {...common}/>}
+      {page==="reset-password"&&<ResetPasswordPage {...common}/>}
+      {(page==="login"||page==="signup"||page==="auth")&&<LoginPage {...common}/>}
+      {page==="verified"&&<EmptyState title="Your email is verified" body="Your Drizzlearn account is ready. Go back to your workspace and keep learning." action="Go to home" onAction={()=>go("home")}/>}
+      {!titles[page]&&<EmptyState title="This page is ready for your next course" body="Create a learning goal to start building your workspace." action="Create a course" onAction={()=>go("goal")}/>}
+    </Suspense>
   </div>;
 }
 
@@ -840,7 +849,9 @@ export default function App(){
   if(page==="login"||page==="signup"||page==="auth"){
     return <>
       {(syncing||activeRequests>0||busy)&&<div className="global-progress-bar" role="progressbar" aria-label="Loading workspace data"/>}
-      <LoginPage loginMode={loginMode} setLoginMode={setLoginMode} authSubmit={authSubmit} authError={authError} authMessage={authMessage} setAuthError={setAuthError} setAuthMessage={setAuthMessage} go={go} user={user} logout={logout} returnPage={returnPage} authBusy={authBusy} />
+      <Suspense fallback={<RouteSuspenseFallback />}>
+        <LoginPage loginMode={loginMode} setLoginMode={setLoginMode} authSubmit={authSubmit} authError={authError} authMessage={authMessage} setAuthError={setAuthError} setAuthMessage={setAuthMessage} go={go} user={user} logout={logout} returnPage={returnPage} authBusy={authBusy} />
+      </Suspense>
       {toast&&<div className="toast show fixed z-50" role="status" aria-live="polite">{toast}</div>}
     </>;
   }
@@ -952,7 +963,11 @@ export default function App(){
       <AppFooter go={go} />
     </main>
     {toast&&<div className="toast show fixed z-50" role="status" aria-live="polite">{toast}</div>}
-    {modal&&<Modal modal={modal} onClose={()=>{if(!deletingCourseId){setDeleteCourseError("");setModal(null);}}} onApprove={()=>approveProposal(true)} onDeleteCourse={deleteCourse} deletingCourse={Boolean(deletingCourseId)} deleteCourseError={deleteCourseError} loginMode={loginMode} setLoginMode={setLoginMode} authSubmit={authSubmit} authError={authError} authMessage={authMessage} setAuthError={setAuthError} setAuthMessage={setAuthMessage} logout={logout} authBusy={authBusy} />}
+    {modal && (
+      <Suspense fallback={null}>
+        <Modal modal={modal} onClose={()=>{if(!deletingCourseId){setDeleteCourseError("");setModal(null);}}} onApprove={()=>approveProposal(true)} onDeleteCourse={deleteCourse} deletingCourse={Boolean(deletingCourseId)} deleteCourseError={deleteCourseError} loginMode={loginMode} setLoginMode={setLoginMode} authSubmit={authSubmit} authError={authError} authMessage={authMessage} setAuthError={setAuthError} setAuthMessage={setAuthMessage} logout={logout} authBusy={authBusy} />
+      </Suspense>
+    )}
     <MobileNavDrawer
       isOpen={mobileDrawerOpen}
       onClose={() => setMobileDrawerOpen(false)}

@@ -16769,7 +16769,7 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 }
 
 /* ==========================================================================
-   PERFORMANCE & RENDERING OPTIMIZATIONS (CSS Hardware Acceleration & Containment)
+   PERFORMANCE & RENDERING OPTIMIZATIONS (CSS Virtualization, Hardware Acceleration & Containment)
    ========================================================================== */
 .course-library-grid,
 .notes-container,
@@ -16781,6 +16781,19 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 .home-dashboard section,
 .workspace-page section {
   contain: layout;
+}
+
+.sticky-note-timeline,
+.review-playing-cards-panel,
+.custom-progress-canvas,
+.ambient-focus-station {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 340px;
+}
+
+.roadmap-scroll-container {
+  will-change: scroll-position;
+  transform: translateZ(0);
 }
 
 .app-footer,

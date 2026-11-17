@@ -1,4 +1,14 @@
-export { HomePage, Home, HumanProgressAvatar, PlayingCardsReviewSection } from "./HomePage.jsx";
+export {
+  HomePage,
+  Home,
+  HumanProgressAvatar,
+  PlayingCardsReviewSection,
+  HeroInteractiveStage,
+  CurrentCoursePanel,
+  LearningRoadmapPanel,
+  StudyTimelinePanel,
+  ProgressMetricsPanel
+} from "./HomePage.jsx";
 export { CoursesPage } from "./CoursesPage.jsx";
 export { TodayPage } from "./TodayPage.jsx";
 export { StudyTogetherPage } from "./StudyTogetherPage.jsx";
