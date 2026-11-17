@@ -232,8 +232,8 @@ const ShowcaseCard = React.memo(function ShowcaseCard({
         {/* Level & Duration Subtitle */}
         <div className="course-meta-row flex items-center gap-2 text-xs">
           <span className="meta-level-text">{levelText}</span>
-          <span className="meta-dot text-[#607586]">·</span>
-          <span className="meta-duration-text flex items-center gap-1.5 text-[#607586]">
+          <span className="meta-dot text-[#789FC9]/60">·</span>
+          <span className="meta-duration-text flex items-center gap-1.5 text-[#96C3E5]/90">
             <Icon name="clock" size={13} />
             <span>{durationText}</span>
           </span>
@@ -245,7 +245,7 @@ const ShowcaseCard = React.memo(function ShowcaseCard({
         </h3>
 
         {/* Description / Summary */}
-        <p className="showcase-card-desc text-xs text-[#CDE2F4]/85 leading-relaxed line-clamp-3">
+        <p className="showcase-card-desc text-xs text-[#CDE2F4] leading-relaxed line-clamp-3">
           {course.summary || course.desired_outcome || "A comprehensive learning roadmap structured for step-by-step concept mastery."}
         </p>
 
