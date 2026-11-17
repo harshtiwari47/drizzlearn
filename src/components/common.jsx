@@ -188,17 +188,57 @@ export default function App(){
     setBusy(true);
     setGenerationError("");
     setGenerationProgress({stage:"initializing",percent:5,message:"Saving goal & starting curriculum synthesis…",model:"",provider:""});
+
+    const MAX_RETRIES = 4;
+    let goalId = null;
+    let lastError = null;
+
     try{
-      const created=await request("goals",{method:"POST",body:JSON.stringify(form)});
-      const result=await requestStream(`goals/${created.goal.id}/proposal?stream=1`,{method:"POST",body:JSON.stringify({})},(frame)=>{
-        setGenerationProgress(prev=>mergeStreamProgress(prev,frame,"Crafting your customized course…"));
-      });
-      setProposal(result.course);
-      sessionStorage.removeItem("learnos.goal.draft");
-      sessionStorage.removeItem("learnos.goal.prefill");
-      go("proposal",{params:{courseId:result.course?.id}});
-    }catch(error){
-      const msg=error?.message||"Course generation could not be completed.";
+      for(let attempt = 1; attempt <= MAX_RETRIES; attempt++){
+        try{
+          if(!goalId){
+            const created = await request("goals", { method: "POST", body: JSON.stringify(form) });
+            goalId = created.goal.id;
+          }
+
+          if(attempt > 1){
+            setGenerationProgress({
+              stage: "retrying",
+              percent: Math.min(30, 5 + attempt * 6),
+              message: `Refining course structure (auto-retry ${attempt} of ${MAX_RETRIES})…`,
+              model: "",
+              provider: "",
+            });
+            await new Promise((r) => setTimeout(r, 1000));
+          }
+
+          const result = await requestStream(`goals/${goalId}/proposal?stream=1`, { method: "POST", body: JSON.stringify({}) }, (frame) => {
+            setGenerationProgress((prev) => mergeStreamProgress(prev, frame, "Crafting your customized course…"));
+          });
+
+          setProposal(result.course);
+          sessionStorage.removeItem("learnos.goal.draft");
+          sessionStorage.removeItem("learnos.goal.prefill");
+          go("proposal", { params: { courseId: result.course?.id } });
+          return;
+        }catch(error){
+          lastError = error;
+          const errMsg = String(error?.message || "");
+          const isJsonError =
+            error?.code === "AI_INVALID_JSON" ||
+            errMsg.toLowerCase().includes("not valid json") ||
+            errMsg.toLowerCase().includes("invalid json");
+          const isRetryable = isJsonError || error?.details?.retryable || error?.code === "AI_RATE_LIMIT" || error?.code === "AI_PROVIDER_ERROR";
+
+          if(isRetryable && attempt < MAX_RETRIES){
+            console.warn(`[Drizzlearn] Course proposal attempt ${attempt} failed with ${error?.code || errMsg}. Auto-retrying (${attempt + 1}/${MAX_RETRIES})...`);
+            continue;
+          }
+          break;
+        }
+      }
+
+      const msg = lastError?.message || "Course generation could not be completed.";
       setGenerationError(msg);
       flashToast(msg, 7000);
     }finally{

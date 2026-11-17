@@ -60,7 +60,7 @@ function boundedPromptMessages(messages, enforcePromptJson = false) {
   }));
   if (!enforcePromptJson) return mapped;
 
-  const jsonGuard = " Return ONLY a valid raw JSON object without markdown code fences or extra commentary.";
+  const jsonGuard = " IMPORTANT: Your response must be strictly valid JSON and nothing else. No markdown code blocks (do NOT use ```json), no backticks, and no commentary. Properly escape quotes and newlines within strings, avoid trailing commas, and ensure all brackets and braces are closed.";
   const sysIndex = mapped.findIndex((m) => m.role === "system");
   if (sysIndex >= 0) {
     mapped[sysIndex] = {
@@ -177,7 +177,7 @@ async function providerAttempt(
   armTimer(wantsStream ? ttftTimeoutMs : effectiveTimeoutMs);
 
   const useResponseFormat = Boolean(json && candidate.supportsJsonFormat !== false);
-  const enforcePromptJson = Boolean(json && candidate.supportsJsonFormat === false);
+  const enforcePromptJson = Boolean(json);
   const promptMessages = boundedPromptMessages(messages, enforcePromptJson);
   const resolvedMaxTokens = Math.max(128, Math.min(Number(maxTokens) || 1200, MAX_PROVIDER_TOKENS));
   const resolvedTemperature = Math.max(0, Math.min(Number(temperature) || 0, 1));
@@ -313,18 +313,196 @@ async function chat(candidates, options = {}) {
   });
 }
 
-function parseJSON(raw) {
-  const normalized = String(raw).replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-  const first = normalized.indexOf("{");
-  const last = normalized.lastIndexOf("}");
-  if (first < 0 || last < first) {
+function repairJsonString(str) {
+  let text = String(str).trim();
+
+  // Strip leading/trailing markdown code fences
+  text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+
+  // Strip single-line comments // ... outside quotes
+  // and multiline comments /* ... */
+  let cleaned = "";
+  let inString = false;
+  let quoteChar = '"';
+  let escaped = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (inString) {
+      if (escaped) {
+        cleaned += char;
+        escaped = false;
+      } else if (char === "\\") {
+        cleaned += char;
+        escaped = true;
+      } else if (char === quoteChar) {
+        cleaned += '"'; // normalize closing quote to double quote
+        inString = false;
+      } else if (char === "\n") {
+        cleaned += "\\n";
+      } else if (char === "\r") {
+        cleaned += "\\r";
+      } else if (char === "\t") {
+        cleaned += "\\t";
+      } else {
+        cleaned += char;
+      }
+    } else {
+      if (char === '"' || char === "'") {
+        inString = true;
+        quoteChar = char;
+        cleaned += '"'; // normalize to double quote
+      } else if (char === "/" && nextChar === "/") {
+        i += 1;
+        while (i + 1 < text.length && text[i + 1] !== "\n" && text[i + 1] !== "\r") {
+          i++;
+        }
+      } else if (char === "/" && nextChar === "*") {
+        i += 2;
+        while (i + 1 < text.length && !(text[i] === "*" && text[i + 1] === "/")) {
+          i++;
+        }
+        i++;
+      } else {
+        cleaned += char;
+      }
+    }
+  }
+
+  // Remove trailing commas before } or ]
+  cleaned = cleaned.replace(/,\s*([}\]])/g, "$1");
+
+  // Fix unquoted property names like {title: "Test"} -> {"title": "Test"}
+  cleaned = cleaned.replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":');
+
+  return cleaned;
+}
+
+function autoCloseJson(str) {
+  let cleaned = str.trim();
+  let inString = false;
+  let escaped = false;
+  const stack = [];
+
+  for (let i = 0; i < cleaned.length; i++) {
+    const char = cleaned[i];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+    } else {
+      if (char === '"') {
+        inString = true;
+      } else if (char === "{" || char === "[") {
+        stack.push(char === "{" ? "}" : "]");
+      } else if (char === "}" || char === "]") {
+        if (stack.length && stack[stack.length - 1] === char) {
+          stack.pop();
+        }
+      }
+    }
+  }
+
+  if (inString) {
+    cleaned += '"';
+  }
+
+  // Clean any trailing comma before closing
+  cleaned = cleaned.replace(/,\s*$/, "");
+
+  while (stack.length) {
+    cleaned += stack.pop();
+  }
+
+  return cleaned;
+}
+
+export function parseJSON(raw) {
+  if (typeof raw !== "string") {
+    if (raw && typeof raw === "object") return raw;
     throw Object.assign(new Error("The AI response was not valid JSON."), { code: "AI_INVALID_JSON", retryable: true });
   }
+
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    throw Object.assign(new Error("The AI response was not valid JSON."), { code: "AI_INVALID_JSON", retryable: true });
+  }
+
+  // 1. Direct parse attempt
   try {
-    return JSON.parse(normalized.slice(first, last + 1));
-  } catch {
-    throw Object.assign(new Error("The AI response was not valid JSON."), { code: "AI_INVALID_JSON", retryable: true });
+    return JSON.parse(trimmed);
+  } catch (_) {}
+
+  // 2. Extract content from markdown code fences if present
+  let extracted = trimmed;
+  const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fenceMatch && fenceMatch[1]) {
+    extracted = fenceMatch[1].trim();
+    try {
+      return JSON.parse(extracted);
+    } catch (_) {}
   }
+
+  // 3. Extract outermost JSON structure ({...} or [...])
+  const firstBrace = extracted.indexOf("{");
+  const firstBracket = extracted.indexOf("[");
+  let startIdx = -1;
+  let isObject = true;
+
+  if (firstBrace >= 0 && firstBracket >= 0) {
+    if (firstBrace < firstBracket) {
+      startIdx = firstBrace;
+      isObject = true;
+    } else {
+      startIdx = firstBracket;
+      isObject = false;
+    }
+  } else if (firstBrace >= 0) {
+    startIdx = firstBrace;
+    isObject = true;
+  } else if (firstBracket >= 0) {
+    startIdx = firstBracket;
+    isObject = false;
+  }
+
+  if (startIdx >= 0) {
+    const endChar = isObject ? "}" : "]";
+    const lastIdx = extracted.lastIndexOf(endChar);
+    let candidate = lastIdx > startIdx ? extracted.slice(startIdx, lastIdx + 1) : extracted.slice(startIdx);
+
+    try {
+      return JSON.parse(candidate);
+    } catch (_) {}
+
+    // Progressive repair
+    let repaired = repairJsonString(candidate);
+    try {
+      return JSON.parse(repaired);
+    } catch (_) {}
+
+    // Auto-close
+    let closed = autoCloseJson(repaired);
+    try {
+      return JSON.parse(closed);
+    } catch (_) {}
+  }
+
+  // Fallback repair directly on extracted
+  try {
+    return JSON.parse(repairJsonString(extracted));
+  } catch (_) {}
+
+  try {
+    return JSON.parse(autoCloseJson(repairJsonString(extracted)));
+  } catch (_) {}
+
+  throw Object.assign(new Error("The AI response was not valid JSON."), { code: "AI_INVALID_JSON", retryable: true });
 }
 
 function shortText(value, max = 1000) {
@@ -585,83 +763,101 @@ async function agentCourseDraft(candidates, goal, { memory = [], previousPlan = 
     "Work as an independent Drizzlearn course-design specialist. Produce only JSON. Use learner evidence when relevant, and only reference its listed ids. A course must teach the stated practical outcome, not just cover keywords. Keep module prerequisites limited to earlier module positions. Do not invent citations.";
 
   let failoverCount = 0;
-  const outlineRes = await chat(candidates, {
-    stageName: "outline",
-    deadline,
-    maxTokens: 2400,
-    messages: [
-      {
-        role: "system",
-        content:
-          baseInstruction +
-          " You are the curriculum and prerequisite planner. Apply Backward Design (Understanding by Design / UbD): start with the terminal practical outcome the learner must achieve, then design modules in backward progression with explicit prerequisites from foundational core intuition to applied synthesis. Return {title,summary,durationWeeks,assumptions,modules:[{position,title,objective,rationale,prerequisites:[earlier module positions],sourceRefs:[provided ids],lessons:[{position,title,objective,prerequisites:[earlier lesson titles]}]}]}. Create 4-6 modules and 2-3 lessons per module. Objectives should be observable, demonstrable, and ordered logically from foundations to an applied outcome. Fit the learner's weekly budget and level.",
-      },
-      { role: "user", content: JSON.stringify(context) },
-    ],
-  });
-  failoverCount += outlineRes.failoverCount;
-  let preferredKey = outlineRes.candidateKey;
-
+  let preferredKey = null;
   let outline = null;
   let outlineLessonCount = 0;
-  try {
-    outline = parseJSON(outlineRes.result);
-    if (!outline || typeof outline !== "object" || !Array.isArray(outline.modules) || outline.modules.length < 3 || outline.modules.length > 8) {
-      throw aiError("AI_INVALID_PLAN", "The curriculum planner returned an invalid outline. Retry generation; no partial course was saved.", { retryable: true });
-    }
+  let lastOutlineRes = null;
+  const maxOutlineAttempts = Math.min(3, Math.max(2, candidates.length));
+  let outlineCandidates = candidates;
 
-    for (const [moduleIndex, module] of outline.modules.entries()) {
-      if (!module || typeof module !== "object" || !shortText(module.title, 120) || !shortText(module.objective, 600) || !Array.isArray(module.lessons) || module.lessons.length < 1 || module.lessons.length > 8) {
-        throw aiError("AI_INVALID_PLAN", "The curriculum planner returned a module without lessons and a measurable objective. Retry generation; no partial course was saved.", {
-          retryable: true,
-        });
-      }
-      const prerequisites = Array.isArray(module.prerequisites) ? module.prerequisites.map(Number) : [];
-      if (module.prerequisites !== undefined && !Array.isArray(module.prerequisites)) {
-        throw aiError("AI_INVALID_PREREQUISITE", "A module prerequisite list has an invalid format. Retry generation; no partial course was saved.", {
-          retryable: true,
-        });
-      }
-      if (prerequisites.some((position) => !Number.isInteger(position) || position < 1 || position > moduleIndex)) {
-        throw aiError("AI_INVALID_PREREQUISITE", "The curriculum outline points to a missing or later module. Retry generation; no partial course was saved.", {
-          retryable: true,
-        });
-      }
-      for (const [lessonIndex, lesson] of module.lessons.entries()) {
-        outlineLessonCount++;
-        if (!lesson || typeof lesson !== "object" || !shortText(lesson.title, 120) || !shortText(lesson.objective, 600)) {
-          throw aiError("AI_INVALID_LESSON", "The curriculum outline contains an incomplete lesson. Retry generation; no partial course was saved.", {
-            retryable: true,
-          });
-        }
-        if (lesson.prerequisites !== undefined && !Array.isArray(lesson.prerequisites)) {
-          throw aiError("AI_INVALID_PREREQUISITE", "A lesson prerequisite list has an invalid format. Retry generation; no partial course was saved.", {
-            retryable: true,
-          });
-        }
-        const earlierTitles = new Set(
-          outline.modules
-            .slice(0, moduleIndex)
-            .flatMap((item) => (item.lessons || []).map((prior) => shortText(prior.title, 120).toLocaleLowerCase()))
-            .concat(module.lessons.slice(0, lessonIndex).map((prior) => shortText(prior.title, 120).toLocaleLowerCase()))
-        );
-        if ((lesson.prerequisites || []).some((value) => !earlierTitles.has(shortText(String(value), 120).toLocaleLowerCase()))) {
-          throw aiError("AI_INVALID_PREREQUISITE", "The curriculum outline points to a missing or later lesson. Retry generation; no partial course was saved.", {
-            retryable: true,
-          });
-        }
-      }
-    }
-    if (outlineLessonCount > 32) {
-      throw aiError("AI_INVALID_PLAN", "The curriculum outline has too many lessons for one draft. Narrow the goal or retry; no partial course was saved.", {
-        retryable: true,
+  for (let attempt = 1; attempt <= maxOutlineAttempts; attempt++) {
+    try {
+      const outlineRes = await chat(outlineCandidates, {
+        stageName: attempt === 1 ? "outline" : `outline_retry_${attempt}`,
+        deadline,
+        maxTokens: 2400,
+        preferredKey,
+        messages: [
+          {
+            role: "system",
+            content:
+              baseInstruction +
+              " You are the curriculum and prerequisite planner. Apply Backward Design (Understanding by Design / UbD): start with the terminal practical outcome the learner must achieve, then design modules in backward progression with explicit prerequisites from foundational core intuition to applied synthesis. Return {title,summary,durationWeeks,assumptions,modules:[{position,title,objective,rationale,prerequisites:[earlier module positions],sourceRefs:[provided ids],lessons:[{position,title,objective,prerequisites:[earlier lesson titles]}]}]}. Create 4-6 modules and 2-3 lessons per module. Objectives should be observable, demonstrable, and ordered logically from foundations to an applied outcome. Fit the learner's weekly budget and level." +
+              (attempt > 1 ? " CRITICAL: Output ONLY clean, valid, parseable JSON conforming strictly to this schema." : ""),
+          },
+          { role: "user", content: JSON.stringify(context) },
+        ],
       });
+      lastOutlineRes = outlineRes;
+      failoverCount += outlineRes.failoverCount;
+      preferredKey = outlineRes.candidateKey;
+
+      outline = parseJSON(outlineRes.result);
+      if (!outline || typeof outline !== "object" || !Array.isArray(outline.modules) || outline.modules.length < 3 || outline.modules.length > 8) {
+        throw aiError("AI_INVALID_PLAN", "The curriculum planner returned an invalid outline. Retry generation; no partial course was saved.", { retryable: true });
+      }
+
+      outlineLessonCount = 0;
+      for (const [moduleIndex, module] of outline.modules.entries()) {
+        if (!module || typeof module !== "object" || !shortText(module.title, 120) || !shortText(module.objective, 600) || !Array.isArray(module.lessons) || module.lessons.length < 1 || module.lessons.length > 8) {
+          throw aiError("AI_INVALID_PLAN", "The curriculum planner returned a module without lessons and a measurable objective. Retry generation; no partial course was saved.", {
+            retryable: true,
+          });
+        }
+        const prerequisites = Array.isArray(module.prerequisites) ? module.prerequisites.map(Number) : [];
+        if (module.prerequisites !== undefined && !Array.isArray(module.prerequisites)) {
+          throw aiError("AI_INVALID_PREREQUISITE", "A module prerequisite list has an invalid format. Retry generation; no partial course was saved.", {
+            retryable: true,
+          });
+        }
+        if (prerequisites.some((position) => !Number.isInteger(position) || position < 1 || position > moduleIndex)) {
+          throw aiError("AI_INVALID_PREREQUISITE", "The curriculum outline points to a missing or later module. Retry generation; no partial course was saved.", {
+            retryable: true,
+          });
+        }
+        for (const [lessonIndex, lesson] of module.lessons.entries()) {
+          outlineLessonCount++;
+          if (!lesson || typeof lesson !== "object" || !shortText(lesson.title, 120) || !shortText(lesson.objective, 600)) {
+            throw aiError("AI_INVALID_LESSON", "The curriculum outline contains an incomplete lesson. Retry generation; no partial course was saved.", {
+              retryable: true,
+            });
+          }
+          if (lesson.prerequisites !== undefined && !Array.isArray(lesson.prerequisites)) {
+            throw aiError("AI_INVALID_PREREQUISITE", "A lesson prerequisite list has an invalid format. Retry generation; no partial course was saved.", {
+              retryable: true,
+            });
+          }
+          const earlierTitles = new Set(
+            outline.modules
+              .slice(0, moduleIndex)
+              .flatMap((item) => (item.lessons || []).map((prior) => shortText(prior.title, 120).toLocaleLowerCase()))
+              .concat(module.lessons.slice(0, lessonIndex).map((prior) => shortText(prior.title, 120).toLocaleLowerCase()))
+          );
+          if ((lesson.prerequisites || []).some((value) => !earlierTitles.has(shortText(String(value), 120).toLocaleLowerCase()))) {
+            throw aiError("AI_INVALID_PREREQUISITE", "The curriculum outline points to a missing or later lesson. Retry generation; no partial course was saved.", {
+              retryable: true,
+            });
+          }
+        }
+      }
+      if (outlineLessonCount > 32) {
+        throw aiError("AI_INVALID_PLAN", "The curriculum outline has too many lessons for one draft. Narrow the goal or retry; no partial course was saved.", {
+          retryable: true,
+        });
+      }
+      break;
+    } catch (err) {
+      if (attempt >= maxOutlineAttempts) {
+        if (err && !err.failedCandidateKey && lastOutlineRes?.candidateKey) {
+          err.failedCandidateKey = lastOutlineRes.candidateKey;
+        }
+        throw err;
+      }
+      if (preferredKey && candidates.length > 1) {
+        outlineCandidates = candidates.filter((c) => candidateKey(c) !== preferredKey);
+        if (!outlineCandidates.length) outlineCandidates = candidates;
+      }
     }
-  } catch (err) {
-    if (err && !err.failedCandidateKey) {
-      err.failedCandidateKey = outlineRes.candidateKey;
-    }
-    throw err;
   }
 
   emitProgress(onProgress, {
@@ -959,50 +1155,69 @@ export async function generatePlan(goal, { memory = [], previousPlan = null, fee
       throw error;
     }
 
-    const repairCandidates =
+    const baseRepairCandidates =
       error?.failedCandidateKey && candidates.length > 1
         ? candidates.filter((c) => candidateKey(c) !== error.failedCandidateKey)
         : candidates;
 
-    const repairRes = await chat(repairCandidates, {
-      stageName: "repair",
-      deadline,
-      maxTokens: 6500,
-      preferredKey: draft?.preferredKey || null,
-      messages: [
-        {
-          role: "system",
-          content:
-            "Repair this Drizzlearn course proposal as JSON. Keep the learner's outcome and requested changes. Follow Backward Design and Faded Scaffolding. Return the same complete schema: title, summary, durationWeeks, assumptions, modules with objectives/prerequisites/sourceRefs, and lessons with title, objective, prerequisites, content (mental model, clear steps, pitfalls), workedExample (concrete steps with explicit reasoning), estimatedMinutes, sourceRefs and checkpoint(question testing applied reasoning, options, answerIndex, actionable explanation). Ensure 3-8 modules, no orphan module prerequisites, 1-8 lessons per module, and every checkpoint answer index is valid. Use only the supplied source ids.",
-        },
-        {
-          role: "user",
-          content: JSON.stringify({
-            goal: goalInput(goal),
-            learnerEvidence: contextForPrompt(memory),
-            previousPlan,
-            requestedChanges: feedback,
-            invalidDraft: draft?.plan || null,
-            validationError: error.message,
-          }),
-        },
-      ],
-    });
+    let activeRepairCandidates = baseRepairCandidates.length ? baseRepairCandidates : candidates;
+    const maxRepairAttempts = Math.min(3, Math.max(2, activeRepairCandidates.length));
+    let lastRepairRes = null;
+    let lastRepairErr = null;
 
-    const normalized = normalizePlan(parseJSON(repairRes.result), goal, memory);
-    emitProgress(onProgress, {
-      stage: "finalizing",
-      percent: 96,
-      message: "Repaired course structure and validated checkpoints.",
-      model: repairRes.model,
-      provider: repairRes.provider,
-    });
-    return {
-      ...normalized,
-      modelUsed: repairRes.model,
-      providerUsed: repairRes.provider,
-      failoverCount: (draft?.failoverCount || 0) + repairRes.failoverCount,
-    };
+    for (let repairAttempt = 1; repairAttempt <= maxRepairAttempts; repairAttempt++) {
+      try {
+        const repairRes = await chat(activeRepairCandidates, {
+          stageName: repairAttempt === 1 ? "repair" : `repair_retry_${repairAttempt}`,
+          deadline,
+          maxTokens: 6500,
+          preferredKey: draft?.preferredKey || null,
+          messages: [
+            {
+              role: "system",
+              content:
+                "Repair this Drizzlearn course proposal as JSON. Keep the learner's outcome and requested changes. Follow Backward Design and Faded Scaffolding. Return the same complete schema: title, summary, durationWeeks, assumptions, modules with objectives/prerequisites/sourceRefs, and lessons with title, objective, prerequisites, content (mental model, clear steps, pitfalls), workedExample (concrete steps with explicit reasoning), estimatedMinutes, sourceRefs and checkpoint(question testing applied reasoning, options, answerIndex, actionable explanation). Ensure 3-8 modules, no orphan module prerequisites, 1-8 lessons per module, and every checkpoint answer index is valid. Use only the supplied source ids. Return ONLY valid JSON with no markdown formatting.",
+            },
+            {
+              role: "user",
+              content: JSON.stringify({
+                goal: goalInput(goal),
+                learnerEvidence: contextForPrompt(memory),
+                previousPlan,
+                requestedChanges: feedback,
+                invalidDraft: draft?.plan || null,
+                validationError: error.message,
+              }),
+            },
+          ],
+        });
+        lastRepairRes = repairRes;
+
+        const normalized = normalizePlan(parseJSON(repairRes.result), goal, memory);
+        emitProgress(onProgress, {
+          stage: "finalizing",
+          percent: 96,
+          message: "Repaired course structure and validated checkpoints.",
+          model: repairRes.model,
+          provider: repairRes.provider,
+        });
+        return {
+          ...normalized,
+          modelUsed: repairRes.model,
+          providerUsed: repairRes.provider,
+          failoverCount: (draft?.failoverCount || 0) + repairRes.failoverCount,
+        };
+      } catch (repairErr) {
+        lastRepairErr = repairErr;
+        if (repairAttempt >= maxRepairAttempts) break;
+        if (lastRepairRes?.candidateKey && candidates.length > 1) {
+          activeRepairCandidates = candidates.filter((c) => candidateKey(c) !== lastRepairRes.candidateKey);
+          if (!activeRepairCandidates.length) activeRepairCandidates = candidates;
+        }
+      }
+    }
+
+    throw lastRepairErr || error;
   }
 }
 
@@ -1628,12 +1843,13 @@ const VALID_FLASHCARD_TYPES = new Set(["qa", "cloze", "formula", "application"])
  * Validates and normalizes AI-generated flashcards, deduplicating against existing cards.
  */
 export function normalizeGeneratedFlashcards(rawPayload, existingFronts = []) {
-  const list = Array.isArray(rawPayload?.flashcards)
-    ? rawPayload.flashcards
-    : Array.isArray(rawPayload?.cards)
-    ? rawPayload.cards
-    : Array.isArray(rawPayload)
-    ? rawPayload
+  const parsed = typeof rawPayload === "string" ? parseJSON(rawPayload) : rawPayload;
+  const list = Array.isArray(parsed?.flashcards)
+    ? parsed.flashcards
+    : Array.isArray(parsed?.cards)
+    ? parsed.cards
+    : Array.isArray(parsed)
+    ? parsed
     : [];
 
   const seen = new Set(

@@ -14,18 +14,48 @@ function ProposalPage(p){
     setImproveError("");
     setImproving(true);
     setImproveProgress({stage:"initializing",percent:5,message:"Starting proposal revision…",model:"",provider:""});
+
+    const MAX_RETRIES = 3;
+    let lastError = null;
+
     try{
-      const result=await p.requestStream(`courses/${course.id}/improve?stream=1`,{method:"POST",body:JSON.stringify({feedback:improveText})},(frame)=>{
-        setImproveProgress(prev=>mergeStreamProgress(prev,frame,"Revising your course proposal…"));
-      });
-      if(!result?.course){
-        throw new Error("The revised proposal could not be loaded. Your current proposal is still available.");
+      for(let attempt = 1; attempt <= MAX_RETRIES; attempt++){
+        try{
+          if(attempt > 1){
+            setImproveProgress({
+              stage: "retrying",
+              percent: 15,
+              message: `Refining revision format (retry ${attempt} of ${MAX_RETRIES})…`,
+              model: "",
+              provider: "",
+            });
+            await new Promise((r) => setTimeout(r, 1000));
+          }
+
+          const result=await p.requestStream(`courses/${course.id}/improve?stream=1`,{method:"POST",body:JSON.stringify({feedback:improveText})},(frame)=>{
+            setImproveProgress(prev=>mergeStreamProgress(prev,frame,"Revising your course proposal…"));
+          });
+          if(!result?.course){
+            throw new Error("The revised proposal could not be loaded. Your current proposal is still available.");
+          }
+          p.setProposal(result.course);
+          setImproveText("");
+          p.flashToast("A revised draft is ready. Review it before approving.");
+          return;
+        }catch(err){
+          lastError = err;
+          const errMsg = String(err?.message || "");
+          const isJsonError =
+            err?.code === "AI_INVALID_JSON" ||
+            errMsg.toLowerCase().includes("not valid json") ||
+            errMsg.toLowerCase().includes("invalid json");
+          const isRetryable = isJsonError || err?.details?.retryable || err?.code === "AI_RATE_LIMIT";
+
+          if(isRetryable && attempt < MAX_RETRIES) continue;
+          break;
+        }
       }
-      p.setProposal(result.course);
-      setImproveText("");
-      p.flashToast("A revised draft is ready. Review it before approving.");
-    }catch(error){
-      setImproveError(error?.message||"The revision could not be generated. Your current proposal is still available.");
+      setImproveError(lastError?.message || "The revision could not be generated. Your current proposal is still available.");
     }finally{
       setImproving(false);
       setImproveProgress(null);

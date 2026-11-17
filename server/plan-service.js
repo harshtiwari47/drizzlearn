@@ -29,7 +29,34 @@ function withFeasibility(course,goal,plan){
 
 export async function generateCourseProposal(userId,goalId,{onProgress}={}){
   const result=await query("SELECT * FROM learning_goals WHERE id=$1 AND user_id=$2",[goalId,userId]),goal=result.rows[0];if(!goal)return null;
-  const memory=await retrieveLearnerContext(userId,`${goal.topic} ${goal.desired_outcome}`,{limit:10,deepRag:true}),plan=await generatePlan(goal,{memory,onProgress}),courseId=crypto.randomUUID();
+  const memory=await retrieveLearnerContext(userId,`${goal.topic} ${goal.desired_outcome}`,{limit:10,deepRag:true});
+  let plan=null;
+  let lastErr=null;
+  for(let attempt=1;attempt<=3;attempt++){
+    try{
+      plan=await generatePlan(goal,{memory,onProgress});
+      if(plan)break;
+    }catch(err){
+      lastErr=err;
+      const isJsonError=err?.code==="AI_INVALID_JSON"||String(err?.message||"").toLowerCase().includes("not valid json");
+      if((isJsonError||err?.retryable)&&attempt<3){
+        if(typeof onProgress==="function"){
+          try{
+            onProgress({
+              stage:"retrying",
+              percent:15,
+              message:`Formatting course curriculum (server retry ${attempt+1} of 3)…`
+            });
+          }catch(_){}
+        }
+        await new Promise(r=>setTimeout(r,600));
+        continue;
+      }
+      throw err;
+    }
+  }
+  if(!plan)throw lastErr||new Error("Failed to generate course plan.");
+  const courseId=crypto.randomUUID();
   const course=await withTransaction(async client=>{
     await client.query(`INSERT INTO ai_jobs(user_id,job_type,status,input_ref,output_ref,finished_at) VALUES($1,'course_plan','succeeded',$2,$3,NOW())`,[userId,JSON.stringify({goalId,memorySourceCount:memory.length}),JSON.stringify({title:plan.title,modules:plan.modules.length,lessons:plan.modules.reduce((n,module)=>n+module.lessons.length,0),generationMode:plan.generationMode,modelUsed:plan.modelUsed||null,providerUsed:plan.providerUsed||null,failoverCount:plan.failoverCount||0})]);
     await client.query(`INSERT INTO courses(id,user_id,goal_id,title,summary,status,estimated_minutes,assumptions) VALUES($1,$2,$3,$4,$5,'proposal',$6,$7)`,[courseId,userId,goalId,plan.title,plan.summary,plan.estimatedMinutes,JSON.stringify(plan.assumptions)]);
@@ -47,7 +74,32 @@ export async function improveCourseProposal(userId,courseId,feedback,{onProgress
     FROM course_modules m LEFT JOIN lessons l ON l.module_id=m.id WHERE m.course_id=$1 GROUP BY m.id ORDER BY m.position`,[courseId]);
   const previousPlan={title:course.title,summary:course.summary,durationWeeks:course.target_weeks,assumptions:course.assumptions,modules:moduleResult.rows.map(module=>({...module,sourceRefs:module.source_refs}))};
   const memory=await retrieveLearnerContext(userId,`${course.topic} ${course.desired_outcome} ${feedback}`,{limit:10,courseId,deepRag:true});
-  const plan=await generatePlan(course,{memory,previousPlan,feedback,onProgress});
+  let plan=null;
+  let lastErr=null;
+  for(let attempt=1;attempt<=3;attempt++){
+    try{
+      plan=await generatePlan(course,{memory,previousPlan,feedback,onProgress});
+      if(plan)break;
+    }catch(err){
+      lastErr=err;
+      const isJsonError=err?.code==="AI_INVALID_JSON"||String(err?.message||"").toLowerCase().includes("not valid json");
+      if((isJsonError||err?.retryable)&&attempt<3){
+        if(typeof onProgress==="function"){
+          try{
+            onProgress({
+              stage:"retrying",
+              percent:15,
+              message:`Refining revision structure (server retry ${attempt+1} of 3)…`
+            });
+          }catch(_){}
+        }
+        await new Promise(r=>setTimeout(r,600));
+        continue;
+      }
+      throw err;
+    }
+  }
+  if(!plan)throw lastErr||new Error("Failed to generate course plan.");
   const improved=await withTransaction(async client=>{
     const locked=await client.query("SELECT id,status FROM courses WHERE id=$1 AND user_id=$2 FOR UPDATE",[courseId,userId]);
     if(!locked.rows[0]||locked.rows[0].status!=="proposal")throw Object.assign(new Error("This proposal was already approved or is no longer available."),{code:"COURSE_NOT_PROPOSAL"});
