@@ -17636,19 +17636,19 @@ body:has(.app-shell-create-course-page) {
   color: #F3F7F1 !important;
 }
 
-/* Page Container (Clean Centered Layout) */
+/* Page Container (Wide & Balanced for High-End Displays) */
 .create-course-page-container {
   width: 100% !important;
-  max-width: 740px !important;
+  max-width: 1100px !important;
   margin: 0 auto !important;
-  padding: 0 16px 64px !important;
+  padding: 16px 24px 64px !important;
 }
 
 .workspace-page:has(.create-course-page-container),
 .workspace-create-course-page {
-  max-width: 740px !important;
+  max-width: 1100px !important;
   margin: 0 auto !important;
-  padding: 16px 16px 0 !important;
+  padding: 16px 24px 0 !important;
 }
 
 .workspace-create-course-page .create-course-page-container {
@@ -17656,131 +17656,10 @@ body:has(.app-shell-create-course-page) {
   padding-right: 0 !important;
 }
 
-/* ==========================================================================
-   DRIZZLEARN BREADCRUMB & CONTEXT BAR (/create/course) - EMERALD GLASS UI
-   ========================================================================== */
-
+/* Breadcrumb Removed on Create Course Page as requested */
 .app-shell-create-course-page .page-context-bar,
 .workspace-create-course-page .page-context-bar {
-  display: flex !important;
-  align-items: center !important;
-  flex-wrap: wrap !important;
-  gap: 12px 18px !important;
-  margin: 0 0 28px 0 !important;
-  padding: 0 !important;
-}
-
-/* Modern Back Button (Emerald Glass Pill with Lime Icon) */
-.app-shell-create-course-page .page-back-btn,
-.workspace-create-course-page .page-back-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  min-height: 36px !important;
-  padding: 6px 16px !important;
-  border-radius: 9999px !important;
-  background: rgba(14, 38, 26, 0.72) !important;
-  border: 1px solid rgba(207, 221, 208, 0.28) !important;
-  color: #E5EFE6 !important;
-  font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  letter-spacing: -0.01em !important;
-  text-decoration: none !important;
-  white-space: nowrap !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(207, 221, 208, 0.18) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.app-shell-create-course-page .page-back-btn svg,
-.workspace-create-course-page .page-back-btn svg {
-  color: #D6E69A !important; /* Lime: #D6E69A arrow */
-  flex-shrink: 0 !important;
-  transition: transform 0.2s ease !important;
-}
-
-.app-shell-create-course-page .page-back-btn:hover,
-.workspace-create-course-page .page-back-btn:hover {
-  background: linear-gradient(135deg, rgba(38, 121, 78, 0.45) 0%, rgba(17, 95, 56, 0.55) 100%) !important;
-  border-color: #26794E !important;
-  color: #FFFFFF !important;
-  box-shadow: 0 6px 20px rgba(17, 95, 56, 0.45), inset 0 1px 0 rgba(214, 230, 154, 0.4) !important;
-  transform: translateY(-1.5px) !important;
-}
-
-.app-shell-create-course-page .page-back-btn:hover svg,
-.workspace-create-course-page .page-back-btn:hover svg {
-  transform: translateX(-3px) !important;
-  color: #FFFFFF !important;
-}
-
-/* Breadcrumb Navigation Trail */
-.app-shell-create-course-page .page-breadcrumb,
-.workspace-create-course-page .page-breadcrumb {
-  display: flex !important;
-  align-items: center !important;
-  min-width: 0 !important;
-}
-
-.app-shell-create-course-page .page-breadcrumb-list,
-.workspace-create-course-page .page-breadcrumb-list {
-  display: flex !important;
-  align-items: center !important;
-  flex-wrap: wrap !important;
-  gap: 6px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  list-style: none !important;
-}
-
-.app-shell-create-course-page .page-breadcrumb-item,
-.workspace-create-course-page .page-breadcrumb-item {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  font-size: 13px !important;
-  line-height: 1.3 !important;
-}
-
-/* Breadcrumb Link (Home, My Courses) */
-.app-shell-create-course-page .page-breadcrumb-link,
-.workspace-create-course-page .page-breadcrumb-link {
-  color: #A8C5A8 !important; /* Sage: #A8C5A8 */
-  font-weight: 500 !important;
-  text-decoration: none !important;
-  padding: 4px 8px !important;
-  border-radius: 6px !important;
-  transition: all 0.18s ease !important;
-}
-
-.app-shell-create-course-page .page-breadcrumb-link:hover,
-.workspace-create-course-page .page-breadcrumb-link:hover {
-  color: #D6E69A !important; /* Lime: #D6E69A */
-  background: rgba(17, 95, 56, 0.25) !important;
-}
-
-/* Breadcrumb Separator (Chevron >) */
-.app-shell-create-course-page .page-breadcrumb-sep,
-.workspace-create-course-page .page-breadcrumb-sep {
-  display: inline-flex !important;
-  align-items: center !important;
-  color: rgba(168, 197, 168, 0.45) !important;
-  flex-shrink: 0 !important;
-}
-
-/* Current Page (Create a course) */
-.app-shell-create-course-page .page-breadcrumb-current,
-.workspace-create-course-page .page-breadcrumb-current {
-  color: #F3F7F1 !important; /* Off-white: #F3F7F1 */
-  font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-  font-weight: 700 !important;
-  padding: 4px 10px !important;
-  border-radius: 8px !important;
-  background: rgba(207, 221, 208, 0.08) !important;
-  border: 1px solid rgba(207, 221, 208, 0.18) !important;
-  white-space: nowrap !important;
+  display: none !important;
 }
 
 /* Page Header */
@@ -17790,7 +17669,7 @@ body:has(.app-shell-create-course-page) {
 
 .create-course-title {
   font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-  font-size: clamp(28px, 3.5vw, 36px) !important;
+  font-size: clamp(28px, 3.5vw, 38px) !important;
   font-weight: 800 !important;
   letter-spacing: -0.03em !important;
   color: #F3F7F1 !important;
@@ -17799,29 +17678,113 @@ body:has(.app-shell-create-course-page) {
 }
 
 .create-course-subtitle {
-  font-size: 14.5px !important;
+  font-size: 15px !important;
   color: #A8C5A8 !important; /* Sage */
   opacity: 0.95 !important;
   margin: 0 !important;
   line-height: 1.5 !important;
 }
 
-/* Main Form Card - Deep Emerald Glass Surface */
+/* Main Form Card - Deep Emerald Glass Surface with Dynamic Cursor Green Glow */
 .create-course-form-card {
-  background: linear-gradient(165deg, rgba(24, 49, 38, 0.88) 0%, rgba(17, 95, 56, 0.38) 45%, rgba(11, 71, 43, 0.78) 100%) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  background: linear-gradient(165deg, rgba(24, 49, 38, 0.92) 0%, rgba(17, 95, 56, 0.42) 45%, rgba(11, 71, 43, 0.82) 100%) !important;
   border: 1px solid rgba(207, 221, 208, 0.32) !important; /* Border: #CFDDD0 */
-  border-radius: 24px !important;
-  padding: clamp(22px, 3.8vw, 36px) !important;
+  border-radius: 28px !important;
+  padding: clamp(24px, 3.5vw, 40px) !important;
   box-shadow: 
     0 24px 60px rgba(0, 0, 0, 0.7),
     0 0 35px rgba(17, 95, 56, 0.25),
-    inset 0 1px 0 rgba(207, 221, 208, 0.45),
-    inset 0 0 24px rgba(17, 95, 56, 0.15) !important;
+    inset 0 1px 0 rgba(207, 221, 208, 0.45) !important;
   backdrop-filter: blur(28px) !important;
   -webkit-backdrop-filter: blur(28px) !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 22px !important;
+  gap: 24px !important;
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  --spotlight-opacity: 0;
+}
+
+/* Green Light Glow Near Cursor (Inner Radial Spotlight) */
+.create-course-form-card::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  border-radius: inherit !important;
+  background: radial-gradient(
+    520px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(38, 121, 78, 0.45) 0%,
+    rgba(17, 95, 56, 0.28) 32%,
+    rgba(214, 230, 154, 0.09) 55%,
+    transparent 75%
+  ) !important;
+  opacity: var(--spotlight-opacity, 0) !important;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  z-index: 1 !important;
+}
+
+/* Illuminated Border Glow Following Cursor */
+.create-course-form-card::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: -1px !important;
+  pointer-events: none !important;
+  border-radius: inherit !important;
+  padding: 1px !important;
+  background: radial-gradient(
+    420px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(214, 230, 154, 0.75) 0%,
+    rgba(38, 121, 78, 0.5) 35%,
+    rgba(17, 95, 56, 0.2) 60%,
+    transparent 75%
+  ) !important;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  -webkit-mask-composite: xor !important;
+  mask-composite: exclude !important;
+  opacity: var(--spotlight-opacity, 0) !important;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  z-index: 1 !important;
+}
+
+/* Ensure card children sit above the cursor spotlight */
+.create-course-form-card > * {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+/* Multi-Column Responsive Row Grid for High-End Devices */
+.create-course-columns-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 28px 36px !important;
+  width: 100% !important;
+  align-items: stretch !important;
+}
+
+.create-course-col {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+}
+
+.create-course-field-grow {
+  flex: 1 !important;
+}
+
+.create-course-textarea-fill {
+  min-height: 140px !important;
+  height: 100% !important;
+  resize: vertical !important;
+}
+
+@media (max-width: 900px) {
+  .create-course-columns-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
 }
 
 /* Form Fields */

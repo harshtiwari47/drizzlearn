@@ -52,6 +52,21 @@ function CreateCoursePage(props) {
     }
   };
 
+  const handleMouseMove = (e) => {
+    if (!formRef.current) return;
+    const rect = formRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    formRef.current.style.setProperty("--mouse-x", `${x}px`);
+    formRef.current.style.setProperty("--mouse-y", `${y}px`);
+    formRef.current.style.setProperty("--spotlight-opacity", "1");
+  };
+
+  const handleMouseLeave = () => {
+    if (!formRef.current) return;
+    formRef.current.style.setProperty("--spotlight-opacity", "0");
+  };
+
   return (
     <div className="create-course-page-container">
       {/* Page Header */}
@@ -62,144 +77,158 @@ function CreateCoursePage(props) {
         </p>
       </div>
 
-      {/* Main Clean Form Card */}
-      <form ref={formRef} className="create-course-form-card" onSubmit={handleSubmit}>
-        {/* Field 1: Topic */}
-        <div className="create-course-field">
-          <label htmlFor="course-topic" className="create-course-label">
-            What do you want to learn?
-          </label>
-          <input
-            id="course-topic"
-            type="text"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            required
-            minLength={2}
-            maxLength={120}
-            placeholder="e.g. Node.js Foundations, Spanish, Cloud Architecture..."
-            className="create-course-input"
-          />
-        </div>
+      {/* Main Responsive Form Card with Interactive Cursor Green Glow */}
+      <form
+        ref={formRef}
+        className="create-course-form-card"
+        onSubmit={handleSubmit}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="create-course-columns-grid">
+          {/* Left Column: Course Scope & Demonstration */}
+          <div className="create-course-col">
+            {/* Field 1: Topic */}
+            <div className="create-course-field">
+              <label htmlFor="course-topic" className="create-course-label">
+                What do you want to learn?
+              </label>
+              <input
+                id="course-topic"
+                type="text"
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                required
+                minLength={2}
+                maxLength={120}
+                placeholder="e.g. Node.js Foundations, Spanish, Cloud Architecture..."
+                className="create-course-input"
+              />
+            </div>
 
-        {/* Field 2: Outcome */}
-        <div className="create-course-field">
-          <label htmlFor="course-outcome" className="create-course-label">
-            What do you want to be able to do?
-          </label>
-          <textarea
-            id="course-outcome"
-            value={outcome}
-            onChange={(e) => setOutcome(e.target.value)}
-            required
-            minLength={8}
-            placeholder="Describe a practical outcome you can demonstrate..."
-            className="create-course-textarea"
-            rows={3}
-          />
-        </div>
-
-        {/* Field 3: Level & Purpose */}
-        <div className="create-course-grid-two">
-          <div className="create-course-field">
-            <label htmlFor="course-level" className="create-course-label">
-              Current level
-            </label>
-            <select
-              id="course-level"
-              value={level}
-              onChange={(e) => setLevel(e.target.value)}
-              className="create-course-select"
-            >
-              <option value="Beginner">Beginner</option>
-              <option value="Some experience">Some experience</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
-            </select>
+            {/* Field 2: Outcome */}
+            <div className="create-course-field create-course-field-grow">
+              <label htmlFor="course-outcome" className="create-course-label">
+                What do you want to be able to do?
+              </label>
+              <textarea
+                id="course-outcome"
+                value={outcome}
+                onChange={(e) => setOutcome(e.target.value)}
+                required
+                minLength={8}
+                placeholder="Describe a practical outcome you can demonstrate upon course completion..."
+                className="create-course-textarea create-course-textarea-fill"
+                rows={5}
+              />
+            </div>
           </div>
 
-          <div className="create-course-field">
-            <label htmlFor="course-purpose" className="create-course-label">
-              Purpose
-            </label>
-            <select
-              id="course-purpose"
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              className="create-course-select"
-            >
-              <option value="Personal learning">Personal learning</option>
-              <option value="School or university">School or university</option>
-              <option value="Work project">Work project</option>
-              <option value="Career transition">Career transition</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </div>
+          {/* Right Column: Parameters, Cadence & Target Date */}
+          <div className="create-course-col">
+            {/* Field 3: Level & Purpose */}
+            <div className="create-course-grid-two">
+              <div className="create-course-field">
+                <label htmlFor="course-level" className="create-course-label">
+                  Current level
+                </label>
+                <select
+                  id="course-level"
+                  value={level}
+                  onChange={(e) => setLevel(e.target.value)}
+                  className="create-course-select"
+                >
+                  <option value="Beginner">Beginner</option>
+                  <option value="Some experience">Some experience</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
+              </div>
 
-        {/* Field 4: Weekly Hours & Duration */}
-        <div className="create-course-grid-two">
-          <div className="create-course-field">
-            <label htmlFor="course-weekly-hours" className="create-course-label">
-              Hours each week
-            </label>
-            <select
-              id="course-weekly-hours"
-              value={weekly}
-              onChange={(e) => setWeekly(Number(e.target.value))}
-              className="create-course-select"
-            >
-              <option value="180">3 hours / week</option>
-              <option value="360">6 hours / week</option>
-              <option value="600">10 hours / week</option>
-              <option value="900">15 hours / week</option>
-              <option value="1200">20 hours / week</option>
-            </select>
-          </div>
+              <div className="create-course-field">
+                <label htmlFor="course-purpose" className="create-course-label">
+                  Purpose
+                </label>
+                <select
+                  id="course-purpose"
+                  value={purpose}
+                  onChange={(e) => setPurpose(e.target.value)}
+                  className="create-course-select"
+                >
+                  <option value="Personal learning">Personal learning</option>
+                  <option value="School or university">School or university</option>
+                  <option value="Work project">Work project</option>
+                  <option value="Career transition">Career transition</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
 
-          <div className="create-course-field">
-            <label htmlFor="course-duration" className="create-course-label">
-              Target duration
-            </label>
-            <select
-              id="course-duration"
-              value={weeks}
-              onChange={(e) => setWeeks(Number(e.target.value))}
-              className="create-course-select"
-            >
-              <option value="4">4 weeks</option>
-              <option value="8">8 weeks</option>
-              <option value="10">10 weeks</option>
-              <option value="12">12 weeks</option>
-              <option value="16">16 weeks</option>
-            </select>
-          </div>
-        </div>
+            {/* Field 4: Weekly Hours & Duration */}
+            <div className="create-course-grid-two">
+              <div className="create-course-field">
+                <label htmlFor="course-weekly-hours" className="create-course-label">
+                  Hours each week
+                </label>
+                <select
+                  id="course-weekly-hours"
+                  value={weekly}
+                  onChange={(e) => setWeekly(Number(e.target.value))}
+                  className="create-course-select"
+                >
+                  <option value="180">3 hours / week</option>
+                  <option value="360">6 hours / week</option>
+                  <option value="600">10 hours / week</option>
+                  <option value="900">15 hours / week</option>
+                  <option value="1200">20 hours / week</option>
+                </select>
+              </div>
 
-        {/* Field 5: Target Date */}
-        <div className="create-course-field">
-          <div className="flex items-center justify-between">
-            <label htmlFor="course-date" className="create-course-label">
-              Target date
-            </label>
-            <span className="optional-label">Optional</span>
+              <div className="create-course-field">
+                <label htmlFor="course-duration" className="create-course-label">
+                  Target duration
+                </label>
+                <select
+                  id="course-duration"
+                  value={weeks}
+                  onChange={(e) => setWeeks(Number(e.target.value))}
+                  className="create-course-select"
+                >
+                  <option value="4">4 weeks</option>
+                  <option value="8">8 weeks</option>
+                  <option value="10">10 weeks</option>
+                  <option value="12">12 weeks</option>
+                  <option value="16">16 weeks</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Field 5: Target Date */}
+            <div className="create-course-field">
+              <div className="flex items-center justify-between">
+                <label htmlFor="course-date" className="create-course-label">
+                  Target date
+                </label>
+                <span className="optional-label">Optional</span>
+              </div>
+              <p className="create-course-field-hint">
+                Set a completion deadline to pace your lessons and daily study blocks.
+              </p>
+              <input
+                id="course-date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                onClick={(e) => {
+                  try {
+                    e.target.showPicker?.();
+                  } catch (_) {}
+                }}
+                min={new Date().toISOString().slice(0, 10)}
+                className="create-course-input"
+              />
+            </div>
           </div>
-          <p className="create-course-field-hint">
-            Set a completion deadline to pace your lessons and daily study blocks.
-          </p>
-          <input
-            id="course-date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            onClick={(e) => {
-              try {
-                e.target.showPicker?.();
-              } catch (_) {}
-            }}
-            min={new Date().toISOString().slice(0, 10)}
-            className="create-course-input"
-          />
         </div>
 
         {/* Progress Display */}
