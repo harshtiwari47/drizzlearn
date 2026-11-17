@@ -9,17 +9,17 @@ const CardHeaderGraphic = React.memo(function CardHeaderGraphic({ isProposal }) 
     return (
       <svg className="card-header-art-svg" viewBox="0 0 160 80" fill="none" aria-hidden="true">
         {/* Constellation Network Nodes for Proposal Plan */}
-        <circle cx="135" cy="18" r="4.5" fill="#a855f7" fillOpacity="0.85" />
-        <circle cx="95" cy="28" r="3.5" fill="#818cf8" fillOpacity="0.75" />
-        <circle cx="120" cy="56" r="5" fill="#84cc16" fillOpacity="0.85" />
-        <circle cx="68" cy="65" r="3" fill="#c084fc" fillOpacity="0.6" />
-        <circle cx="40" cy="35" r="2.5" fill="#a855f7" fillOpacity="0.5" />
-        <line x1="135" y1="18" x2="95" y2="28" stroke="#a855f7" strokeWidth="1.2" strokeOpacity="0.4" />
-        <line x1="95" y1="28" x2="120" y2="56" stroke="#a855f7" strokeWidth="1.2" strokeOpacity="0.4" />
-        <line x1="120" y1="56" x2="68" y2="65" stroke="#84cc16" strokeWidth="1.2" strokeOpacity="0.4" />
-        <line x1="135" y1="18" x2="120" y2="56" stroke="#818cf8" strokeWidth="1" strokeOpacity="0.3" />
-        <line x1="40" y1="35" x2="95" y2="28" stroke="#a855f7" strokeWidth="0.8" strokeOpacity="0.25" />
-        <line x1="40" y1="35" x2="68" y2="65" stroke="#c084fc" strokeWidth="0.8" strokeOpacity="0.25" />
+        <circle cx="135" cy="18" r="4.5" fill="#789FC9" fillOpacity="0.85" />
+        <circle cx="95" cy="28" r="3.5" fill="#526F93" fillOpacity="0.75" />
+        <circle cx="120" cy="56" r="5" fill="#4A9B66" fillOpacity="0.85" />
+        <circle cx="68" cy="65" r="3" fill="#96C3E5" fillOpacity="0.6" />
+        <circle cx="40" cy="35" r="2.5" fill="#789FC9" fillOpacity="0.5" />
+        <line x1="135" y1="18" x2="95" y2="28" stroke="#526F93" strokeWidth="1.2" strokeOpacity="0.4" />
+        <line x1="95" y1="28" x2="120" y2="56" stroke="#789FC9" strokeWidth="1.2" strokeOpacity="0.4" />
+        <line x1="120" y1="56" x2="68" y2="65" stroke="#4A9B66" strokeWidth="1.2" strokeOpacity="0.4" />
+        <line x1="135" y1="18" x2="120" y2="56" stroke="#96C3E5" strokeWidth="1" strokeOpacity="0.3" />
+        <line x1="40" y1="35" x2="95" y2="28" stroke="#526F93" strokeWidth="0.8" strokeOpacity="0.25" />
+        <line x1="40" y1="35" x2="68" y2="65" stroke="#96C3E5" strokeWidth="0.8" strokeOpacity="0.25" />
       </svg>
     );
   }
@@ -27,12 +27,12 @@ const CardHeaderGraphic = React.memo(function CardHeaderGraphic({ isProposal }) 
   return (
     <svg className="card-header-art-svg" viewBox="0 0 160 80" fill="none" aria-hidden="true">
       {/* Circuit Trace & Orbital Nodes for Active Learning Path */}
-      <path d="M 20 40 L 65 40 L 85 22 L 138 22" stroke="#06b6d4" strokeWidth="1.2" strokeOpacity="0.4" />
-      <path d="M 65 40 L 85 58 L 125 58" stroke="#10b981" strokeWidth="1.2" strokeOpacity="0.4" />
-      <circle cx="138" cy="22" r="4.5" fill="#06b6d4" fillOpacity="0.85" />
-      <circle cx="125" cy="58" r="4" fill="#10b981" fillOpacity="0.85" />
-      <rect x="98" y="14" width="16" height="16" rx="3.5" stroke="#06b6d4" strokeWidth="1" strokeOpacity="0.45" />
-      <circle cx="65" cy="40" r="2.5" fill="#38bdf8" />
+      <path d="M 20 40 L 65 40 L 85 22 L 138 22" stroke="#526F93" strokeWidth="1.2" strokeOpacity="0.5" />
+      <path d="M 65 40 L 85 58 L 125 58" stroke="#4A9B66" strokeWidth="1.2" strokeOpacity="0.5" />
+      <circle cx="138" cy="22" r="4.5" fill="#789FC9" fillOpacity="0.9" />
+      <circle cx="125" cy="58" r="4" fill="#4A9B66" fillOpacity="0.9" />
+      <rect x="98" y="14" width="16" height="16" rx="3.5" stroke="#789FC9" strokeWidth="1" strokeOpacity="0.55" />
+      <circle cx="65" cy="40" r="2.5" fill="#96C3E5" />
     </svg>
   );
 });
@@ -52,7 +52,7 @@ const CourseProgressGauge = React.memo(function CourseProgressGauge({
     <div className="unique-progress-card p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center gap-3.5 relative overflow-hidden">
       {/* Ambient Radial Core Light */}
       <div
-        className="absolute -right-4 -top-4 w-20 h-20 rounded-full bg-amber-400/[0.06] blur-xl pointer-events-none"
+        className="absolute -right-4 -top-4 w-20 h-20 rounded-full bg-[#789FC9]/[0.08] blur-xl pointer-events-none"
         aria-hidden="true"
       />
 
@@ -64,7 +64,7 @@ const CourseProgressGauge = React.memo(function CourseProgressGauge({
             cy="22"
             r="18"
             fill="none"
-            stroke="rgba(255, 255, 255, 0.08)"
+            stroke="rgba(150, 195, 229, 0.15)"
             strokeWidth="3.5"
           />
           <circle
@@ -72,7 +72,7 @@ const CourseProgressGauge = React.memo(function CourseProgressGauge({
             cy="22"
             r="18"
             fill="none"
-            stroke="#facc15"
+            stroke="#4A9B66"
             strokeWidth="3.5"
             strokeDasharray={113.1}
             strokeDashoffset={113.1 - (113.1 * Math.max(percent, percent > 0 ? 5 : 0)) / 100}
@@ -80,7 +80,7 @@ const CourseProgressGauge = React.memo(function CourseProgressGauge({
             className="transition-all duration-700 ease-out"
           />
         </svg>
-        <span className="absolute font-display font-extrabold text-[11px] text-amber-300">
+        <span className="absolute font-display font-extrabold text-[11px] text-[#EEF6FB]">
           {percent}%
         </span>
       </div>
@@ -88,10 +88,10 @@ const CourseProgressGauge = React.memo(function CourseProgressGauge({
       {/* Milestone Info & Segmented Capsule Track */}
       <div className="flex flex-col flex-1 min-w-0">
         <div className="flex items-center justify-between gap-1 mb-1.5">
-          <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase font-display">
+          <span className="text-[10px] font-bold tracking-wider text-[#607586] uppercase font-display">
             Course Progress
           </span>
-          <span className="text-[11px] font-semibold text-amber-300/90 truncate">
+          <span className="text-[11px] font-semibold text-[#96C3E5] truncate">
             {done > 0 ? `${done} / ${total} lessons` : `${modulesCount} modules`}
           </span>
         </div>
@@ -108,9 +108,9 @@ const CourseProgressGauge = React.memo(function CourseProgressGauge({
                 key={idx}
                 className={`milestone-capsule flex-1 h-2 rounded-full transition-all duration-300 ${
                   isComplete
-                    ? "bg-amber-400 shadow-[0_0_8px_rgba(250,204,21,0.6)]"
+                    ? "bg-[#4A9B66] shadow-[0_0_8px_rgba(74,155,102,0.65)]"
                     : isCurrent && percent > 0
-                    ? "bg-amber-400/40 border border-amber-300/60 animate-pulse"
+                    ? "bg-[#4A9B66]/35 border border-[#4A9B66] animate-pulse"
                     : "bg-white/[0.08]"
                 }`}
                 title={`Module ${idx + 1}`}
@@ -142,14 +142,14 @@ const GhostShowcaseCard = React.memo(function GhostShowcaseCard({ position, go }
         }
       }}
     >
-      <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 grid place-items-center text-cyan-400 mb-3">
+      <div className="w-12 h-12 rounded-2xl bg-[#526F93]/20 border border-[#789FC9]/30 grid place-items-center text-[#96C3E5] mb-3">
         <span className="text-xl">✦</span>
       </div>
-      <strong className="text-white text-base font-bold mb-1">New Learning Goal</strong>
-      <p className="text-xs text-slate-400 max-w-[200px] mb-4">
+      <strong className="text-[#EEF6FB] text-base font-bold mb-1">New Learning Goal</strong>
+      <p className="text-xs text-[#607586] max-w-[200px] mb-4">
         Add another skill to your workspace roadmap.
       </p>
-      <span className="text-xs font-semibold text-cyan-300 py-1.5 px-3 rounded-lg bg-cyan-500/15 border border-cyan-500/25">
+      <span className="text-xs font-semibold text-[#EEF6FB] py-1.5 px-3 rounded-lg bg-[#526F93]/35 border border-[#789FC9]/50 shadow-[0_0_12px_rgba(120,159,201,0.25)]">
         Create plan ↗
       </span>
     </article>
@@ -208,7 +208,7 @@ const ShowcaseCard = React.memo(function ShowcaseCard({
         <div className="flex items-center gap-2 relative z-10">
           {isProposal && (
             <span className="showcase-cat-pill flex items-center gap-1.5">
-              <span className="cat-spark text-amber-300 text-xs">✦</span>
+              <span className="cat-spark text-[#789FC9] text-xs">✦</span>
               <span>DRAFT PLAN</span>
             </span>
           )}
@@ -232,20 +232,20 @@ const ShowcaseCard = React.memo(function ShowcaseCard({
         {/* Level & Duration Subtitle */}
         <div className="course-meta-row flex items-center gap-2 text-xs">
           <span className="meta-level-text">{levelText}</span>
-          <span className="meta-dot text-slate-500">·</span>
-          <span className="meta-duration-text flex items-center gap-1.5 text-slate-400">
+          <span className="meta-dot text-[#607586]">·</span>
+          <span className="meta-duration-text flex items-center gap-1.5 text-[#607586]">
             <Icon name="clock" size={13} />
             <span>{durationText}</span>
           </span>
         </div>
 
         {/* Title */}
-        <h3 className="showcase-card-title text-xl font-extrabold text-white leading-snug tracking-tight">
+        <h3 className="showcase-card-title text-xl font-extrabold text-[#EEF6FB] leading-snug tracking-tight">
           {course.title}
         </h3>
 
         {/* Description / Summary */}
-        <p className="showcase-card-desc text-xs text-slate-400 leading-relaxed line-clamp-3">
+        <p className="showcase-card-desc text-xs text-[#CDE2F4]/85 leading-relaxed line-clamp-3">
           {course.summary || course.desired_outcome || "A comprehensive learning roadmap structured for step-by-step concept mastery."}
         </p>
 
@@ -364,11 +364,11 @@ const CourseDirectoryItem = React.memo(function CourseDirectoryItem({
     >
       {/* Left: Info */}
       <div className="flex flex-col min-w-0 flex-1">
-        <strong className="row-item-title text-sm font-bold text-white truncate group-hover:text-yellow-200">
+        <strong className="row-item-title text-sm font-bold text-[#EEF6FB] truncate group-hover:text-white">
           {course.title}
         </strong>
-        <div className="row-item-meta flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
-          <span className="text-amber-300 font-semibold">{course.current_level || "Beginner"}</span>
+        <div className="row-item-meta flex items-center gap-1.5 text-[11px] text-[#607586] mt-0.5">
+          <span className="text-[#96C3E5] font-semibold">{course.current_level || "Beginner"}</span>
           <span>•</span>
           <span>{course.target_weeks || 8} wks</span>
           <span>•</span>
@@ -379,18 +379,18 @@ const CourseDirectoryItem = React.memo(function CourseDirectoryItem({
       {/* Right: Progress Indicator & Action Arrow */}
       <div className="row-item-right flex items-center gap-3 flex-shrink-0">
         <div className="flex flex-col items-end">
-          <span className={`text-xs font-bold ${percent > 0 ? "text-amber-300" : "text-slate-400"}`}>
+          <span className={`text-xs font-bold ${percent > 0 ? "text-[#4A9B66]" : "text-[#607586]"}`}>
             {percent}%
           </span>
           <div className="w-12 h-1 rounded-full bg-white/[0.08] overflow-hidden mt-1">
             <div
-              className="h-full bg-gradient-to-r from-amber-400 to-yellow-300 rounded-full"
+              className="h-full bg-gradient-to-r from-[#789FC9] to-[#4A9B66] rounded-full"
               style={{ width: `${percent}%` }}
             />
           </div>
         </div>
 
-        <span className="row-item-arrow text-slate-400 text-sm font-bold pl-1">
+        <span className="row-item-arrow text-[#96C3E5] text-sm font-bold pl-1">
           ›
         </span>
       </div>
@@ -435,7 +435,7 @@ const CoursesFilterBar = React.memo(function CoursesFilterBar({
           );
         })}
       </div>
-      <div className="text-xs text-slate-400 font-medium">
+      <div className="text-xs text-[#607586] font-medium">
         Showing {visibleCount} of {totalCount} course{totalCount === 1 ? "" : "s"}
       </div>
     </div>
@@ -592,7 +592,7 @@ const CoursesDirectory = React.memo(function CoursesDirectory({
           {/* Matches Brand Logo 'LEARN' Electric Cyan */}
           <span className="courses-directory-title">All Courses</span>
         </div>
-        <span className="directory-count-badge text-xs font-bold px-2.5 py-0.5 rounded-full bg-yellow-500/10 text-yellow-300 border border-yellow-500/20">
+        <span className="directory-count-badge text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#526F93]/20 text-[#96C3E5] border border-[#789FC9]/30">
           {visible.length} available
         </span>
       </div>
@@ -600,7 +600,7 @@ const CoursesDirectory = React.memo(function CoursesDirectory({
       {/* Search Filter Input */}
       <div className="directory-search-wrap px-4 py-3 border-b border-white/[0.06] bg-black/25">
         <div className="relative flex items-center w-full">
-          <span className="absolute left-3 text-slate-400 pointer-events-none">
+          <span className="absolute left-3 text-[#607586] pointer-events-none">
             <Icon name="search" size={14} />
           </span>
           <input
@@ -608,7 +608,7 @@ const CoursesDirectory = React.memo(function CoursesDirectory({
             placeholder="Search courses by title or topic..."
             value={searchQuery}
             onChange={onSearchChange}
-            className="directory-search-input w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-slate-500 focus:outline-none focus:border-yellow-400/50 transition-colors"
+            className="directory-search-input w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-white/[0.04] border border-white/[0.08] text-[#EEF6FB] placeholder-[#607586] focus:outline-none focus:border-[#789FC9]/60 transition-colors"
           />
           {searchQuery && (
             <button

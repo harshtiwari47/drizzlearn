@@ -15699,22 +15699,21 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
-  width: 480px !important;
-  height: 420px !important;
+  width: 500px !important;
+  height: 440px !important;
   border-radius: 50% !important;
   background: conic-gradient(
     from 0deg at 50% 50%,
-    rgba(6, 182, 212, 0.48) 0deg,
-    rgba(56, 189, 248, 0.45) 60deg,
-    rgba(168, 85, 247, 0.5) 120deg,
-    rgba(236, 72, 153, 0.38) 180deg,
-    rgba(16, 185, 129, 0.42) 240deg,
-    rgba(59, 130, 246, 0.48) 300deg,
-    rgba(6, 182, 212, 0.48) 360deg
+    rgba(120, 159, 201, 0.45) 0deg,
+    rgba(82, 111, 147, 0.55) 70deg,
+    rgba(30, 50, 74, 0.7) 140deg,
+    rgba(74, 155, 102, 0.35) 200deg,
+    rgba(150, 195, 229, 0.5) 270deg,
+    rgba(120, 159, 201, 0.45) 360deg
   ) !important;
   transform: translate(-50%, -50%) !important;
-  filter: blur(60px) !important;
-  animation: movingColorCenter 12s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite !important;
+  filter: blur(65px) !important;
+  animation: movingColorCenter 14s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite !important;
   pointer-events: none !important;
   z-index: 2 !important;
 }
@@ -15724,7 +15723,7 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   position: absolute !important;
   inset: 15% !important;
   border-radius: 50% !important;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.6) 0%, rgba(168, 85, 247, 0.45) 50%, transparent 75%) !important;
+  background: radial-gradient(circle, rgba(150, 195, 229, 0.55) 0%, rgba(82, 111, 147, 0.4) 45%, transparent 75%) !important;
   filter: blur(40px) !important;
   animation: movingColorCorePulse 6s ease-in-out infinite !important;
 }
@@ -15737,18 +15736,24 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   z-index: 1 !important;
 }
 
-/* App Shell Course Page: Deep Black with minimal yellow radial gradient circle */
+/* App Shell Course Page: Primary Blue Gradient (Deep Navy #1E324A, Steel Blue #526F93, Sky Blue #789FC9) */
 .app-shell.app-shell-course-page,
 .app-shell[data-page="courses"],
 .app-shell[data-page="course"] {
-  background-color: #030303 !important;
-  background-image: radial-gradient(
-    circle 540px at 50% 30%,
-    rgba(250, 204, 21, 0.16) 0%,
-    rgba(234, 179, 8, 0.08) 35%,
-    rgba(161, 98, 7, 0.02) 60%,
-    transparent 72%
-  ) !important;
+  background-color: #0c1520 !important;
+  background-image: 
+    radial-gradient(
+      circle 700px at 50% 28%,
+      rgba(82, 111, 147, 0.3) 0%,
+      rgba(30, 50, 74, 0.45) 40%,
+      rgba(12, 21, 32, 0.88) 72%,
+      transparent 100%
+    ),
+    radial-gradient(
+      circle 900px at 85% 15%,
+      rgba(120, 159, 201, 0.14) 0%,
+      transparent 60%
+    ) !important;
   background-attachment: fixed !important;
   background-repeat: no-repeat !important;
   background-size: cover !important;
@@ -15758,8 +15763,8 @@ select option { color: var(--color-text) !important; background: var(--color-sur
 body[data-page="courses"],
 body[data-page="course"],
 body:has(.app-shell-course-page) {
-  background-color: #030303 !important;
-  background: #030303 !important;
+  background-color: #0c1520 !important;
+  background: #0c1520 !important;
 }
 
 /* 3D Perspective Deck Stage */
@@ -15816,14 +15821,14 @@ body:has(.app-shell-course-page) {
   }
 }
 
-/* Modern Showcase Card in 3D Space */
+/* Modern Showcase Card in 3D Space (Deep Navy #1E324A & Steel Blue #526F93 Surfaces) */
 .showcase-card {
   position: absolute !important;
   width: min(390px, 86%) !important;
   border-radius: 32px !important;
-  background: rgba(12, 12, 12, 0.72) !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  background: linear-gradient(165deg, rgba(24, 40, 62, 0.85) 0%, rgba(14, 25, 42, 0.94) 100%) !important;
+  border: 1px solid rgba(150, 195, 229, 0.2) !important;
+  box-shadow: 0 24px 60px rgba(6, 14, 24, 0.88), inset 0 1px 0 rgba(205, 226, 244, 0.25) !important;
   backdrop-filter: blur(36px) !important;
   -webkit-backdrop-filter: blur(36px) !important;
   transition: transform 0.5s cubic-bezier(0.2, 0.85, 0.25, 1),
@@ -15836,7 +15841,7 @@ body:has(.app-shell-course-page) {
   overflow: hidden !important;
 }
 
-/* Gradient blurry background aura inside card - subtle warm golden/white blur */
+/* Gradient blurry background aura inside card - subtle Sky Blue / Ice Blue specular highlight */
 .showcase-card::before {
   content: "" !important;
   position: absolute !important;
@@ -15844,7 +15849,7 @@ body:has(.app-shell-course-page) {
   left: -20% !important;
   width: 140% !important;
   height: 80% !important;
-  background: radial-gradient(ellipse at 50% 0%, rgba(250, 204, 21, 0.08) 0%, rgba(255, 255, 255, 0.03) 40%, transparent 70%) !important;
+  background: radial-gradient(ellipse at 50% 0%, rgba(120, 159, 201, 0.16) 0%, rgba(205, 226, 244, 0.05) 45%, transparent 70%) !important;
   filter: blur(35px) !important;
   pointer-events: none !important;
   z-index: 0 !important;
@@ -15854,10 +15859,10 @@ body:has(.app-shell-course-page) {
   transform: translate3d(0, 0, 0) scale(1) !important;
   z-index: 20 !important;
   opacity: 1 !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 32px 75px -10px rgba(0, 0, 0, 0.92),
-              0 0 28px rgba(250, 204, 21, 0.07),
-              inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(120, 159, 201, 0.42) !important;
+  box-shadow: 0 32px 80px -10px rgba(5, 12, 22, 0.95),
+              0 0 35px rgba(82, 111, 147, 0.3),
+              inset 0 1px 0 rgba(238, 246, 251, 0.35) !important;
   cursor: default !important;
   pointer-events: auto !important;
   animation: showcaseSlideInCenter 1.15s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -15865,17 +15870,17 @@ body:has(.app-shell-course-page) {
 
 .showcase-card.is-center:hover {
   transform: translate3d(0, -6px, 15px) scale(1.02) !important;
-  border-color: rgba(250, 204, 21, 0.35) !important;
-  box-shadow: 0 40px 90px -10px rgba(0, 0, 0, 0.95),
-              0 0 35px rgba(250, 204, 21, 0.12),
-              inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+  border-color: #789FC9 !important;
+  box-shadow: 0 40px 95px -10px rgba(4, 10, 18, 0.98),
+              0 0 45px rgba(120, 159, 201, 0.35),
+              inset 0 1px 0 rgba(238, 246, 251, 0.45) !important;
 }
 
 .showcase-card.is-left {
   transform: translate3d(-38%, 0, -80px) rotateY(12deg) scale(0.88) !important;
   z-index: 10 !important;
   opacity: 0.65 !important;
-  filter: brightness(0.8) blur(0.2px) !important;
+  filter: brightness(0.85) blur(0.2px) !important;
   cursor: pointer !important;
   animation: showcaseSlideInLeft 1.25s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
@@ -15884,9 +15889,9 @@ body:has(.app-shell-course-page) {
   transform: translate3d(-34%, -8px, -20px) rotateY(6deg) scale(0.94) !important;
   opacity: 0.95 !important;
   filter: brightness(1) blur(0px) !important;
-  border-color: rgba(250, 204, 21, 0.4) !important;
-  box-shadow: 0 35px 75px rgba(0, 0, 0, 0.9),
-              0 0 25px rgba(250, 204, 21, 0.12) !important;
+  border-color: rgba(120, 159, 201, 0.5) !important;
+  box-shadow: 0 35px 75px rgba(4, 10, 18, 0.9),
+              0 0 30px rgba(82, 111, 147, 0.25) !important;
   z-index: 15 !important;
 }
 
@@ -15894,7 +15899,7 @@ body:has(.app-shell-course-page) {
   transform: translate3d(38%, 0, -80px) rotateY(-12deg) scale(0.88) !important;
   z-index: 10 !important;
   opacity: 0.65 !important;
-  filter: brightness(0.8) blur(0.2px) !important;
+  filter: brightness(0.85) blur(0.2px) !important;
   cursor: pointer !important;
   animation: showcaseSlideInRight 1.25s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
@@ -15903,9 +15908,9 @@ body:has(.app-shell-course-page) {
   transform: translate3d(34%, -8px, -20px) rotateY(-6deg) scale(0.94) !important;
   opacity: 0.95 !important;
   filter: brightness(1) blur(0px) !important;
-  border-color: rgba(250, 204, 21, 0.4) !important;
-  box-shadow: 0 35px 75px rgba(0, 0, 0, 0.9),
-              0 0 25px rgba(250, 204, 21, 0.12) !important;
+  border-color: rgba(120, 159, 201, 0.5) !important;
+  box-shadow: 0 35px 75px rgba(4, 10, 18, 0.9),
+              0 0 30px rgba(82, 111, 147, 0.25) !important;
   z-index: 15 !important;
 }
 
@@ -15919,8 +15924,8 @@ body:has(.app-shell-course-page) {
 }
 
 .showcase-ghost-card:hover {
-  border-color: rgba(250, 204, 21, 0.4) !important;
-  background: rgba(250, 204, 21, 0.05) !important;
+  border-color: rgba(120, 159, 201, 0.4) !important;
+  background: rgba(82, 111, 147, 0.1) !important;
 }
 
 /* Card Header Decorative Graphic Art */
@@ -15939,15 +15944,15 @@ body:has(.app-shell-course-page) {
   height: 100% !important;
 }
 
-/* Specular Top Bar with Subtle Warm Blurry Gradient Glow */
+/* Specular Top Bar with Sky Blue / Ice Blue Specular Glow */
 .course-card-glow-bar {
   position: absolute !important;
   top: 0 !important;
   left: 10% !important;
   right: 10% !important;
   height: 2px !important;
-  background: linear-gradient(90deg, transparent 0%, rgba(250, 204, 21, 0.8) 50%, transparent 100%) !important;
-  box-shadow: 0 0 24px 6px rgba(250, 204, 21, 0.32), 0 0 12px 2px rgba(255, 255, 255, 0.16) !important;
+  background: linear-gradient(90deg, transparent 0%, #789FC9 50%, transparent 100%) !important;
+  box-shadow: 0 0 24px 6px rgba(120, 159, 201, 0.45), 0 0 12px 2px rgba(205, 226, 244, 0.35) !important;
   filter: blur(0.5px) !important;
   opacity: 0.85 !important;
   pointer-events: none !important;
@@ -15961,11 +15966,11 @@ body:has(.app-shell-course-page) {
   font-weight: 800 !important;
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
-  color: #f1f5f9 !important;
+  color: #EEF6FB !important;
   padding: 4px 11px !important;
   border-radius: 9999px !important;
-  background: rgba(13, 24, 38, 0.8) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(30, 50, 74, 0.75) !important;
+  border: 1px solid rgba(150, 195, 229, 0.3) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
@@ -15992,25 +15997,25 @@ body:has(.app-shell-course-page) {
 }
 
 .showcase-status-badge.active {
-  background: rgba(16, 185, 129, 0.16) !important;
-  border: 1px solid rgba(16, 185, 129, 0.35) !important;
-  color: #34d399 !important;
+  background: rgba(74, 155, 102, 0.18) !important;
+  border: 1px solid rgba(74, 155, 102, 0.45) !important;
+  color: #4A9B66 !important;
 }
 
 .showcase-status-badge.active .status-dot {
-  background: #10b981 !important;
-  box-shadow: 0 0 8px #10b981 !important;
+  background: #4A9B66 !important;
+  box-shadow: 0 0 8px #4A9B66 !important;
 }
 
 .showcase-status-badge.proposal {
-  background: rgba(168, 85, 247, 0.16) !important;
-  border: 1px solid rgba(168, 85, 247, 0.35) !important;
-  color: #c084fc !important;
+  background: rgba(120, 159, 201, 0.18) !important;
+  border: 1px solid rgba(120, 159, 201, 0.4) !important;
+  color: #96C3E5 !important;
 }
 
 .showcase-status-badge.proposal .status-dot {
-  background: #a855f7 !important;
-  box-shadow: 0 0 8px #a855f7 !important;
+  background: #789FC9 !important;
+  box-shadow: 0 0 8px #789FC9 !important;
 }
 
 .showcase-status-badge.suspended {
@@ -16026,14 +16031,14 @@ body:has(.app-shell-course-page) {
 
 /* Level & Duration */
 .meta-level-text {
-  color: #facc15 !important;
+  color: #96C3E5 !important;
   font-weight: 700 !important;
   font-size: 12.5px !important;
   letter-spacing: 0.02em !important;
 }
 
 .meta-duration-text {
-  color: #94a3b8 !important;
+  color: #607586 !important;
   font-weight: 600 !important;
   font-size: 12.5px !important;
 }
@@ -16043,10 +16048,12 @@ body:has(.app-shell-course-page) {
   font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
   letter-spacing: -0.025em !important;
   margin: 0 !important;
+  color: #EEF6FB !important;
 }
 
 .showcase-card-desc {
-  color: #94a3b8 !important;
+  color: #CDE2F4 !important;
+  opacity: 0.85 !important;
   font-size: 13px !important;
   line-height: 1.55 !important;
   margin: 0 !important;
@@ -16058,62 +16065,62 @@ body:has(.app-shell-course-page) {
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(30, 50, 74, 0.6) !important;
+  border: 1px solid rgba(150, 195, 229, 0.22) !important;
   border-radius: 9999px !important;
   padding: 5px 12px !important;
   font-size: 11.5px !important;
   font-weight: 600 !important;
-  color: #cbd5e1 !important;
+  color: #CDE2F4 !important;
   transition: background 0.2s ease, border-color 0.2s ease !important;
 }
 
 .showcase-card.is-center:hover .showcase-chip {
-  background: rgba(255, 255, 255, 0.07) !important;
-  border-color: rgba(250, 204, 21, 0.25) !important;
+  background: rgba(82, 111, 147, 0.32) !important;
+  border-color: rgba(120, 159, 201, 0.45) !important;
 }
 
 .showcase-chip svg {
-  color: #facc15 !important;
+  color: #789FC9 !important;
 }
 
 /* Progress Bar */
 .showcase-progress-section .progress-track {
   height: 6.5px !important;
-  background: rgba(255, 255, 255, 0.07) !important;
+  background: rgba(150, 195, 229, 0.1) !important;
   border-radius: 9999px !important;
-  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(150, 195, 229, 0.08) !important;
   overflow: hidden !important;
 }
 
 .showcase-progress-section .progress-fill {
   height: 100% !important;
-  background: linear-gradient(90deg, #facc15 0%, #eab308 100%) !important;
+  background: linear-gradient(90deg, #789FC9 0%, #4A9B66 100%) !important;
   border-radius: 9999px !important;
-  box-shadow: 0 0 10px rgba(250, 204, 21, 0.45) !important;
+  box-shadow: 0 0 10px rgba(74, 155, 102, 0.45) !important;
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-/* Action Buttons */
+/* Action Buttons (Primary Blue Gradient #1E324A -> #526F93, Sky Blue #789FC9 Border) */
 .showcase-primary-btn {
   padding: 8.5px 20px !important;
   border-radius: 14px !important;
   font-size: 13px !important;
   font-weight: 700 !important;
   letter-spacing: 0.02em !important;
-  background: rgba(250, 204, 21, 0.12) !important;
-  color: #fef08a !important;
-  border: 1px solid rgba(250, 204, 21, 0.45) !important;
-  box-shadow: 0 0 16px rgba(250, 204, 21, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  background: linear-gradient(135deg, #526F93 0%, #1E324A 100%) !important;
+  color: #EEF6FB !important;
+  border: 1px solid #789FC9 !important;
+  box-shadow: 0 4px 18px rgba(12, 24, 38, 0.6), inset 0 1px 0 rgba(205, 226, 244, 0.35) !important;
   backdrop-filter: blur(12px) !important;
   transition: all 0.2s ease !important;
 }
 
 .showcase-primary-btn:hover:not(:disabled) {
-  background: #facc15 !important;
-  color: #1a1600 !important;
-  border-color: #fde047 !important;
-  box-shadow: 0 0 24px rgba(250, 204, 21, 0.55) !important;
+  background: linear-gradient(135deg, #789FC9 0%, #526F93 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #96C3E5 !important;
+  box-shadow: 0 0 26px rgba(120, 159, 201, 0.55), inset 0 1px 0 #EEF6FB !important;
   transform: translateY(-1px) !important;
 }
 
@@ -16146,16 +16153,16 @@ body:has(.app-shell-course-page) {
   width: 44px !important;
   height: 44px !important;
   border-radius: 13px !important;
-  background: rgba(16, 16, 16, 0.76) !important;
+  background: rgba(22, 38, 58, 0.82) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  color: #cbd5e1 !important;
+  border: 1px solid rgba(150, 195, 229, 0.25) !important;
+  color: #CDE2F4 !important;
   display: grid !important;
   place-items: center !important;
   cursor: pointer !important;
   z-index: 35 !important;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 10px 28px rgba(6, 14, 24, 0.65), inset 0 1px 0 rgba(205, 226, 244, 0.2) !important;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
   user-select: none !important;
 }
@@ -16169,10 +16176,10 @@ body:has(.app-shell-course-page) {
 }
 
 .showcase-side-nav-arrow:hover:not(:disabled) {
-  background: rgba(250, 204, 21, 0.16) !important;
-  color: #facc15 !important;
-  border-color: rgba(250, 204, 21, 0.5) !important;
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.72), 0 0 24px rgba(250, 204, 21, 0.28) !important;
+  background: rgba(82, 111, 147, 0.45) !important;
+  color: #EEF6FB !important;
+  border-color: #789FC9 !important;
+  box-shadow: 0 14px 32px rgba(6, 14, 24, 0.75), 0 0 24px rgba(120, 159, 201, 0.4) !important;
   transform: translateY(-50%) scale(1.1) !important;
 }
 
@@ -16182,8 +16189,8 @@ body:has(.app-shell-course-page) {
 
 .showcase-side-nav-arrow:focus-visible {
   outline: none !important;
-  border-color: #facc15 !important;
-  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.35) !important;
+  border-color: #789FC9 !important;
+  box-shadow: 0 0 0 3px rgba(120, 159, 201, 0.35) !important;
 }
 
 .showcase-side-nav-arrow:disabled {
@@ -16196,9 +16203,9 @@ body:has(.app-shell-course-page) {
   width: 32px !important;
   height: 32px !important;
   border-radius: 8px !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: #cbd5e1 !important;
+  background: rgba(30, 50, 74, 0.4) !important;
+  border: 1px solid rgba(150, 195, 229, 0.2) !important;
+  color: #CDE2F4 !important;
   display: grid !important;
   place-items: center !important;
   font-size: 18px !important;
@@ -16207,9 +16214,9 @@ body:has(.app-shell-course-page) {
 }
 
 .showcase-nav-arrow:hover:not(:disabled) {
-  background: rgba(250, 204, 21, 0.12) !important;
-  color: #facc15 !important;
-  border-color: rgba(250, 204, 21, 0.35) !important;
+  background: rgba(82, 111, 147, 0.35) !important;
+  color: #EEF6FB !important;
+  border-color: #789FC9 !important;
 }
 
 .showcase-nav-arrow:disabled {
@@ -16221,7 +16228,7 @@ body:has(.app-shell-course-page) {
   width: 8px !important;
   height: 8px !important;
   border-radius: 9999px !important;
-  background: rgba(255, 255, 255, 0.15) !important;
+  background: rgba(150, 195, 229, 0.25) !important;
   transition: all 0.25s ease !important;
   cursor: pointer !important;
   border: none !important;
@@ -16229,32 +16236,32 @@ body:has(.app-shell-course-page) {
 
 .showcase-dot-btn.is-active {
   width: 22px !important;
-  background: #facc15 !important;
-  box-shadow: 0 0 10px rgba(250, 204, 21, 0.8) !important;
+  background: #789FC9 !important;
+  box-shadow: 0 0 10px rgba(120, 159, 201, 0.8) !important;
 }
 
 /* ==========================================================================
-   BOX 2: LIST STYLED LIST OF ALL COURSES (Directory)
+   BOX 2: LIST STYLED LIST OF ALL COURSES (Directory - Deep Navy & Sky Blue)
    ========================================================================== */
 .courses-directory-box {
   background: 
-    radial-gradient(circle 380px at 90% 12%, rgba(250, 204, 21, 0.08) 0%, rgba(234, 179, 8, 0.03) 45%, transparent 70%),
-    rgba(12, 12, 12, 0.72) !important;
+    radial-gradient(circle 380px at 90% 12%, rgba(120, 159, 201, 0.12) 0%, rgba(82, 111, 147, 0.05) 45%, transparent 70%),
+    linear-gradient(165deg, rgba(24, 40, 62, 0.85) 0%, rgba(14, 25, 42, 0.94) 100%) !important;
   backdrop-filter: blur(32px) !important;
   -webkit-backdrop-filter: blur(32px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(150, 195, 229, 0.2) !important;
   border-radius: 24px !important;
-  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.65), 0 0 24px rgba(250, 204, 21, 0.04) !important;
+  box-shadow: 0 24px 50px rgba(6, 14, 24, 0.75), 0 0 24px rgba(82, 111, 147, 0.15) !important;
 }
 
 .course-list-styled-container {
   scrollbar-width: thin;
-  scrollbar-color: rgba(250, 204, 21, 0.25) transparent;
+  scrollbar-color: rgba(120, 159, 201, 0.3) transparent;
 }
 
 .course-list-row-item {
-  background: rgba(20, 20, 20, 0.5) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  background: rgba(30, 50, 74, 0.45) !important;
+  border: 1px solid rgba(150, 195, 229, 0.12) !important;
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1) !important;
   position: relative !important;
   animation: listRowSlideIn 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -16273,10 +16280,10 @@ body:has(.app-shell-course-page) {
 
 .course-list-row-item:hover,
 .course-list-row-item.active-item {
-  background: rgba(250, 204, 21, 0.08) !important;
-  border-color: rgba(250, 204, 21, 0.32) !important;
+  background: linear-gradient(90deg, rgba(82, 111, 147, 0.35) 0%, rgba(30, 50, 74, 0.5) 100%) !important;
+  border-color: rgba(120, 159, 201, 0.45) !important;
   transform: translateX(6px) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 18px rgba(250, 204, 21, 0.1) !important;
+  box-shadow: 0 8px 24px rgba(6, 14, 24, 0.6), 0 0 18px rgba(82, 111, 147, 0.25) !important;
 }
 
 .course-list-row-item.active-item::before {
@@ -16286,20 +16293,20 @@ body:has(.app-shell-course-page) {
   top: 18% !important;
   bottom: 18% !important;
   width: 3.5px !important;
-  background: #facc15 !important;
+  background: #4A9B66 !important;
   border-radius: 0 4px 4px 0 !important;
-  box-shadow: 0 0 8px rgba(250, 204, 21, 0.6) !important;
+  box-shadow: 0 0 10px rgba(74, 155, 102, 0.7) !important;
 }
 
-/* All Courses Directory Header Logo-matched Cyan Styling */
+/* All Courses Directory Header Cyan/Sky Blue Styling */
 .courses-directory-icon-wrap {
   width: 28px !important;
   height: 28px !important;
   border-radius: 9px !important;
-  background: rgba(0, 229, 255, 0.12) !important;
-  border: 1px solid rgba(0, 229, 255, 0.35) !important;
-  color: #00e5ff !important;
-  box-shadow: 0 0 14px rgba(0, 229, 255, 0.35) !important;
+  background: rgba(82, 111, 147, 0.25) !important;
+  border: 1px solid rgba(150, 195, 229, 0.4) !important;
+  color: #96C3E5 !important;
+  box-shadow: 0 0 14px rgba(120, 159, 201, 0.35) !important;
   display: grid !important;
   place-items: center !important;
   flex-shrink: 0 !important;
@@ -16307,37 +16314,38 @@ body:has(.app-shell-course-page) {
 }
 
 .courses-directory-box:hover .courses-directory-icon-wrap {
-  background: rgba(0, 229, 255, 0.18) !important;
-  border-color: rgba(0, 229, 255, 0.55) !important;
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.5) !important;
+  background: rgba(120, 159, 201, 0.3) !important;
+  border-color: #789FC9 !important;
+  box-shadow: 0 0 20px rgba(120, 159, 201, 0.55) !important;
   transform: scale(1.05) !important;
 }
 
 .courses-directory-title {
-  color: #00e5ff !important;
+  color: #EEF6FB !important;
   font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
   font-size: 16px !important;
   font-weight: 800 !important;
   letter-spacing: -0.01em !important;
-  text-shadow: 0 0 14px rgba(0, 229, 255, 0.55), 0 0 2px rgba(0, 229, 255, 0.8) !important;
+  text-shadow: 0 0 16px rgba(150, 195, 229, 0.5) !important;
 }
 
 /* Unique Milestone Progress Module */
 .unique-progress-card {
-  background: rgba(255, 255, 255, 0.025) !important;
+  background: rgba(20, 36, 56, 0.55) !important;
+  border: 1px solid rgba(150, 195, 229, 0.2) !important;
   backdrop-filter: blur(14px) !important;
   -webkit-backdrop-filter: blur(14px) !important;
   transition: all 0.25s ease !important;
 }
 
 .showcase-card.is-center:hover .unique-progress-card {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(250, 204, 21, 0.24) !important;
+  background: rgba(30, 50, 74, 0.6) !important;
+  border-color: rgba(120, 159, 201, 0.4) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
 }
 
 .unique-radial-meter svg circle:last-of-type {
-  filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.55));
+  filter: drop-shadow(0 0 6px rgba(74, 155, 102, 0.6));
 }
 
 .row-item-status-icon {
@@ -16647,26 +16655,26 @@ body:has(.app-shell-course-page) {
 .filter-chip {
   min-height: 36px !important;
   padding: 0 14px !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(150, 195, 229, 0.18) !important;
   border-radius: 9999px !important;
-  color: #94a3b8 !important;
-  background: rgba(255, 255, 255, 0.03) !important;
+  color: #CDE2F4 !important;
+  background: rgba(30, 50, 74, 0.35) !important;
   font-size: 12.5px !important;
   font-weight: 600 !important;
   transition: all 0.2s ease !important;
 }
 
 .filter-chip:hover {
-  background: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.18) !important;
-  color: #f1f5f9 !important;
+  background: rgba(82, 111, 147, 0.28) !important;
+  border-color: rgba(120, 159, 201, 0.4) !important;
+  color: #EEF6FB !important;
 }
 
 .filter-chip.selected {
-  color: #1a1600 !important;
-  border-color: #facc15 !important;
-  background: #facc15 !important;
-  box-shadow: 0 0 16px rgba(250, 204, 21, 0.45) !important;
+  color: #EEF6FB !important;
+  border-color: #789FC9 !important;
+  background: linear-gradient(135deg, #526F93 0%, #1E324A 100%) !important;
+  box-shadow: 0 4px 18px rgba(30, 50, 74, 0.6), inset 0 1px 0 rgba(205, 226, 244, 0.35) !important;
   font-weight: 700 !important;
 }
 
@@ -16678,18 +16686,19 @@ body:has(.app-shell-course-page) {
   height: 19px !important;
   padding: 0 5px !important;
   border-radius: 9999px !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #cbd5e1 !important;
+  background: rgba(150, 195, 229, 0.15) !important;
+  color: #CDE2F4 !important;
   font-size: 11px !important;
   font-weight: 700 !important;
 }
 
 .filter-chip.selected .filter-chip-count {
-  background: rgba(26, 22, 0, 0.22) !important;
-  color: #1a1600 !important;
+  background: #4A9B66 !important; /* Medical green accent */
+  color: #FFFFFF !important;
+  box-shadow: 0 0 10px rgba(74, 155, 102, 0.6) !important;
 }
 
-/* Page Heading & Create Course Button */
+/* Page Heading & Create Course Button (Primary Blue Gradient #1E324A -> #526F93) */
 .page-heading {
   margin-bottom: 24px !important;
 }
@@ -16699,25 +16708,28 @@ body:has(.app-shell-course-page) {
   font-size: clamp(28px, 3vw, 36px) !important;
   font-weight: 800 !important;
   letter-spacing: -0.035em !important;
-  color: #f8fafc !important;
+  color: #EEF6FB !important;
 }
 
 .page-heading > .primary-btn {
   border-radius: 9999px !important;
-  padding: 10px 20px !important;
+  padding: 10px 22px !important;
   font-weight: 700 !important;
   font-size: 13.5px !important;
   letter-spacing: 0.01em !important;
-  background: linear-gradient(135deg, #facc15, #eab308) !important;
-  color: #1a1600 !important;
-  border: none !important;
-  box-shadow: 0 0 16px rgba(250, 204, 21, 0.4) !important;
+  background: linear-gradient(135deg, #526F93 0%, #1E324A 100%) !important;
+  color: #EEF6FB !important;
+  border: 1px solid rgba(120, 159, 201, 0.5) !important;
+  box-shadow: 0 4px 20px rgba(30, 50, 74, 0.6), inset 0 1px 0 rgba(205, 226, 244, 0.4) !important;
   transition: all 0.2s ease !important;
 }
 
 .page-heading > .primary-btn:hover {
   transform: translateY(-1px) !important;
-  box-shadow: 0 0 24px rgba(250, 204, 21, 0.6) !important;
+  background: linear-gradient(135deg, #789FC9 0%, #526F93 100%) !important;
+  border-color: #96C3E5 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 26px rgba(120, 159, 201, 0.55), inset 0 1px 0 #EEF6FB !important;
 }
 
 /* ==========================================================================
