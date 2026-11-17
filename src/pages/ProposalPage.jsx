@@ -169,19 +169,28 @@ export function ProposalPage(p) {
 
   return (
     <div className="proposal-v2-container">
-      {/* Top Navigation Bar with Circular Back Button */}
-      <div className="proposal-v2-nav-bar">
-        <button
-          type="button"
-          className="proposal-v2-back-nav"
-          onClick={() => p.go("courses")}
-          aria-label="Back to courses"
-        >
-          <span className="proposal-v2-circle-back-icon">
-            <Icon name="arrow-left" size={18} />
-          </span>
-          <span className="proposal-v2-back-text">Back to courses</span>
-        </button>
+      {/* Page Header with Circular Back Button & Title */}
+      <div className="proposal-v2-header">
+        <div className="proposal-v2-title-row">
+          <button
+            type="button"
+            className="proposal-v2-circle-back-btn"
+            onClick={() => p.go("courses")}
+            aria-label="Back to courses"
+            title="Back to My Courses"
+          >
+            <Icon name="arrowLeft" size={20} />
+          </button>
+          <div className="proposal-v2-title-wrap">
+            <div className="proposal-v2-heading-row">
+              <h1 className="proposal-v2-page-title">Course Proposal</h1>
+              <span className="proposal-v2-status-pill">Pending Review</span>
+            </div>
+            <p className="proposal-v2-page-subtitle">
+              Review and refine your custom curriculum before approving.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Hero Bento Header Card */}
@@ -385,9 +394,6 @@ export function ProposalPage(p) {
               <Icon name="book" size={20} />
               <span>Course Roadmap</span>
             </h2>
-            <span className="proposal-v2-roadmap-subtitle">
-              Follow the connected milestones from foundational concepts to capstone execution.
-            </span>
           </div>
 
           <div className="proposal-v2-view-switcher">

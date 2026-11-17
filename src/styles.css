@@ -18137,77 +18137,112 @@ body:has(.workspace-proposal-page),
   z-index: 0;
 }
 
-/* Circular back button navigation */
-.proposal-v2-nav-bar {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+/* Page Header with Circular Back Button & Title */
+.proposal-v2-header {
   margin-bottom: 24px;
   position: relative;
   z-index: 2;
 }
 
-.proposal-v2-back-nav {
+.proposal-v2-title-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.proposal-v2-circle-back-btn {
+  display: grid !important;
+  place-items: center !important;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  border-radius: 50% !important;
+  background: rgba(25, 23, 19, 0.85) !important;
+  border: 1px solid #393129 !important;
+  color: #E7B477 !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(231, 180, 119, 0.15) !important;
+  cursor: pointer !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  flex-shrink: 0 !important;
+  padding: 0 !important;
+}
+
+.proposal-v2-circle-back-btn svg {
+  transition: transform 0.22s ease !important;
+}
+
+.proposal-v2-circle-back-btn:hover {
+  background: #242019 !important;
+  border-color: #F28C45 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 22px rgba(242, 140, 69, 0.35), inset 0 1px 0 rgba(242, 140, 69, 0.3) !important;
+  transform: translateY(-1.5px) scale(1.05) !important;
+}
+
+.proposal-v2-circle-back-btn:hover svg {
+  transform: translateX(-3px) !important;
+  color: #F28C45 !important;
+}
+
+.proposal-v2-circle-back-btn:active {
+  transform: scale(0.95) !important;
+}
+
+.proposal-v2-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.proposal-v2-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.proposal-v2-page-title {
+  margin: 0;
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-size: 26px;
+  font-weight: 800;
+  color: #F4EFE8;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.proposal-v2-status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  color: #A69B8E;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.proposal-v2-circle-back-icon {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  border-radius: 50%;
-  background: rgba(25, 23, 19, 0.85);
-  border: 1px solid #393129;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: rgba(242, 140, 69, 0.1);
+  border: 1px solid rgba(242, 140, 69, 0.3);
   color: #E7B477;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(231, 180, 119, 0.15);
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.proposal-v2-circle-back-icon svg {
-  transition: transform 0.22s ease;
-}
-
-.proposal-v2-back-text {
-  font-family: var(--font-body, 'Manrope', sans-serif);
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 700;
-  color: #F4EFE8;
-  letter-spacing: -0.01em;
-  transition: color 0.2s ease;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-.proposal-v2-back-nav:hover .proposal-v2-circle-back-icon {
-  background: #242019;
-  border-color: #F28C45;
-  color: #FFFFFF;
-  box-shadow: 0 6px 22px rgba(242, 140, 69, 0.3), inset 0 1px 0 rgba(242, 140, 69, 0.3);
-  transform: translateY(-1.5px) scale(1.05);
+.proposal-v2-status-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #F28C45;
+  box-shadow: 0 0 8px rgba(242, 140, 69, 0.6);
 }
 
-.proposal-v2-back-nav:hover .proposal-v2-circle-back-icon svg {
-  transform: translateX(-3px);
-  color: #F28C45;
-}
-
-.proposal-v2-back-nav:hover .proposal-v2-back-text {
-  color: #F28C45;
-}
-
-.proposal-v2-back-nav:active .proposal-v2-circle-back-icon {
-  transform: scale(0.95);
+.proposal-v2-page-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: #A69B8E;
+  line-height: 1.4;
 }
 
 /* Bento Hero Header Card with Glass Blur */
@@ -19091,7 +19126,7 @@ body:has(.workspace-proposal-page),
 }
 
 /* Staggered entry sequence for initial appearance */
-.proposal-v2-nav-bar {
+.proposal-v2-header {
   animation: proposalFlowFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   animation-delay: 0.04s;
 }
@@ -19417,18 +19452,27 @@ body:has(.workspace-proposal-page),
   .proposal-v2-container {
     padding: 14px 8px 120px;
   }
-  .proposal-v2-nav-bar {
-    gap: 10px;
+  .proposal-v2-header {
     margin-bottom: 16px;
   }
-  .proposal-v2-circle-back-icon {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    min-height: 38px;
+  .proposal-v2-title-row {
+    gap: 12px;
   }
-  .proposal-v2-back-text {
-    font-size: 13px;
+  .proposal-v2-circle-back-btn {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+  .proposal-v2-page-title {
+    font-size: 20px;
+  }
+  .proposal-v2-status-pill {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+  .proposal-v2-page-subtitle {
+    font-size: 12px;
   }
   .proposal-v2-hero-card {
     padding: 18px 14px;
@@ -19515,7 +19559,7 @@ body:has(.workspace-proposal-page),
 
 /* Accessibility: Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
-  .proposal-v2-nav-bar,
+  .proposal-v2-header,
   .proposal-v2-hero-card,
   .proposal-v2-bento-grid > *,
   .proposal-v2-roadmap-container,
