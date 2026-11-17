@@ -1,27 +1,128 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Icon, Panel, minuteLabel, EmptyState, GenerationProgressCard, mergeStreamProgress } from "../components/common.jsx";
+import { Icon, minuteLabel, EmptyState, GenerationProgressCard, mergeStreamProgress } from "../components/common.jsx";
 
-function ProposalPage(p){
-  const course=p.proposal||p.activeCourse;
-  const [title,setTitle]=useState(course?.title||""),[summary,setSummary]=useState(course?.summary||""),[expanded,setExpanded]=useState(0),[saving,setSaving]=useState(false),[improveText,setImproveText]=useState(""),[improving,setImproving]=useState(false),[improveProgress,setImproveProgress]=useState(null),[improveError,setImproveError]=useState("");
-  useEffect(()=>{setTitle(course?.title||"");setSummary(course?.summary||"");},[course?.id,course?.title,course?.summary]);
-  if(!course)return <EmptyState title="No proposal to review" body="Create a learning goal to generate an editable plan." action="Create a goal" onAction={()=>p.go("goal")}/>;
-  const modules=course.modules||[];const minutes=Number(course.estimated_minutes)||modules.reduce((sum,m)=>sum+(Number(m.estimatedMinutes)||Number(m.estimated_minutes)||0),0);const weeks=Number(course.durationWeeks||course.target_weeks)||8;const weeklyBudget=Number(course.weeklyMinutes||course.weekly_minutes||p.data.settings.weeklyMinutes);const weeklyNeeded=Math.ceil(minutes/weeks);
-  async function saveChanges(){setSaving(true);const updated={...course,title,summary};try{if(p.remote){await p.request(`courses/${course.id}`,{method:"PUT",body:JSON.stringify({title,summary})});for(const mod of modules){if(mod.id&&!String(mod.id).startsWith("proposal-m"))await p.request(`modules/${mod.id}`,{method:"PUT",body:JSON.stringify({title:mod.title,objective:mod.objective})});}await p.refreshRemote();}else p.updateData(d=>({...d,courses:d.courses.map(c=>c.id===course.id?updated:c)}));p.setProposal(updated);p.flashToast("Proposal changes saved.");}catch(error){p.flashToast(error.message);}finally{setSaving(false);}}
-  async function improvePlan(event){
+export function ProposalPage(p) {
+  const course = p.proposal || p.activeCourse;
+
+  const [title, setTitle] = useState(course?.title || "");
+  const [summary, setSummary] = useState(course?.summary || "");
+  const [modules, setModules] = useState(course?.modules || []);
+  const [activeModuleIndex, setActiveModuleIndex] = useState(0);
+  const [viewMode, setViewMode] = useState("milestone"); // "milestone" | "all"
+  const [saving, setSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [improveText, setImproveText] = useState("");
+  const [improving, setImproving] = useState(false);
+  const [improveProgress, setImproveProgress] = useState(null);
+  const [improveError, setImproveError] = useState("");
+
+  useEffect(() => {
+    setTitle(course?.title || "");
+    setSummary(course?.summary || "");
+    setModules(course?.modules || []);
+    setHasUnsavedChanges(false);
+  }, [course?.id, course?.title, course?.summary, course?.modules]);
+
+  if (!course) {
+    return (
+      <EmptyState
+        title="No proposal to review"
+        body="Create a learning goal to generate a personalized course roadmap."
+        action="Create a course"
+        onAction={() => p.go("create/course")}
+      />
+    );
+  }
+
+  const minutes = Number(course.estimated_minutes) || modules.reduce(
+    (sum, m) => sum + (Number(m.estimatedMinutes) || Number(m.estimated_minutes) || 0),
+    0
+  );
+  const totalHours = Math.round((minutes / 60) * 10) / 10;
+  const weeks = Number(course.durationWeeks || course.target_weeks) || 8;
+  const weeklyBudget = Number(course.weeklyMinutes || course.weekly_minutes || p.data?.settings?.weeklyMinutes || 360);
+  const weeklyNeeded = Math.ceil(minutes / weeks);
+  const weeklyNeededHours = Math.round((weeklyNeeded / 60) * 10) / 10;
+  const weeklyBudgetHours = Math.round(weeklyBudget / 60);
+  const fitsSchedule = weeklyNeeded <= weeklyBudget;
+  const pacingRatio = Math.min(100, Math.round((weeklyNeeded / Math.max(1, weeklyBudget)) * 100));
+  const totalLessons = modules.reduce((n, m) => n + (m.lessons?.length || 0), 0);
+
+  const activeModule = modules[activeModuleIndex] || modules[0] || null;
+
+  const handleTitleChange = (val) => {
+    setTitle(val);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSummaryChange = (val) => {
+    setSummary(val);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleModuleTitleChange = (modIndex, val) => {
+    const updated = modules.map((m, idx) => (idx === modIndex ? { ...m, title: val } : m));
+    setModules(updated);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleModuleObjectiveChange = (modIndex, val) => {
+    const updated = modules.map((m, idx) => (idx === modIndex ? { ...m, objective: val } : m));
+    setModules(updated);
+    setHasUnsavedChanges(true);
+  };
+
+  async function saveChanges() {
+    setSaving(true);
+    const updated = { ...course, title, summary, modules };
+    try {
+      if (p.remote) {
+        await p.request(`courses/${course.id}`, {
+          method: "PUT",
+          body: JSON.stringify({ title, summary }),
+        });
+        for (const mod of modules) {
+          if (mod.id && !String(mod.id).startsWith("proposal-m")) {
+            await p.request(`modules/${mod.id}`, {
+              method: "PUT",
+              body: JSON.stringify({ title: mod.title, objective: mod.objective }),
+            });
+          }
+        }
+        await p.refreshRemote();
+      } else {
+        p.updateData((d) => ({
+          ...d,
+          courses: d.courses.map((c) => (c.id === course.id ? updated : c)),
+        }));
+      }
+      p.setProposal(updated);
+      setHasUnsavedChanges(false);
+      p.flashToast("Proposal changes saved.");
+    } catch (error) {
+      p.flashToast(error.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function improvePlan(event) {
     event.preventDefault();
-    if(!p.remote){p.openAccount();return;}
+    if (!p.remote) {
+      p.openAccount();
+      return;
+    }
     setImproveError("");
     setImproving(true);
-    setImproveProgress({stage:"initializing",percent:5,message:"Starting proposal revision…",model:"",provider:""});
+    setImproveProgress({ stage: "initializing", percent: 5, message: "Starting proposal revision…", model: "", provider: "" });
 
     const MAX_RETRIES = 3;
     let lastError = null;
 
-    try{
-      for(let attempt = 1; attempt <= MAX_RETRIES; attempt++){
-        try{
-          if(attempt > 1){
+    try {
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          if (attempt > 1) {
             setImproveProgress({
               stage: "retrying",
               percent: 15,
@@ -32,17 +133,21 @@ function ProposalPage(p){
             await new Promise((r) => setTimeout(r, 1000));
           }
 
-          const result=await p.requestStream(`courses/${course.id}/improve?stream=1`,{method:"POST",body:JSON.stringify({feedback:improveText})},(frame)=>{
-            setImproveProgress(prev=>mergeStreamProgress(prev,frame,"Revising your course proposal…"));
+          const result = await p.requestStream(`courses/${course.id}/improve?stream=1`, {
+            method: "POST",
+            body: JSON.stringify({ feedback: improveText }),
+          }, (frame) => {
+            setImproveProgress((prev) => mergeStreamProgress(prev, frame, "Revising your course proposal…"));
           });
-          if(!result?.course){
+
+          if (!result?.course) {
             throw new Error("The revised proposal could not be loaded. Your current proposal is still available.");
           }
           p.setProposal(result.course);
           setImproveText("");
           p.flashToast("A revised draft is ready. Review it before approving.");
           return;
-        }catch(err){
+        } catch (err) {
           lastError = err;
           const errMsg = String(err?.message || "");
           const isJsonError =
@@ -51,21 +156,454 @@ function ProposalPage(p){
             errMsg.toLowerCase().includes("invalid json");
           const isRetryable = isJsonError || err?.details?.retryable || err?.code === "AI_RATE_LIMIT";
 
-          if(isRetryable && attempt < MAX_RETRIES) continue;
+          if (isRetryable && attempt < MAX_RETRIES) continue;
           break;
         }
       }
       setImproveError(lastError?.message || "The revision could not be generated. Your current proposal is still available.");
-    }finally{
+    } finally {
       setImproving(false);
       setImproveProgress(null);
     }
   }
-  return <div className="proposal-layout grid gap-4 items-start"><div className="proposal-main flex flex-col gap-4"><div className="proposal-status-row flex items-center justify-between gap-3"><span className="status-pill proposal">AWAITING YOUR APPROVAL</span><span>{course.generationMode==="multi-agent"?"Three AI roles shaped the curriculum, lessons, and practice checks.":"Nothing is scheduled until you approve this plan."}</span></div><section className="panel proposal-summary flex flex-col p-4 gap-3"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="spark"/>Course overview</div><span className="proposal-duration text-sm">{weeks} weeks</span></div><div className="proposal-fields flex flex-col gap-3"><label>Course title<input value={title} onChange={e=>setTitle(e.target.value)}/></label><label>Learning outcome<textarea value={summary} onChange={e=>setSummary(e.target.value)}/></label></div><div className="proposal-meta grid grid-cols-1 sm:grid-cols-3 gap-3"><div><small>ESTIMATED STUDY TIME</small><strong>{Math.round(minutes/60*10)/10} hrs</strong></div><div><small>ESTIMATED PER WEEK</small><strong>{Math.round(weeklyNeeded/60*10)/10} hrs</strong></div><div><small>YOUR WEEKLY BUDGET</small><strong>{Math.round(weeklyBudget/60)} hrs</strong></div></div></section>
-    <section className="panel proposal-improve-panel flex flex-col p-4 gap-3"><div className="panel-title flex items-center gap-2.5"><Icon name="spark"/>Improve this draft</div><p>Ask for a different pace, more examples, clearer prerequisites, or stronger practice. Your current draft stays available until you review the revision.</p><form className="flex flex-col gap-3" onSubmit={improvePlan}><label htmlFor="proposal-improvement">What would you like to change?</label><textarea id="proposal-improvement" value={improveText} onChange={e=>setImproveText(e.target.value)} disabled={improving} maxLength="1200" minLength="8" required placeholder="For example: Add a small project to each module and make the checkpoints more practical."/>{improving&&<GenerationProgressCard progress={improveProgress} fallbackMessage="Working on your revision…" ariaLabel="Course improvement progress" note="Refining modules, lessons, and checkpoints around your feedback. Your current draft stays available until the revision finishes."/>}<div className="proposal-improve-actions flex items-center justify-between gap-3 mt-2"><small className="text-sm text-learnos-muted leading-relaxed">{p.remote?"You can request another revision after reviewing this one.":"Sign in to generate AI revisions. You can still edit the proposal by hand."}</small><button className="primary-btn" type="submit" disabled={improving||p.busy||!improveText.trim()}>{improving?"Working on revision…":p.remote?"Improve with AI ↗":"Sign in to improve ↗"}</button></div>{improveError&&<p className="form-error" role="alert">{improveError}</p>}</form></section>
-    <section className="proposal-modules flex flex-col gap-3"><div className="section-heading-row flex items-center justify-between"><div><span className="eyebrow">THE LEARNING PATH</span><h2>Modules and lessons</h2></div><span className="text-sm font-semibold text-learnos-muted">{modules.length} modules · {modules.reduce((n,m)=>n+(m.lessons?.length||0),0)} lessons</span></div>{modules.map((m,i)=><article className={`panel proposal-module flex flex-col overflow-hidden ${expanded===i?"expanded":""}`} key={m.id||i}><button className="proposal-module-head flex items-center justify-between p-3.5 w-full text-left cursor-pointer" onClick={()=>setExpanded(expanded===i?-1:i)}><span className="module-number">{String(i+1).padStart(2,"0")}</span><span><strong>{m.title}</strong><small className="block text-sm text-learnos-muted">{m.lessons?.length||0} lessons · {Math.round((m.estimatedMinutes||m.estimated_minutes||0)/60*10)/10||1} hrs</small></span><span className="expand-icon">{expanded===i?"−":"+"}</span></button>{expanded===i&&<div className="proposal-module-body flex flex-col p-4 gap-3"><label>Module title<input value={m.title} onChange={e=>{const next=modules.map((x,j)=>j===i?{...x,title:e.target.value}:x);p.setProposal({...course,modules:next});}}/></label><label>Objective<textarea value={m.objective||""} onChange={e=>{const next=modules.map((x,j)=>j===i?{...x,objective:e.target.value}:x);p.setProposal({...course,modules:next});}}/></label><p className="module-rationale text-sm text-learnos-muted">{m.rationale||"This module supports the stated learning outcome."}</p>{(m.sourceRefs||m.source_refs||[]).length>0&&<div className="proposal-sources flex flex-wrap gap-1.5"><small className="w-full text-sm font-semibold text-learnos-muted uppercase tracking-wider">Grounded in your workspace</small>{(m.sourceRefs||m.source_refs||[]).map(source=><span key={source.id}>{source.title}</span>)}</div>}<ol className="proposal-lesson-list flex flex-col gap-2">{m.lessons?.map((l,j)=><li key={l.id||j} className="flex items-center justify-between gap-3 p-2"><span>{j+1}</span><div className="flex-1 min-w-0"><strong>{l.title}</strong><small className="block text-sm text-learnos-muted">{l.objective}</small>{(l.sourceRefs||l.source_refs||[]).length>0&&<span className="proposal-lesson-source block text-sm font-medium">Based on: {(l.sourceRefs||l.source_refs).map(source=>source.title).join(", ")}</span>}</div><em>{minuteLabel(l.estimated_minutes||l.estimatedMinutes)}</em></li>)}</ol></div>}</article>)}</section>
-    <div className="proposal-actions flex flex-wrap items-center justify-end gap-3 mt-4"><button className="quiet-action" onClick={()=>p.go("goal")}>← Edit goal details</button><div className="proposal-actions-right flex items-center gap-3">{p.confirmDeleteCourse&&<button type="button" className="danger-btn compact course-delete-btn" disabled={saving||improving||p.busy||p.deletingCourseId===course.id} onClick={()=>p.confirmDeleteCourse(course,"courses")}>Delete proposal</button>}<button className="secondary-btn" disabled={saving||improving} onClick={saveChanges}>{saving?<><span className="btn-spinner"/> Saving…</>:"Save edits"}</button><button className="primary-btn" disabled={p.busy||improving} onClick={()=>p.approveProposal(false,course)}>{p.busy?<><span className="btn-spinner"/> Approving plan…</>:"Approve and schedule ↗"}</button></div></div>
-  </div><aside className="proposal-side flex flex-col gap-4"><Panel title={weeklyNeeded<=weeklyBudget?"Fits your schedule":"Needs a schedule check"} icon={weeklyNeeded<=weeklyBudget?"check":"clock"}><div className={`feasibility-card flex flex-col gap-2 p-4 ${weeklyNeeded<=weeklyBudget?"fits":"over"}`}><strong>{weeklyNeeded<=weeklyBudget?"Within your weekly budget":"Above your weekly budget"}</strong><p>This plan needs about {Math.round(weeklyNeeded/60*10)/10} hours each week. Your current budget is {Math.round(weeklyBudget/60)} hours.</p>{weeklyNeeded>weeklyBudget&&<p>Shorten the plan or increase study time before approving.</p>}</div></Panel><Panel title="Plan assumptions" icon="notes"><ul className="assumption-list flex flex-col gap-2 p-4">{(course.assumptions||["The plan is a draft based on the details you provided.","Review the order and effort before you approve."]).map((x,i)=><li key={i}>{x}</li>)}</ul></Panel><div className="proposal-note flex items-center gap-2.5 p-3.5"><Icon name="spark"/><p className="text-sm">Your course remains a proposal until you approve it. You can still edit the title, outcome and module objectives.</p></div></aside></div>;
-}
 
-export { ProposalPage };
+  return (
+    <div className="proposal-v2-container">
+      {/* Top Navigation & Status */}
+      <div className="proposal-v2-top-bar">
+        <button
+          type="button"
+          className="proposal-v2-back-btn"
+          onClick={() => p.go("courses")}
+        >
+          <Icon name="arrow-left" size={15} />
+          <span>Back to courses</span>
+        </button>
+
+        <div className="proposal-v2-status-tag">
+          <span className="proposal-v2-status-dot" />
+          <span>Curriculum Blueprint · Reviewing</span>
+        </div>
+      </div>
+
+      {/* Hero Bento Header Card */}
+      <section className="proposal-v2-hero-card" aria-label="Course Overview">
+        <div className="proposal-v2-hero-content">
+          <div className="proposal-v2-eyebrow-row">
+            <span className="proposal-v2-category-chip">
+              <Icon name="spark" size={13} />
+              <span>Tailored Learning Path</span>
+            </span>
+            {hasUnsavedChanges && (
+              <span className="text-xs font-semibold text-[#E7B477] bg-[#242019] px-3 py-1 rounded-full border border-[#5C3926]">
+                ● Unsaved changes
+              </span>
+            )}
+          </div>
+
+          <div>
+            <label className="sr-only" htmlFor="proposal-course-title">Course Title</label>
+            <input
+              id="proposal-course-title"
+              className="proposal-v2-title-input"
+              value={title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              placeholder="Course Title"
+              title="Click to edit title"
+            />
+          </div>
+
+          <div>
+            <label className="sr-only" htmlFor="proposal-course-summary">Learning Outcome</label>
+            <textarea
+              id="proposal-course-summary"
+              className="proposal-v2-summary-textarea"
+              value={summary}
+              onChange={(e) => handleSummaryChange(e.target.value)}
+              placeholder="What practical capability will this course build?"
+              title="Click to edit learning outcome"
+            />
+          </div>
+
+          {/* Quick Metrics Strip */}
+          <div className="proposal-v2-metrics-strip">
+            <div className="proposal-v2-metric-chip">
+              <span className="proposal-v2-metric-icon">
+                <Icon name="calendar" size={15} />
+              </span>
+              <span>Duration: <strong>{weeks} weeks</strong></span>
+            </div>
+
+            <div className="proposal-v2-metric-chip">
+              <span className="proposal-v2-metric-icon">
+                <Icon name="clock" size={15} />
+              </span>
+              <span>Estimated effort: <strong>{totalHours} hrs</strong></span>
+            </div>
+
+            <div className="proposal-v2-metric-chip">
+              <span className="proposal-v2-metric-icon">
+                <Icon name="book" size={15} />
+              </span>
+              <span>Structure: <strong>{modules.length} modules</strong></span>
+            </div>
+
+            <div className="proposal-v2-metric-chip">
+              <span className="proposal-v2-metric-icon">
+                <Icon name="check" size={15} />
+              </span>
+              <span>Content: <strong>{totalLessons} lessons</strong></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Bento Middle Grid: Pacing, Refine, and Assumptions */}
+      <div className="proposal-v2-bento-grid">
+        {/* Pacing & Schedule Sync Card */}
+        <div className="proposal-v2-bento-card proposal-v2-col-4">
+          <div className="proposal-v2-card-header">
+            <div className="proposal-v2-card-title">
+              <span className="proposal-v2-card-title-icon">
+                <Icon name="clock" size={17} />
+              </span>
+              <span>Weekly Pacing</span>
+            </div>
+            <span className={`proposal-v2-pacing-badge ${fitsSchedule ? "fits" : ""}`}>
+              {fitsSchedule ? "✓ Fits routine" : "⚠ Pacing check"}
+            </span>
+          </div>
+
+          <div className={`proposal-v2-pacing-status ${fitsSchedule ? "fits" : ""}`}>
+            <div className="proposal-v2-pacing-bar-track">
+              <div
+                className="proposal-v2-pacing-bar-fill"
+                style={{ width: `${Math.min(100, pacingRatio)}%` }}
+              />
+            </div>
+
+            <div className="proposal-v2-pacing-stats">
+              <span>Required: <strong>{weeklyNeededHours} hrs / wk</strong></span>
+              <span>Budget: <strong>{weeklyBudgetHours} hrs / wk</strong></span>
+            </div>
+          </div>
+
+          <p className="text-xs text-[#A69B8E] leading-relaxed m-0">
+            {fitsSchedule
+              ? "This proposal fits comfortably inside your weekly learning schedule."
+              : "This curriculum requires more time than your current budget. You can request a slower pace or increase study hours."}
+          </p>
+        </div>
+
+        {/* Refine & Customize Card (No AI Slop) */}
+        <div className="proposal-v2-bento-card proposal-v2-col-4">
+          <div className="proposal-v2-card-header">
+            <div className="proposal-v2-card-title">
+              <span className="proposal-v2-card-title-icon">
+                <Icon name="spark" size={17} />
+              </span>
+              <span>Request Adjustments</span>
+            </div>
+          </div>
+
+          <form className="proposal-v2-refine-form" onSubmit={improvePlan}>
+            <textarea
+              className="proposal-v2-refine-textarea"
+              value={improveText}
+              onChange={(e) => setImproveText(e.target.value)}
+              disabled={improving}
+              maxLength="1200"
+              minLength="8"
+              required
+              placeholder="e.g. Add more hands-on coding drills, slow down the first module, or add realistic projects."
+            />
+
+            {improving && (
+              <GenerationProgressCard
+                progress={improveProgress}
+                fallbackMessage="Revising your course blueprint…"
+                ariaLabel="Course revision progress"
+                note="Refining modules and lessons according to your feedback. Your current draft remains active."
+              />
+            )}
+
+            <button
+              type="submit"
+              className="proposal-v2-refine-btn"
+              disabled={improving || p.busy || !improveText.trim()}
+            >
+              {improving ? (
+                <>
+                  <span className="btn-spinner" />
+                  <span>Revising curriculum…</span>
+                </>
+              ) : (
+                <span>Request revisions ↗</span>
+              )}
+            </button>
+
+            {improveError && (
+              <p className="form-error text-xs text-rose-400 m-0" role="alert">
+                {improveError}
+              </p>
+            )}
+          </form>
+        </div>
+
+        {/* Course Assumptions & Focus Card */}
+        <div className="proposal-v2-bento-card proposal-v2-col-4">
+          <div className="proposal-v2-card-header">
+            <div className="proposal-v2-card-title">
+              <span className="proposal-v2-card-title-icon">
+                <Icon name="notes" size={17} />
+              </span>
+              <span>Curriculum Notes</span>
+            </div>
+          </div>
+
+          <ul className="proposal-v2-assumptions-list">
+            {(course.assumptions || [
+              "Backward design progression from core intuition to applied synthesis.",
+              "Weekly milestone checkpoints verify demonstrated capability.",
+              "Pacing calibrated for consistent daily practice intervals."
+            ]).map((item, idx) => (
+              <li key={idx} className="proposal-v2-assumption-item">
+                <span className="proposal-v2-assumption-bullet">›</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Unique Roadmap Journey Visualizer */}
+      <section className="proposal-v2-roadmap-container" aria-label="Curriculum Roadmap">
+        <div className="proposal-v2-roadmap-header">
+          <div className="proposal-v2-roadmap-title-area">
+            <h2 className="proposal-v2-roadmap-title">
+              <Icon name="book" size={20} />
+              <span>Interactive Learning Roadmap</span>
+            </h2>
+            <span className="proposal-v2-roadmap-subtitle">
+              Follow the connected milestones from foundational concepts to capstone execution.
+            </span>
+          </div>
+
+          <div className="proposal-v2-view-switcher">
+            <button
+              type="button"
+              className={`proposal-v2-view-btn ${viewMode === "milestone" ? "active" : ""}`}
+              onClick={() => setViewMode("milestone")}
+            >
+              Milestone View
+            </button>
+            <button
+              type="button"
+              className={`proposal-v2-view-btn ${viewMode === "all" ? "active" : ""}`}
+              onClick={() => setViewMode("all")}
+            >
+              Full Blueprint
+            </button>
+          </div>
+        </div>
+
+        {/* Milestone View: Connected Subway Milestones Rail */}
+        {viewMode === "milestone" ? (
+          <>
+            <div className="proposal-v2-milestones-rail" role="tablist" aria-label="Milestones Rail">
+              {modules.map((m, idx) => {
+                const isActive = activeModuleIndex === idx;
+                const modHours = Math.round(((m.estimatedMinutes || m.estimated_minutes || 0) / 60) * 10) / 10 || 1;
+                return (
+                  <React.Fragment key={m.id || idx}>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      className={`proposal-v2-milestone-node ${isActive ? "active" : ""}`}
+                      onClick={() => setActiveModuleIndex(idx)}
+                    >
+                      <div className="proposal-v2-node-number">{String(idx + 1).padStart(2, "0")}</div>
+                      <div className="proposal-v2-node-info">
+                        <span className="proposal-v2-node-title">{m.title}</span>
+                        <span className="proposal-v2-node-meta">
+                          {m.lessons?.length || 0} lessons · {modHours} hrs
+                        </span>
+                      </div>
+                    </button>
+                    {idx < modules.length - 1 && (
+                      <span className="proposal-v2-milestone-arrow">
+                        <Icon name="arrow-right" size={14} />
+                      </span>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+
+            {/* Active Module Spotlight Card */}
+            {activeModule && (
+              <div className="proposal-v2-module-spotlight">
+                <div className="proposal-v2-module-header">
+                  <div className="flex-1 min-w-0">
+                    <span className="proposal-v2-module-tag">
+                      Module {String(activeModuleIndex + 1).padStart(2, "0")} of {String(modules.length).padStart(2, "0")}
+                    </span>
+
+                    <input
+                      className="proposal-v2-module-title-input"
+                      value={activeModule.title}
+                      onChange={(e) => handleModuleTitleChange(activeModuleIndex, e.target.value)}
+                      title="Edit module title"
+                    />
+
+                    <textarea
+                      className="proposal-v2-module-obj-input"
+                      value={activeModule.objective || ""}
+                      onChange={(e) => handleModuleObjectiveChange(activeModuleIndex, e.target.value)}
+                      placeholder="Module objective"
+                      title="Edit module objective"
+                    />
+                  </div>
+                </div>
+
+                <div className="proposal-v2-module-rationale">
+                  <strong className="text-[#E7B477] mr-1.5 font-semibold">Pedagogical Rationale:</strong>
+                  {activeModule.rationale || "Builds prerequisite competency required for applied mastery in downstream modules."}
+                </div>
+
+                {/* Lesson Cards Grid */}
+                <div className="proposal-v2-lessons-grid">
+                  {(activeModule.lessons || []).map((lesson, lIdx) => (
+                    <article key={lesson.id || lIdx} className="proposal-v2-lesson-card">
+                      <div className="proposal-v2-lesson-top">
+                        <span className="proposal-v2-lesson-badge">{lIdx + 1}</span>
+                        <div className="proposal-v2-lesson-text">
+                          <h4 className="proposal-v2-lesson-title">{lesson.title}</h4>
+                          <p className="proposal-v2-lesson-obj">{lesson.objective}</p>
+                        </div>
+                      </div>
+
+                      <div className="proposal-v2-lesson-footer">
+                        <span className="proposal-v2-duration-chip">
+                          <Icon name="clock" size={13} />
+                          <span>{minuteLabel(lesson.estimated_minutes || lesson.estimatedMinutes || 25)}</span>
+                        </span>
+
+                        <span className="proposal-v2-checkpoint-chip">
+                          <Icon name="check" size={12} />
+                          <span>Check</span>
+                        </span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          /* Full Blueprint View: All modules rendered in interconnected vertical sequence */
+          <div className="flex flex-col gap-6">
+            {modules.map((m, mIdx) => (
+              <div key={m.id || mIdx} className="proposal-v2-module-spotlight">
+                <div className="proposal-v2-module-header">
+                  <div className="flex-1 min-w-0">
+                    <span className="proposal-v2-module-tag">
+                      Module {String(mIdx + 1).padStart(2, "0")} · {m.lessons?.length || 0} lessons
+                    </span>
+                    <h3 className="text-lg font-bold text-[#F4EFE8] mt-1">{m.title}</h3>
+                    <p className="text-sm text-[#A69B8E] mt-1">{m.objective}</p>
+                  </div>
+                </div>
+
+                <div className="proposal-v2-lessons-grid">
+                  {(m.lessons || []).map((lesson, lIdx) => (
+                    <article key={lesson.id || lIdx} className="proposal-v2-lesson-card">
+                      <div className="proposal-v2-lesson-top">
+                        <span className="proposal-v2-lesson-badge">{lIdx + 1}</span>
+                        <div className="proposal-v2-lesson-text">
+                          <h4 className="proposal-v2-lesson-title">{lesson.title}</h4>
+                          <p className="proposal-v2-lesson-obj">{lesson.objective}</p>
+                        </div>
+                      </div>
+
+                      <div className="proposal-v2-lesson-footer">
+                        <span className="proposal-v2-duration-chip">
+                          <Icon name="clock" size={13} />
+                          <span>{minuteLabel(lesson.estimated_minutes || lesson.estimatedMinutes || 25)}</span>
+                        </span>
+                        <span className="proposal-v2-checkpoint-chip">
+                          <Icon name="check" size={12} />
+                          <span>Check</span>
+                        </span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Floating / Sticky Action Bar */}
+      <div className="proposal-v2-action-bar">
+        <div className="proposal-v2-action-left">
+          <button
+            type="button"
+            className="text-xs text-[#A69B8E] hover:text-[#F4EFE8] transition-colors bg-transparent border-none cursor-pointer"
+            onClick={() => p.go("create/course")}
+          >
+            ← Change goal parameters
+          </button>
+        </div>
+
+        <div className="proposal-v2-action-right">
+          {p.confirmDeleteCourse && (
+            <button
+              type="button"
+              className="proposal-v2-danger-btn"
+              disabled={saving || improving || p.busy || p.deletingCourseId === course.id}
+              onClick={() => p.confirmDeleteCourse(course, "courses")}
+            >
+              <Icon name="trash" size={14} />
+              <span>Delete</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            className="proposal-v2-secondary-btn"
+            disabled={saving || improving}
+            onClick={saveChanges}
+          >
+            {saving ? (
+              <>
+                <span className="btn-spinner" />
+                <span>Saving…</span>
+              </>
+            ) : (
+              <span>Save edits</span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            className="proposal-v2-primary-btn"
+            disabled={p.busy || improving}
+            onClick={() => p.approveProposal(false, { ...course, title, summary, modules })}
+          >
+            {p.busy ? (
+              <>
+                <span className="btn-spinner" />
+                <span>Approving blueprint…</span>
+              </>
+            ) : (
+              <span>Approve & start learning ↗</span>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
