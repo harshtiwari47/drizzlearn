@@ -1,50 +1,68 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Icon, Panel, EmptyState, minuteLabel, prettyDate } from "../components/common.jsx";
 
-function formatTaskTimeSlot(task, index = 0) {
+const STUDY_SLOTS = [
+  { hour: 9, min: 0 },   // 9:00 AM
+  { hour: 11, min: 0 },  // 11:00 AM
+  { hour: 13, min: 30 }, // 1:30 PM
+  { hour: 15, min: 30 }, // 3:30 PM
+  { hour: 17, min: 30 }, // 5:30 PM
+  { hour: 19, min: 0 },  // 7:00 PM
+];
+
+export function getTaskTimeMetrics(task, index = 0, totalDayTasks = 1) {
   const baseMinutes = Number(task?.estimated_minutes) || 25;
-  if (!task?.scheduled_at) {
-    const startHour = 9 + (index % 4) * 2;
-    const startMin = 0;
-    const endTotal = startHour * 60 + startMin + baseMinutes;
-    const endH = Math.floor(endTotal / 60);
-    const endM = endTotal % 60;
-    const pad = (n) => String(n).padStart(2, "0");
-    const ampm = startHour >= 12 ? "PM" : "AM";
-    const h12 = startHour % 12 || 12;
-    const endAmpm = endH >= 12 ? "PM" : "AM";
-    const endH12 = endH % 12 || 12;
-    if (ampm === endAmpm) {
-      return `${h12}:${pad(startMin)} – ${endH12}:${pad(endM)} ${endAmpm}`;
+  let startH = 9;
+  let startM = 0;
+
+  if (task?.scheduled_at) {
+    const d = new Date(task.scheduled_at);
+    if (!Number.isNaN(d.getTime())) {
+      startH = d.getHours();
+      startM = d.getMinutes();
     }
-    return `${h12}:${pad(startMin)} ${ampm} – ${endH12}:${pad(endM)} ${endAmpm}`;
   }
-  const date = new Date(task.scheduled_at);
-  if (Number.isNaN(date.getTime())) return `${baseMinutes}m`;
-  let startHour = date.getHours();
-  let startMin = date.getMinutes();
-  
-  if (startHour >= 0 && startHour < 6) {
-    startHour = 9 + (index % 4) * 2;
-    startMin = 0;
+
+  // If outside grid bounds (8:00 AM - 8:00 PM) or defaulted to identical evening time (18:00:00) with multiple tasks:
+  const isDefaultEvening = (startH === 18 && startM === 0);
+  const isOutOfGrid = (startH < 8 || startH >= 20);
+
+  if (isOutOfGrid || (isDefaultEvening && totalDayTasks > 1)) {
+    const slot = STUDY_SLOTS[index % STUDY_SLOTS.length];
+    startH = slot.hour;
+    startM = slot.min;
   }
-  if (index > 0 && startHour === 18 && startMin === 0) {
-    const totalMin = startHour * 60 + startMin + (index % 3) * 45;
-    startHour = Math.floor(totalMin / 60) % 24;
-    startMin = totalMin % 60;
-  }
-  const endTotal = startHour * 60 + startMin + baseMinutes;
-  const endHour = Math.floor(endTotal / 60) % 24;
-  const endMin = endTotal % 60;
+
+  const totalStartMin = startH * 60 + startM;
+  const totalEndMin = totalStartMin + baseMinutes;
+  const endH = Math.floor(totalEndMin / 60) % 24;
+  const endM = totalEndMin % 60;
+
   const pad = (n) => String(n).padStart(2, "0");
-  const ampm = startHour >= 12 ? "PM" : "AM";
-  const h12 = startHour % 12 || 12;
-  const endAmpm = endHour >= 12 ? "PM" : "AM";
-  const endH12 = endHour % 12 || 12;
+  const ampm = startH >= 12 ? "PM" : "AM";
+  const h12 = startH % 12 || 12;
+  const endAmpm = endH >= 12 ? "PM" : "AM";
+  const endH12 = endH % 12 || 12;
+
+  let timeStr;
   if (ampm === endAmpm) {
-    return `${h12}:${pad(startMin)} – ${endH12}:${pad(endMin)} ${endAmpm}`;
+    timeStr = `${h12}:${pad(startM)} – ${endH12}:${pad(endM)} ${endAmpm}`;
+  } else {
+    timeStr = `${h12}:${pad(startM)} ${ampm} – ${endH12}:${pad(endM)} ${endAmpm}`;
   }
-  return `${h12}:${pad(startMin)} ${ampm} – ${endH12}:${pad(endMin)} ${endAmpm}`;
+
+  return {
+    startH,
+    startM,
+    endH,
+    endM,
+    duration: baseMinutes,
+    timeStr,
+  };
+}
+
+export function formatTaskTimeSlot(task, index = 0, totalDayTasks = 1) {
+  return getTaskTimeMetrics(task, index, totalDayTasks).timeStr;
 }
 
 export function TodayPage(p) {
@@ -662,27 +680,19 @@ export function TodayPage(p) {
                       const taskTitle = task.title || lessonMeta?.title || (task.task_type === "review" ? "Spaced Repetition Review" : task.task_type === "practice" ? "Practice Drill" : "Scheduled Lesson");
                       const courseTitle = task.course_title || lessonMeta?.courseTitle || p.activeCourse?.title || "Curriculum";
 
-                      // Calculate top offset and height inside grid
-                      const taskDate = task.scheduled_at ? new Date(task.scheduled_at) : null;
-                      let startH = taskDate ? taskDate.getHours() : 9;
-                      let startM = taskDate ? taskDate.getMinutes() : 0;
-                      if (startH < 8 || startH >= 20) {
-                        startH = 9 + (taskIdx % 4) * 2;
-                        startM = 0;
-                      }
-
-                      const duration = Number(task.estimated_minutes) || 25;
+                      // Calculate realistic top offset and height inside grid using unified metrics
+                      const metrics = getTaskTimeMetrics(task, taskIdx, day.tasks.length);
                       const scale = 84 / 60; // 84px per hour = 1.4px per minute
-                      let topPx = Math.max(0, ((startH - 8) * 60 + startM) * scale);
-                      const heightPx = Math.max(82, Math.round(duration * scale));
+                      let topPx = Math.max(0, ((metrics.startH - 8) * 60 + metrics.startM) * scale);
+                      const heightPx = Math.max(82, Math.round(metrics.duration * scale));
 
-                      // Prevent card collisions on the same day
+                      // Prevent card collisions on the same day if two tasks share identical slot
                       if (topPx < lastBottomPx + 6) {
                         topPx = lastBottomPx + 6;
                       }
                       lastBottomPx = topPx + heightPx;
 
-                      const timeStr = formatTaskTimeSlot(task, taskIdx);
+                      const timeStr = metrics.timeStr;
                       const animDelayMs = colIdx * 40 + taskIdx * 60;
 
                       return (

@@ -24031,7 +24031,44 @@ body:has(.workspace-proposal-page),
   transform: translateY(-1px);
 }
 
-/* Responsiveness */
+/* ==========================================================================
+   Multi-Breakpoint Responsive Suite (480px, 768px, 1024px, 1280px, 1536px, 1920px)
+   ========================================================================== */
+
+/* 1920px & Ultrawide: Expansive Desktop Canvas */
+@media (min-width: 1920px) {
+  .app-shell-today-page .main,
+  .app-shell[data-page="today"] .main {
+    max-width: 100% !important;
+    padding: 24px 44px 56px !important;
+  }
+  .today-grid-event-title {
+    font-size: 13.5px;
+  }
+  .today-grid-event-course {
+    font-size: 11.5px;
+  }
+}
+
+/* 1536px: Wide Laptop & QHD Displays */
+@media (min-width: 1536px) and (max-width: 1919px) {
+  .app-shell-today-page .main,
+  .app-shell[data-page="today"] .main {
+    max-width: 100% !important;
+    padding: 20px 36px 48px !important;
+  }
+}
+
+/* 1280px: Standard Laptops */
+@media (min-width: 1025px) and (max-width: 1535px) {
+  .app-shell-today-page .main,
+  .app-shell[data-page="today"] .main {
+    max-width: 100% !important;
+    padding: 16px 24px 44px !important;
+  }
+}
+
+/* 1024px: Small Desktop & iPad Pro Landscape */
 @media (max-width: 1024px) {
   .today-grid-card {
     border-radius: 18px;
@@ -24039,9 +24076,11 @@ body:has(.workspace-proposal-page),
   .today-grid-header-row,
   .today-grid-body {
     grid-template-columns: 74px repeat(7, minmax(130px, 1fr)) !important;
+    min-width: 980px;
   }
 }
 
+/* 960px: Two-Column to Stacked Layout */
 @media (max-width: 960px) {
   .today-v2-grid {
     grid-template-columns: 1fr;
@@ -24051,32 +24090,102 @@ body:has(.workspace-proposal-page),
   }
 }
 
-@media (max-width: 640px) {
+/* 768px: Tablets & iPad Portrait */
+@media (max-width: 768px) {
+  .app-shell-today-page .main,
+  .app-shell[data-page="today"] .main {
+    padding: 14px 16px 44px !important;
+  }
+  .today-grid-topbar {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  .today-grid-header-row,
+  .today-grid-body {
+    grid-template-columns: 68px repeat(7, minmax(125px, 1fr)) !important;
+    min-width: 940px;
+  }
+  .today-grid-now-dot {
+    left: 63px;
+  }
+}
+
+/* 480px & Mobile Viewports */
+@media (max-width: 480px) {
+  .app-shell-today-page .main,
+  .app-shell[data-page="today"] .main {
+    padding: 12px 10px calc(var(--mobile-nav-height, 64px) + 24px) !important;
+  }
   .today-v2-greeting-title {
-    font-size: 22px;
+    font-size: 20px;
+  }
+  .today-v2-greeting-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .today-v2-view-toggles {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .today-v2-view-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 6px 8px;
+    font-size: 11.5px;
+  }
+  .today-grid-card {
+    border-radius: 14px;
+  }
+  .today-grid-topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+  }
+  .today-grid-nav-cluster {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .today-grid-action-cluster {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .today-grid-filter-select {
+    flex: 1;
+    min-width: 0;
+  }
+  .today-grid-header-row,
+  .today-grid-body {
+    grid-template-columns: 60px repeat(7, 120px) !important;
+    min-width: 900px;
+  }
+  .today-grid-now-dot {
+    left: 55px;
   }
   .today-v2-hero-card {
-    padding: 20px;
+    padding: 16px;
+    border-radius: 16px;
   }
   .today-v2-hero-title {
-    font-size: 19px;
+    font-size: 18px;
   }
   .today-v2-timeline-track {
-    padding-left: 18px;
+    padding-left: 16px;
   }
   .today-v2-timeline-spine {
-    left: 6px;
+    left: 5px;
   }
   .today-v2-milestone-node {
-    left: -18px;
-    width: 16px;
-    height: 16px;
+    left: -16px;
+    width: 15px;
+    height: 15px;
   }
   .today-v2-timetable-card {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
-    padding: 14px;
+    gap: 10px;
+    padding: 12px;
   }
   .today-v2-card-actions {
     width: 100%;
@@ -24087,14 +24196,14 @@ body:has(.workspace-proposal-page),
     justify-content: center;
   }
   .today-v2-week-strip-card {
-    padding: 12px;
+    padding: 10px;
   }
   .today-v2-day-chip {
-    padding: 8px 2px;
-    border-radius: 10px;
+    padding: 6px 2px;
+    border-radius: 8px;
   }
   .today-v2-day-number {
-    font-size: 14px;
+    font-size: 13.5px;
   }
 }
 
