@@ -282,7 +282,7 @@ export function TodayPage(p) {
   const currentTimeTopPx = useMemo(() => {
     if (currentHour < 8 || currentHour >= 20) return null;
     const totalMinutesSince8am = (currentHour - 8) * 60 + currentMin;
-    return totalMinutesSince8am * (84 / 60); // 84px per hour (1.4px/min)
+    return totalMinutesSince8am * (96 / 60); // 96px per hour (1.6px/min)
   }, [currentHour, currentMin]);
 
   // User Greeting
@@ -682,13 +682,13 @@ export function TodayPage(p) {
 
                       // Calculate realistic top offset and height inside grid using unified metrics
                       const metrics = getTaskTimeMetrics(task, taskIdx, day.tasks.length);
-                      const scale = 84 / 60; // 84px per hour = 1.4px per minute
+                      const scale = 96 / 60; // 96px per hour = 1.6px per minute
                       let topPx = Math.max(0, ((metrics.startH - 8) * 60 + metrics.startM) * scale);
-                      const heightPx = Math.max(82, Math.round(metrics.duration * scale));
+                      const heightPx = Math.max(98, Math.round(metrics.duration * scale));
 
                       // Prevent card collisions on the same day if two tasks share identical slot
-                      if (topPx < lastBottomPx + 6) {
-                        topPx = lastBottomPx + 6;
+                      if (topPx < lastBottomPx + 8) {
+                        topPx = lastBottomPx + 8;
                       }
                       lastBottomPx = topPx + heightPx;
 
