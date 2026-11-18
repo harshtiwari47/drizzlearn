@@ -335,8 +335,9 @@ function PageContent(props){
   const isProposalPage = page === "proposal";
   const isCourseDetailPage = page === "course";
   const isTodayPage = page === "today";
-  const isDedicatedFlow = isCreatePage || isProposalPage || isCourseDetailPage || isTodayPage;
-  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""} ${isCourseDetailPage ? "workspace-course-detail-page" : ""} ${isTodayPage ? "workspace-today-page" : ""}`}>
+  const isStudyTogetherPage = page === "study-together";
+  const isDedicatedFlow = isCreatePage || isProposalPage || isCourseDetailPage || isTodayPage || isStudyTogetherPage;
+  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""} ${isCourseDetailPage ? "workspace-course-detail-page" : ""} ${isTodayPage ? "workspace-today-page" : ""} ${isStudyTogetherPage ? "workspace-study-together-page" : ""}`}>
     {!isDedicatedFlow && <PageContextBar context={routeContext} go={go}/>}
     {!isDedicatedFlow && (
       <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""} ${page==="goal"?"page-heading-goal":""}`}>

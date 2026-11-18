@@ -29,7 +29,7 @@ function controlLocalRoom(room,action,now=Date.now()){
   if(action==="skip"&&["short_break","long_break"].includes(current.phase))return {...current,phase:"focus",phaseStartedAt:new Date(now).toISOString(),phaseEndsAt:new Date(now+current.focusMinutes*60000).toISOString(),pausedRemainingSeconds:0};
   return current;
 }
-function roomPhaseName(phase){return ({idle:"Ready when you are",focus:"Focus session",short_break:"Short break",long_break:"Long break",paused:"Paused"})[phase]||"Focus session";}
+function roomPhaseName(phase){return ({idle:"Focus",focus:"Focus",short_break:"Break",long_break:"Break",paused:"Paused"})[phase]||"Focus";}
 function roomSeconds(room,now){return room.phase==="paused"?room.pausedRemainingSeconds:room.phaseEndsAt?Math.max(0,Math.ceil((Date.parse(room.phaseEndsAt)-now)/1000)):room.focusMinutes*60;}
 function formatClock(totalSeconds){const value=Math.max(0,totalSeconds);return `${String(Math.floor(value/60)).padStart(2,"0")}:${String(value%60).padStart(2,"0")}`;}
 
@@ -97,17 +97,19 @@ function StudyTogetherPage(p){
   const onlineCount=participantsList.filter(m=>m.isOnline!==false).length;
   return <section className="study-together-workspace flex flex-col gap-6">
     {room?<>
-      {/* Top Header Bar */}
+      {/* Top Header Bar with Circular Back Button */}
       <div className="study-room-top-bar">
-        <button className="study-room-pill-back" type="button" onClick={leaveRoom}>
-          <Icon name="arrowLeft" size={15}/>
-          <span>All rooms</span>
+        <button
+          type="button"
+          className="study-circle-back-btn"
+          onClick={leaveRoom}
+          aria-label="Back to Study Together"
+          title="Back to Study Together"
+        >
+          <Icon name="arrowLeft" size={20}/>
         </button>
-        <div className="study-room-live-pill">
-          <span className="live-glow-dot"/>
-          <span className="live-status-name">{roomPhaseName(room.phase)}</span>
-          <span className="live-pill-divider">·</span>
-          <span className="live-online-tally">{onlineCount} learner{onlineCount===1?"":"s"} in room</span>
+        <div className="study-room-top-title-wrap">
+          <h1 className="study-together-title">Study Together</h1>
         </div>
       </div>
 
@@ -285,10 +287,6 @@ function StudyTogetherPage(p){
                             <strong className="cell-value">🔥 {memberStreak}d streak</strong>
                           </div>
                         </div>
-                        <div className="participant-live-tag">
-                          <span className="live-dot" />
-                          <span>{member.isOnline!==false?"Active now · Synchronized with group timer":"Away · Last active recently"}</span>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -345,16 +343,14 @@ function StudyTogetherPage(p){
                 <span className="config-val">{room.longBreakMinutes} min</span>
               </div>
             </div>
-
-            <div className="telemetry-sync-note">
-              <span className="sync-note-dot" />
-              <span>Interval transitions sync live across all participants.</span>
-            </div>
           </section>
         </aside>
       </div>
       {roomError&&<p className="room-error" role="alert">{roomError}</p>}
     </>:<>
+      <div className="study-together-page-header">
+        <h1 className="study-together-title">Study Together</h1>
+      </div>
       <div className="study-together-grid">
         {/* Card 1: Create a room */}
         <section className="study-room-glass-card create-room-card create-room-panel">
