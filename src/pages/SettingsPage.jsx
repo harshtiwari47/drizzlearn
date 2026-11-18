@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { Icon, Panel, emptyWorkspace, LOCAL_STORAGE_KEY, LEGACY_STORAGE_KEY } from "../components/common.jsx";
+import React, { useState } from "react";
+import { Icon, emptyWorkspace, LOCAL_STORAGE_KEY, LEGACY_STORAGE_KEY } from "../components/common.jsx";
 import { AiEngineRagPanel } from "./TutorPage.jsx";
 
 const COMMON_TIMEZONES = [
@@ -77,10 +77,7 @@ function SettingsPage(p) {
   const [deletingAccount, setDeletingAccount] = useState(false);
 
   const coursesCount = p.data?.courses?.length || 0;
-  const activeCoursesCount = p.data?.courses?.filter(c => c.status === "active")?.length || 0;
   const flashcardsCount = p.data?.flashcards?.length || 0;
-  const notesCount = p.data?.notes?.length || 0;
-  const pendingTasksCount = p.data?.tasks?.filter(t => t.status !== "completed")?.length || 0;
 
   const displayName = name || p.user?.fullName || "Learner";
   const userInitials = (displayName || "L")
@@ -130,18 +127,18 @@ function SettingsPage(p) {
   }
 
   async function deleteAccount() {
-    if (!confirm("Are you sure you want to delete your account? This will permanently delete all your courses, tasks, notes, and learning evidence. This action cannot be undone.")) return;
+    if (!confirm("Are you sure you want to delete your account? This permanently removes all your learning data.")) return;
     setDeletingAccount(true);
     try {
       if (p.remote) {
-        const password = prompt("Enter your account password to confirm permanent deletion:");
+        const password = prompt("Enter your password to confirm:");
         if (!password) return;
         try {
           await p.request("settings/account", { method: "DELETE", body: JSON.stringify({ password }) });
           if (p.setUser) p.setUser(null);
           if (p.setRemote) p.setRemote(false);
           if (p.setData) p.setData(emptyWorkspace());
-          p.flashToast("Account permanently deleted.");
+          p.flashToast("Account deleted.");
           p.go("home");
         } catch (error) {
           p.flashToast(error.message || "Could not delete account.");
@@ -160,7 +157,7 @@ function SettingsPage(p) {
 
   return (
     <div className="profile-page-wrapper">
-      {/* Top Header Bar with Circular Back Button */}
+      {/* Top Header Bar with Clean Circular Back Button */}
       <header className="profile-top-bar">
         <div className="profile-top-left">
           <button
@@ -172,77 +169,28 @@ function SettingsPage(p) {
           >
             <Icon name="arrowLeft" size={19} />
           </button>
-          <div className="profile-top-title-group">
-            <span className="profile-kicker-pill">LEARNER PROFILE &amp; PREFERENCES</span>
-            <h1 className="profile-top-heading">Learner Profile</h1>
-          </div>
-        </div>
-        <div className="profile-top-right">
-          <div className={`profile-sync-indicator ${p.remote ? "synced" : "local"}`}>
-            <span className="sync-pulse-dot" />
-            <span>{p.remote ? "Cloud Synced" : "Local Workspace"}</span>
-          </div>
+          <h1 className="profile-top-heading">Profile</h1>
         </div>
       </header>
 
-      {/* Signature Pink & Blue Aurora Hero Card */}
-      <section className="profile-hero-card" aria-label="Learner Profile Summary">
-        {/* Ambient Radial Mesh Glows */}
-        <div className="profile-aurora-glow glow-pink" />
-        <div className="profile-aurora-glow glow-blue" />
-        <div className="profile-aurora-glow glow-violet" />
-
+      {/* Hero Profile Card — Simple, Clean, Ethereal Pink & Blue Accents */}
+      <section className="profile-hero-card" aria-label="Learner Profile">
         <div className="profile-hero-main-row">
-          {/* Avatar Showcase with Pink/Blue Luminous Ring */}
-          <div className="profile-avatar-container">
-            <div className="profile-avatar-ring">
-              <div className="profile-avatar-core">
-                <span className="profile-avatar-initials">{userInitials}</span>
-                <span className="profile-avatar-flower-badge" title="Drizzlearn Active Scholar">🌸</span>
-              </div>
+          <div className="profile-avatar-ring">
+            <div className="profile-avatar-core">
+              <span className="profile-avatar-initials">{userInitials}</span>
             </div>
-            <span className="profile-status-badge">✦ Active</span>
           </div>
 
-          {/* Identity & Display Details */}
           <div className="profile-identity-details">
-            <div className="profile-identity-top-row">
-              <span className="profile-role-chip">
-                <Icon name="spark" size={12} />
-                <span>Drizzlearn Scholar</span>
-              </span>
-              {p.user?.email && (
-                <span className="profile-email-chip" title={p.user.email}>
-                  {p.user.email}
-                </span>
-              )}
-            </div>
-
             <h2 className="profile-display-name">{displayName}</h2>
-
-            {/* Frosted Tag Capsules (Inspired by Angela Robinson / Sarah Connor) */}
-            <div className="profile-tag-capsules">
-              <span className="profile-capsule-tag capsule-pink">
-                <Icon name="clock" size={13} />
-                <span>{session}m Focus Rhythm</span>
-              </span>
-              <span className="profile-capsule-tag capsule-blue">
-                <Icon name="progress" size={13} />
-                <span>{Math.round(weekly / 60 * 10) / 10}h Weekly Target</span>
-              </span>
-              <span className="profile-capsule-tag capsule-violet">
-                <Icon name="calendar" size={13} />
-                <span>{days.length || 7} Days / Week</span>
-              </span>
-              <span className="profile-capsule-tag capsule-cyan">
-                <Icon name="book" size={13} />
-                <span>{coursesCount} {coursesCount === 1 ? "Track" : "Tracks"}</span>
-              </span>
-            </div>
+            {p.user?.email && (
+              <span className="profile-email-line">{p.user.email}</span>
+            )}
           </div>
         </div>
 
-        {/* Floating Quick Stats Cards Row */}
+        {/* 4 Clean Metric Cards (Values + Titles only, No extra noise) */}
         <div className="profile-hero-stats-grid">
           <div className="profile-hero-stat-card card-pink">
             <div className="stat-card-header">
@@ -250,7 +198,6 @@ function SettingsPage(p) {
               <span className="stat-label">Weekly Budget</span>
             </div>
             <strong className="stat-value">{Math.round(weekly / 60 * 10) / 10}h</strong>
-            <small className="stat-caption">{weekly}m planned cadence</small>
             <div className="stat-accent-bar bar-pink" />
           </div>
 
@@ -260,27 +207,24 @@ function SettingsPage(p) {
               <span className="stat-label">Focus Session</span>
             </div>
             <strong className="stat-value">{session}m</strong>
-            <small className="stat-caption">Optimal Pomodoro rhythm</small>
             <div className="stat-accent-bar bar-blue" />
           </div>
 
           <div className="profile-hero-stat-card card-violet">
             <div className="stat-card-header">
               <span className="stat-icon-tile icon-violet"><Icon name="cards" size={14} /></span>
-              <span className="stat-label">Spaced Retention</span>
+              <span className="stat-label">Flashcards</span>
             </div>
             <strong className="stat-value">{flashcardsCount}</strong>
-            <small className="stat-caption">Cards in memory loop</small>
             <div className="stat-accent-bar bar-violet" />
           </div>
 
           <div className="profile-hero-stat-card card-cyan">
             <div className="stat-card-header">
               <span className="stat-icon-tile icon-cyan"><Icon name="book" size={14} /></span>
-              <span className="stat-label">Active Tracks</span>
+              <span className="stat-label">Courses</span>
             </div>
             <strong className="stat-value">{coursesCount}</strong>
-            <small className="stat-caption">{pendingTasksCount} pending steps</small>
             <div className="stat-accent-bar bar-cyan" />
           </div>
         </div>
@@ -288,16 +232,13 @@ function SettingsPage(p) {
 
       {/* Main Settings & Preferences Content Grid */}
       <div className="profile-content-grid">
-        {/* Left Column: Primary Preferences Form */}
+        {/* Left Column: Preferences Form */}
         <div className="profile-main-col">
           <form className="profile-glass-card profile-form-card" onSubmit={save}>
             <div className="profile-card-head">
               <div className="card-head-title">
                 <span className="card-head-icon-box"><Icon name="tutor" size={16} /></span>
-                <div>
-                  <h3>Learner Preferences</h3>
-                  <p>Fine-tune your personal identity, focus schedule, and reminders.</p>
-                </div>
+                <h3>Preferences</h3>
               </div>
             </div>
 
@@ -319,12 +260,9 @@ function SettingsPage(p) {
                   <input
                     className="profile-text-input"
                     value={p.user?.email || ""}
-                    placeholder="Sign in to attach an email"
+                    placeholder="Not signed in"
                     readOnly
                   />
-                  <small className="label-helper-text">
-                    {p.remote ? "Primary account email (cloud verified)" : "Sign in to associate an email account"}
-                  </small>
                 </label>
               </div>
 
@@ -340,22 +278,18 @@ function SettingsPage(p) {
                     <option key={tz} value={tz}>{tz.replace(/_/g, " ")}</option>
                   ))}
                 </select>
-                <small className="label-helper-text">Used to schedule your daily review milestones.</small>
               </label>
 
-              {/* Weekly Study Rhythm Section */}
+              {/* Study Rhythm */}
               <div className="profile-sub-section">
                 <div className="sub-section-header">
                   <span className="sub-section-icon"><Icon name="clock" size={14} /></span>
-                  <div>
-                    <h4>Study Rhythm &amp; Time Budget</h4>
-                    <p>Course roadmaps adapt around the exact study blocks you allocate.</p>
-                  </div>
+                  <h4>Study Rhythm</h4>
                 </div>
 
                 <div className="profile-form-two-col">
                   <label className="profile-field-label">
-                    <span className="label-text">Weekly study budget (minutes)</span>
+                    <span className="label-text">Weekly budget (minutes)</span>
                     <input
                       className="profile-text-input"
                       type="number"
@@ -365,7 +299,6 @@ function SettingsPage(p) {
                       value={weekly}
                       onChange={e => setWeekly(e.target.value)}
                     />
-                    <small className="label-helper-text">~{Math.round(weekly / 60 * 10) / 10} hours every week</small>
                   </label>
 
                   <label className="profile-field-label">
@@ -379,19 +312,15 @@ function SettingsPage(p) {
                       value={session}
                       onChange={e => setSession(e.target.value)}
                     />
-                    <small className="label-helper-text">Recommended: 25m or 50m Pomodoro</small>
                   </label>
                 </div>
               </div>
 
-              {/* Preferred Study Days Section */}
+              {/* Preferred Study Days */}
               <div className="profile-sub-section">
                 <div className="sub-section-header">
                   <span className="sub-section-icon"><Icon name="calendar" size={14} /></span>
-                  <div>
-                    <h4>Preferred Study Days</h4>
-                    <p>Select which days you want study sessions planned.</p>
-                  </div>
+                  <h4>Preferred Study Days</h4>
                 </div>
 
                 <div className="profile-day-picker" role="group" aria-label="Preferred study days">
@@ -405,30 +334,23 @@ function SettingsPage(p) {
                         onClick={() => toggleDay(i)}
                         aria-pressed={isSelected}
                       >
-                        <span className="day-name">{day}</span>
-                        {isSelected && <span className="day-check">✓</span>}
+                        {day}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Notification Preferences */}
+              {/* Notifications */}
               <div className="profile-sub-section">
                 <div className="sub-section-header">
                   <span className="sub-section-icon"><Icon name="spark" size={14} /></span>
-                  <div>
-                    <h4>Smart Notifications</h4>
-                    <p>Gentle nudges before planned study rhythms and spaced review windows.</p>
-                  </div>
+                  <h4>Notifications</h4>
                 </div>
 
                 <div className="profile-toggles-list">
                   <label className="profile-toggle-card">
-                    <div className="toggle-text-group">
-                      <strong>Study session reminders</strong>
-                      <small>Notifies you right before an allocated focus session begins.</small>
-                    </div>
+                    <span className="toggle-label-text">Study session reminders</span>
                     <input
                       type="checkbox"
                       className="profile-toggle-switch"
@@ -438,10 +360,7 @@ function SettingsPage(p) {
                   </label>
 
                   <label className="profile-toggle-card">
-                    <div className="toggle-text-group">
-                      <strong>Spaced review alerts</strong>
-                      <small>Reminds you when retention flashcards reach memory checkpoints.</small>
-                    </div>
+                    <span className="toggle-label-text">Review reminders</span>
                     <input
                       type="checkbox"
                       className="profile-toggle-switch"
@@ -452,31 +371,23 @@ function SettingsPage(p) {
                 </div>
               </div>
 
-              {/* Save Submit Button */}
               <div className="profile-form-footer">
                 <button className="profile-save-btn" type="submit">
-                  {saved ? (
-                    <><span className="save-check">✓</span> Changes Saved</>
-                  ) : (
-                    "Save Preferences"
-                  )}
+                  {saved ? "Saved ✓" : "Save Changes"}
                 </button>
               </div>
             </div>
           </form>
         </div>
 
-        {/* Right Column: Account, Data Backups & AI Engine */}
+        {/* Right Column: Account & Workspace Data */}
         <div className="profile-side-col">
-          {/* Account & Security Card */}
+          {/* Account Card */}
           <div className="profile-glass-card profile-side-card">
             <div className="profile-card-head">
               <div className="card-head-title">
                 <span className="card-head-icon-box"><Icon name="people" size={16} /></span>
-                <div>
-                  <h3>Account &amp; Security</h3>
-                  <p>{p.remote ? "Signed in with cloud sync" : "Running on local device storage"}</p>
-                </div>
+                <h3>Account</h3>
               </div>
             </div>
 
@@ -485,7 +396,7 @@ function SettingsPage(p) {
                 <div className="account-user-avatar">{userInitials}</div>
                 <div className="account-user-meta">
                   <strong>{p.user?.fullName || displayName}</strong>
-                  <span>{p.user?.email || "Guest Learner"}</span>
+                  <span>{p.user?.email || "Local storage"}</span>
                 </div>
               </div>
 
@@ -502,37 +413,28 @@ function SettingsPage(p) {
               </div>
 
               <div className="account-danger-zone">
-                <div className="danger-zone-copy">
-                  <small>Permanently delete your account and wipe all courses, notes, and retention data.</small>
-                </div>
                 <button
                   className="profile-danger-btn"
                   type="button"
                   disabled={deletingAccount}
                   onClick={deleteAccount}
                 >
-                  {deletingAccount ? <><span className="btn-spinner" /> Deleting…</> : "Delete account"}
+                  {deletingAccount ? "Deleting…" : "Delete account"}
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Workspace Data & Backups */}
+          {/* Workspace Data Card */}
           <div className="profile-glass-card profile-side-card">
             <div className="profile-card-head">
               <div className="card-head-title">
                 <span className="card-head-icon-box"><Icon name="notes" size={16} /></span>
-                <div>
-                  <h3>Workspace Data</h3>
-                  <p>Export all notes, cards, sessions, and course evidence as portable JSON.</p>
-                </div>
+                <h3>Workspace Data</h3>
               </div>
             </div>
 
             <div className="profile-side-card-body">
-              <p className="data-card-description">
-                Download a clean, structured JSON archive containing your full study history, flashcards, and course syllabus.
-              </p>
               {p.remote ? (
                 <button
                   type="button"
@@ -551,17 +453,17 @@ function SettingsPage(p) {
                     }
                   }}
                 >
-                  Download cloud export ↗
+                  Export cloud data ↗
                 </button>
               ) : (
                 <button type="button" className="profile-action-btn secondary" onClick={exportWorkspace}>
-                  Download workspace data ↗
+                  Export workspace data ↗
                 </button>
               )}
             </div>
           </div>
 
-          {/* Grounded AI Engine & RAG Status Panel */}
+          {/* AI Engine Panel */}
           <AiEngineRagPanel
             remote={p.remote}
             request={p.request}
