@@ -334,8 +334,9 @@ function PageContent(props){
   const isCreatePage = page === "goal" || page === "create-course" || page === "create/course";
   const isProposalPage = page === "proposal";
   const isCourseDetailPage = page === "course";
-  const isDedicatedFlow = isCreatePage || isProposalPage || isCourseDetailPage;
-  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""} ${isCourseDetailPage ? "workspace-course-detail-page" : ""}`}>
+  const isTodayPage = page === "today";
+  const isDedicatedFlow = isCreatePage || isProposalPage || isCourseDetailPage || isTodayPage;
+  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""} ${isCourseDetailPage ? "workspace-course-detail-page" : ""} ${isTodayPage ? "workspace-today-page" : ""}`}>
     {!isDedicatedFlow && <PageContextBar context={routeContext} go={go}/>}
     {!isDedicatedFlow && (
       <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""} ${page==="goal"?"page-heading-goal":""}`}>
@@ -918,8 +919,9 @@ export default function App(){
 
   const isCoursePage = page === "courses" || page === "course";
   const isCreateCoursePage = page === "create-course" || page === "create/course" || page === "goal";
+  const isTodayAppPage = page === "today";
 
-  return <div className={`app-shell flex min-h-screen relative ${isCoursePage ? "app-shell-course-page" : ""} ${isCreateCoursePage ? "app-shell-create-course-page" : ""}`} data-page={page}>
+  return <div className={`app-shell flex min-h-screen relative ${isCoursePage ? "app-shell-course-page" : ""} ${isCreateCoursePage ? "app-shell-create-course-page" : ""} ${isTodayAppPage ? "app-shell-today-page" : ""}`} data-page={page}>
     <SnowfallOverlay />
     {(syncing||activeRequests>0||busy)&&<div className="global-progress-bar" role="progressbar" aria-label="Loading workspace data"/>}
     <aside className="sidebar sticky top-0 h-screen flex flex-col overflow-hidden" aria-label="Main navigation">

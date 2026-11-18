@@ -14,6 +14,9 @@ function formatTaskTimeSlot(task, index = 0) {
     const h12 = startHour % 12 || 12;
     const endAmpm = endH >= 12 ? "PM" : "AM";
     const endH12 = endH % 12 || 12;
+    if (ampm === endAmpm) {
+      return `${h12}:${pad(startMin)} – ${endH12}:${pad(endM)} ${endAmpm}`;
+    }
     return `${h12}:${pad(startMin)} ${ampm} – ${endH12}:${pad(endM)} ${endAmpm}`;
   }
   const date = new Date(task.scheduled_at);
@@ -38,6 +41,9 @@ function formatTaskTimeSlot(task, index = 0) {
   const h12 = startHour % 12 || 12;
   const endAmpm = endHour >= 12 ? "PM" : "AM";
   const endH12 = endHour % 12 || 12;
+  if (ampm === endAmpm) {
+    return `${h12}:${pad(startMin)} – ${endH12}:${pad(endMin)} ${endAmpm}`;
+  }
   return `${h12}:${pad(startMin)} ${ampm} – ${endH12}:${pad(endMin)} ${endAmpm}`;
 }
 
@@ -258,7 +264,7 @@ export function TodayPage(p) {
   const currentTimeTopPx = useMemo(() => {
     if (currentHour < 8 || currentHour >= 20) return null;
     const totalMinutesSince8am = (currentHour - 8) * 60 + currentMin;
-    return totalMinutesSince8am * (64 / 60); // 64px per hour
+    return totalMinutesSince8am * (72 / 60); // 72px per hour (1.2px/min)
   }, [currentHour, currentMin]);
 
   // User Greeting
@@ -489,7 +495,7 @@ export function TodayPage(p) {
                 aria-expanded={calendarOpen}
               >
                 <span>{weekOffset === 0 ? "Today" : weekData.rangeLabel}</span>
-                <span className="text-xs text-learnos-muted">({weekData.monthLabel})</span>
+                <span className="text-xs text-[#91AA7A]">({weekData.monthLabel})</span>
               </button>
 
               <button
@@ -668,8 +674,8 @@ export function TodayPage(p) {
                       }
 
                       const duration = Number(task.estimated_minutes) || 25;
-                      const topPx = Math.max(0, ((startH - 8) * 60 + startM) * (64 / 60));
-                      const heightPx = Math.max(54, duration * (64 / 60));
+                      const topPx = Math.max(0, ((startH - 8) * 60 + startM) * (72 / 60));
+                      const heightPx = Math.max(62, duration * (72 / 60));
                       const timeStr = formatTaskTimeSlot(task, taskIdx);
 
                       return (
@@ -693,7 +699,7 @@ export function TodayPage(p) {
                           <h5 className="today-grid-event-title">{taskTitle}</h5>
 
                           <div className="today-grid-event-footer">
-                            <span className="text-[11px] text-learnos-muted truncate max-w-[90px]">
+                            <span className="text-[11px] text-[#91AA7A] truncate flex-1 min-w-0">
                               {courseTitle}
                             </span>
                             <button
