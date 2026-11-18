@@ -970,65 +970,98 @@ export function CoursePage(p) {
       <section className="course-v2-roadmap-section" aria-label="Course Curriculum Roadmap">
         
         {/* Roadmap Toolbar & Controls */}
-        <div className="course-v2-roadmap-header">
-          <div className="course-v2-roadmap-title-wrap">
-            <h2 className="course-v2-section-title">Course Roadmap</h2>
-          </div>
-
-          <div className="course-v2-roadmap-controls">
-            {/* View Switcher: By Module vs All Lessons Timeline */}
-            <div className="course-v2-pill-switcher" role="tablist" aria-label="Roadmap View Options">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={viewMode === "modules"}
-                className={`course-v2-switch-btn ${viewMode === "modules" ? "active" : ""}`}
-                onClick={() => setViewMode("modules")}
-              >
-                By Module
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={viewMode === "timeline"}
-                className={`course-v2-switch-btn ${viewMode === "timeline" ? "active" : ""}`}
-                onClick={() => setViewMode("timeline")}
-              >
-                Timeline View
-              </button>
+        <div className="course-v2-roadmap-toolbar-wrap">
+          <div className="course-v2-roadmap-top-bar">
+            <div className="course-v2-roadmap-title-cluster">
+              <h2 className="course-v2-section-title">Course Roadmap</h2>
+              <span className="course-v2-roadmap-count-badge">
+                {totalLessons} lessons · {completedCount} completed
+              </span>
             </div>
 
-            {/* Status Filters */}
-            <div className="course-v2-filter-group">
+            <div className="course-v2-roadmap-view-cluster">
+              {/* View Switcher: By Module vs All Lessons Timeline */}
+              <div className="course-v2-pill-switcher" role="tablist" aria-label="Roadmap View Options">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={viewMode === "modules"}
+                  className={`course-v2-switch-btn ${viewMode === "modules" ? "active" : ""}`}
+                  onClick={() => setViewMode("modules")}
+                >
+                  <Icon name="layout" size={13} />
+                  <span>By Module</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={viewMode === "timeline"}
+                  className={`course-v2-switch-btn ${viewMode === "timeline" ? "active" : ""}`}
+                  onClick={() => setViewMode("timeline")}
+                >
+                  <Icon name="list" size={13} />
+                  <span>Timeline View</span>
+                </button>
+              </div>
+
+              {viewMode === "modules" && (
+                <div className="course-v2-expand-controls">
+                  <button
+                    type="button"
+                    onClick={expandAll}
+                    className="course-v2-text-control-btn"
+                    title="Expand all modules"
+                  >
+                    Expand All
+                  </button>
+                  <span className="course-v2-control-sep" aria-hidden="true">·</span>
+                  <button
+                    type="button"
+                    onClick={collapseAll}
+                    className="course-v2-text-control-btn"
+                    title="Collapse all modules"
+                  >
+                    Collapse All
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sub Bar: Filter Chips & Search Box */}
+          <div className="course-v2-roadmap-filter-bar">
+            <div className="course-v2-filter-group" role="group" aria-label="Filter lessons by status">
               <button
                 type="button"
                 className={`course-v2-filter-chip ${statusFilter === "all" ? "active" : ""}`}
                 onClick={() => setStatusFilter("all")}
               >
-                All
+                <span>All</span>
+                <span className="course-v2-filter-chip-count">{totalLessons}</span>
               </button>
               <button
                 type="button"
                 className={`course-v2-filter-chip ${statusFilter === "in_progress" ? "active" : ""}`}
                 onClick={() => setStatusFilter("in_progress")}
               >
-                To Do
+                <span>To Do</span>
+                <span className="course-v2-filter-chip-count">{totalLessons - completedCount}</span>
               </button>
               <button
                 type="button"
                 className={`course-v2-filter-chip ${statusFilter === "completed" ? "active" : ""}`}
                 onClick={() => setStatusFilter("completed")}
               >
-                Done
+                <span>Done</span>
+                <span className="course-v2-filter-chip-count">{completedCount}</span>
               </button>
             </div>
 
-            {/* Search Input */}
             <div className="course-v2-search-box">
               <Icon name="search" size={14} className="course-v2-search-icon" />
               <input
                 type="text"
-                placeholder="Filter lessons…"
+                placeholder="Filter lessons by name or topic…"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="course-v2-search-input"
@@ -1045,26 +1078,6 @@ export function CoursePage(p) {
                 </button>
               )}
             </div>
-
-            {viewMode === "modules" && (
-              <div className="course-v2-expand-controls">
-                <button
-                  type="button"
-                  onClick={expandAll}
-                  className="course-v2-text-control-btn"
-                >
-                  Expand All
-                </button>
-                <span className="course-v2-control-sep">·</span>
-                <button
-                  type="button"
-                  onClick={collapseAll}
-                  className="course-v2-text-control-btn"
-                >
-                  Collapse All
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
