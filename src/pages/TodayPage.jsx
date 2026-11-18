@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Icon, Panel, EmptyState, minuteLabel, prettyDate } from "../components/common.jsx";
 
 function formatTaskTimeSlot(task, index = 0) {
@@ -21,7 +21,6 @@ function formatTaskTimeSlot(task, index = 0) {
   let startHour = date.getHours();
   let startMin = date.getMinutes();
   
-  // If the time falls between midnight and 6 AM or is default 00:00, map to realistic study hours
   if (startHour >= 0 && startHour < 6) {
     startHour = 9 + (index % 4) * 2;
     startMin = 0;
@@ -44,14 +43,40 @@ function formatTaskTimeSlot(task, index = 0) {
 
 export function TodayPage(p) {
   const { data, updateData, openLesson, request, remote, refreshRemote, flashToast, user } = p;
+  
+  // Default to Desktop Calendar Grid on desktop (>=1024px), Timeline on mobile
+  const [viewMode, setViewMode] = useState(() => {
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      return "grid";
+    }
+    return "timeline";
+  });
+  
   const [selectedDay, setSelectedDay] = useState("all");
   const [weekOffset, setWeekOffset] = useState(0);
-  const [viewMode, setViewMode] = useState("timeline"); // "timeline" | "compact"
+  const [courseFilter, setCourseFilter] = useState("all");
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [miniCalMonthOffset, setMiniCalMonthOffset] = useState(0);
   const [rescheduleTask, setRescheduleTask] = useState(null);
   const [targetDateVal, setTargetDateVal] = useState("");
   const [rebalancing, setRebalancing] = useState(false);
+  
+  const miniCalRef = useRef(null);
 
-  // All lessons map for fast lookup of titles and module context
+  // Close mini-calendar on outside click
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (miniCalRef.current && !miniCalRef.current.contains(e.target)) {
+        setCalendarOpen(false);
+      }
+    }
+    if (calendarOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [calendarOpen]);
+
+  // Lessons map for lookup of titles and module context
   const allLessons = p.allLessons || [];
   const allLessonsMap = useMemo(() => {
     const map = new Map();
@@ -111,8 +136,9 @@ export function TodayPage(p) {
   const tasks = useMemo(() => {
     return [...(data.tasks || [])]
       .filter((t) => t.status !== "completed" || new Date(t.scheduled_at || 0).getTime() >= weekAgo)
+      .filter((t) => courseFilter === "all" || t.course_id === courseFilter)
       .sort(compareTodayTasks);
-  }, [data.tasks]);
+  }, [data.tasks, courseFilter]);
 
   const next = useMemo(() => tasks.find((t) => t.status !== "completed"), [tasks]);
 
@@ -131,7 +157,7 @@ export function TodayPage(p) {
     );
   }, [data.tasks]);
 
-  // Generate 7-day week strip based on weekOffset
+  // Generate 7-day week data based on weekOffset
   const weekData = useMemo(() => {
     const now = new Date();
     const curDay = now.getDay();
@@ -160,16 +186,82 @@ export function TodayPage(p) {
         isToday,
         hasTasks: dayTasks.length > 0,
         taskCount: dayTasks.length,
+        tasks: dayTasks,
         pretty: prettyDate(d.toISOString()),
       };
     });
 
     const monthName = monday.toLocaleString("default", { month: "long" });
     const year = monday.getFullYear();
-    return { days, monthLabel: `${monthName} ${year}` };
+    const weekStartPretty = monday.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const weekEndPretty = sunday.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+
+    return { days, monday, sunday, monthLabel: `${monthName} ${year}`, rangeLabel: `${weekStartPretty} – ${weekEndPretty}` };
   }, [weekOffset, tasks]);
 
-  // Personalized Greeting
+  // Mini Calendar Month Grid
+  const miniCalData = useMemo(() => {
+    const base = new Date();
+    base.setMonth(base.getMonth() + miniCalMonthOffset);
+    const year = base.getFullYear();
+    const month = base.getMonth();
+    const monthName = base.toLocaleString("default", { month: "long" });
+    
+    const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7; // Monday = 0
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    const prevMonthTotal = new Date(year, month, 0).getDate();
+
+    const cells = [];
+    // Previous month padding
+    for (let i = firstDayIndex - 1; i >= 0; i--) {
+      const d = new Date(year, month - 1, prevMonthTotal - i);
+      cells.push({
+        dayNum: prevMonthTotal - i,
+        date: d,
+        isCurrentMonth: false,
+        isoDate: d.toISOString().slice(0, 10),
+      });
+    }
+    // Current month days
+    for (let i = 1; i <= totalDays; i++) {
+      const d = new Date(year, month, i);
+      const isToday = d.toDateString() === new Date().toDateString();
+      cells.push({
+        dayNum: i,
+        date: d,
+        isCurrentMonth: true,
+        isToday,
+        isoDate: d.toISOString().slice(0, 10),
+      });
+    }
+    // Next month padding to complete 35 or 42 cells
+    const remaining = 35 - cells.length;
+    for (let i = 1; i <= (remaining >= 0 ? remaining : 42 - cells.length); i++) {
+      const d = new Date(year, month + 1, i);
+      cells.push({
+        dayNum: i,
+        date: d,
+        isCurrentMonth: false,
+        isoDate: d.toISOString().slice(0, 10),
+      });
+    }
+
+    return { title: `${monthName} ${year}`, cells };
+  }, [miniCalMonthOffset]);
+
+  // Current Time Line Offset in Hours (8:00 AM to 8:00 PM)
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMin = now.getMinutes();
+  const currentTimeTopPx = useMemo(() => {
+    if (currentHour < 8 || currentHour >= 20) return null;
+    const totalMinutesSince8am = (currentHour - 8) * 60 + currentMin;
+    return totalMinutesSince8am * (64 / 60); // 64px per hour
+  }, [currentHour, currentMin]);
+
+  // User Greeting
   const learnerName = user?.fullName || data?.settings?.fullName || "Learner";
   const firstName = learnerName.split(/\s+/)[0] || "Learner";
   const greetingText = useMemo(() => {
@@ -247,7 +339,7 @@ export function TodayPage(p) {
     }
   }
 
-  // Reschedule single task
+  // Reschedule Task handler
   function openRescheduleModal(task) {
     setRescheduleTask(task);
     const initialIso = task.scheduled_at ? new Date(task.scheduled_at).toISOString().slice(0, 10) : new Date(Date.now() + 86400000).toISOString().slice(0, 10);
@@ -294,7 +386,27 @@ export function TodayPage(p) {
     else p.go("courses");
   };
 
+  const jumpToDate = (targetDate) => {
+    const today = new Date();
+    const curDay = today.getDay();
+    const diffToMon = (curDay === 0 ? -6 : 1) - curDay;
+    const currentMonday = new Date(today);
+    currentMonday.setDate(today.getDate() + diffToMon);
+    currentMonday.setHours(0, 0, 0, 0);
+
+    const targetDayIndex = (targetDate.getDay() + 6) % 7;
+    const targetMonday = new Date(targetDate);
+    targetMonday.setDate(targetDate.getDate() - targetDayIndex);
+    targetMonday.setHours(0, 0, 0, 0);
+
+    const diffWeeks = Math.round((targetMonday.getTime() - currentMonday.getTime()) / (7 * 86400000));
+    setWeekOffset(diffWeeks);
+    setSelectedDay(targetDate.toISOString().slice(0, 10));
+    setCalendarOpen(false);
+  };
+
   const preferredDays = (data.settings?.preferredStudyDays || [1, 3, 5]).map(Number);
+  const hourTicks = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
   return (
     <div className="today-v2-container">
@@ -315,21 +427,34 @@ export function TodayPage(p) {
           </p>
         </div>
 
-        <div className="today-v2-view-toggles" role="group" aria-label="View format">
+        {/* View Format Selector (Grid for Desktop, Timeline for Mobile/Focus, Agenda) */}
+        <div className="today-v2-view-toggles" role="group" aria-label="Schedule view format">
+          <button
+            type="button"
+            className={`today-v2-view-btn ${viewMode === "grid" ? "active" : ""}`}
+            onClick={() => setViewMode("grid")}
+            aria-pressed={viewMode === "grid"}
+            title="Desktop Calendar Grid View"
+          >
+            <Icon name="layout" size={14} />
+            <span>Calendar Grid</span>
+          </button>
           <button
             type="button"
             className={`today-v2-view-btn ${viewMode === "timeline" ? "active" : ""}`}
             onClick={() => setViewMode("timeline")}
             aria-pressed={viewMode === "timeline"}
+            title="Vertical Timetable Timeline"
           >
             <Icon name="clock" size={14} />
-            <span>Timetable</span>
+            <span>Timeline</span>
           </button>
           <button
             type="button"
             className={`today-v2-view-btn ${viewMode === "compact" ? "active" : ""}`}
             onClick={() => setViewMode("compact")}
             aria-pressed={viewMode === "compact"}
+            title="Agenda List View"
           >
             <Icon name="list" size={14} />
             <span>Agenda</span>
@@ -337,404 +462,665 @@ export function TodayPage(p) {
         </div>
       </header>
 
-      {/* Main Two-Column Bento Layout */}
-      <div className="today-v2-grid">
-        <main className="today-v2-main-col">
-          {/* Featured Hero "Now / Next Up" Card (Matching Image 1) */}
-          {next && (
-            <section className="today-v2-hero-card" aria-label="Featured next study session">
-              <div className="today-v2-hero-ambient-glow" aria-hidden="true" />
-              <div className="today-v2-hero-inner">
-                <div className="today-v2-hero-content">
-                  <div className="today-v2-hero-tag-row">
-                    <span className="today-v2-hero-now-badge">
-                      <span className="today-v2-pulse-dot" aria-hidden="true" />
-                      <span>{next.status === "in_progress" ? "Now" : "Up Next"}</span>
-                    </span>
-                    <span className="today-v2-hero-time-pill">
-                      <Icon name="clock" size={13} />
-                      <span>{formatTaskTimeSlot(next, 0)}</span>
-                    </span>
-                  </div>
+      {/* ====================================================================
+          VIEW 1: DESKTOP CALENDAR GRID (Matching media_1795017922039_0d0f90e5.jpg)
+          ==================================================================== */}
+      {viewMode === "grid" && (
+        <section className="today-grid-card" aria-label="Weekly study schedule grid">
+          {/* Top Control Bar */}
+          <div className="today-grid-topbar">
+            {/* Date Navigator + Mini-Calendar Popover Trigger */}
+            <div className="today-grid-nav-cluster" ref={miniCalRef}>
+              <button
+                type="button"
+                className="today-v2-week-nav-btn"
+                title="Previous week"
+                aria-label="Previous week"
+                onClick={() => setWeekOffset((w) => w - 1)}
+              >
+                <Icon name="chevronLeft" size={14} />
+              </button>
 
-                  {(() => {
-                    const nextLessonMeta = next?.lesson_id ? allLessonsMap.get(next.lesson_id) : null;
-                    const nextTitle = next?.title || nextLessonMeta?.title || (next?.task_type === "review" ? "Spaced Repetition Review" : next?.task_type === "practice" ? "Checkpoint Practice Drill" : "Scheduled Lesson");
-                    const nextCourse = next?.course_title || nextLessonMeta?.courseTitle || p.activeCourse?.title || "Core Curriculum";
-                    return (
-                      <>
-                        <h2 className="today-v2-hero-title">{nextTitle}</h2>
-                        <div className="today-v2-hero-meta">
-                          <span className="today-v2-hero-course-tag">
-                            <Icon name="book" size={14} />
-                            <span>{nextCourse}</span>
-                          </span>
-                          {nextLessonMeta?.moduleTitle && (
-                            <>
-                              <span>·</span>
-                              <span>{nextLessonMeta.moduleTitle}</span>
-                            </>
-                          )}
-                          <span>·</span>
-                          <span>{minuteLabel(next?.estimated_minutes || 25)}</span>
-                        </div>
-                      </>
-                    );
-                  })()}
+              <button
+                type="button"
+                className="today-grid-date-btn"
+                onClick={() => setCalendarOpen((o) => !o)}
+                title="Toggle month calendar"
+                aria-expanded={calendarOpen}
+              >
+                <span>{weekOffset === 0 ? "Today" : weekData.rangeLabel}</span>
+                <span className="text-xs text-learnos-muted">({weekData.monthLabel})</span>
+              </button>
 
-                  <div className="today-v2-hero-action-row">
+              <button
+                type="button"
+                className={`today-grid-cal-trigger-btn ${calendarOpen ? "active" : ""}`}
+                title="Open calendar picker"
+                aria-label="Open calendar picker"
+                onClick={() => setCalendarOpen((o) => !o)}
+              >
+                <Icon name="calendar" size={15} />
+              </button>
+
+              <button
+                type="button"
+                className="today-v2-week-nav-btn"
+                title="Next week"
+                aria-label="Next week"
+                onClick={() => setWeekOffset((w) => w + 1)}
+              >
+                <Icon name="chevronRight" size={14} />
+              </button>
+
+              {/* Floating Mini Calendar Popover (Matching Image 2) */}
+              {calendarOpen && (
+                <div className="today-grid-mini-cal-popover" role="dialog" aria-label="Month date picker">
+                  <div className="today-grid-mini-cal-header">
                     <button
-                      className="today-v2-hero-cta"
                       type="button"
-                      onClick={() => handleLaunchTask(next)}
+                      className="today-v2-week-nav-btn"
+                      onClick={() => setMiniCalMonthOffset((m) => m - 1)}
+                      aria-label="Previous month"
                     >
-                      <Icon name="play" size={16} />
-                      <span>{next.task_type === "review" ? "Start review" : next.task_type === "practice" ? "Start practice drill" : "Join the lesson"}</span>
-                      <span aria-hidden="true">↗</span>
+                      <Icon name="chevronLeft" size={12} />
+                    </button>
+                    <span className="today-grid-mini-cal-title">{miniCalData.title}</span>
+                    <button
+                      type="button"
+                      className="today-v2-week-nav-btn"
+                      onClick={() => setMiniCalMonthOffset((m) => m + 1)}
+                      aria-label="Next month"
+                    >
+                      <Icon name="chevronRight" size={12} />
                     </button>
                   </div>
-                </div>
 
-                {/* Glass Graphic Tile (Stylized Graph from Mockup 1) */}
-                <div className="today-v2-hero-graphic-tile" aria-hidden="true">
-                  <div className="today-v2-graphic-reflection" />
-                  <svg className="today-v2-graphic-svg" viewBox="0 0 72 64" fill="none">
-                    <defs>
-                      <linearGradient id="todayBarGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.85" />
-                        <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.2" />
-                      </linearGradient>
-                      <linearGradient id="todayLineGrad" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#38bdf8" />
-                        <stop offset="50%" stopColor="#818cf8" />
-                        <stop offset="100%" stopColor="#c084fc" />
-                      </linearGradient>
-                    </defs>
-                    <rect x="8" y="34" width="10" height="26" rx="4" fill="url(#todayBarGrad)" />
-                    <rect x="24" y="24" width="10" height="36" rx="4" fill="url(#todayBarGrad)" />
-                    <rect x="40" y="14" width="10" height="46" rx="4" fill="url(#todayBarGrad)" />
-                    <rect x="56" y="28" width="10" height="32" rx="4" fill="url(#todayBarGrad)" />
-                    <path d="M12 28L28 18L45 10L61 20" stroke="url(#todayLineGrad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                    <circle cx="12" cy="28" r="4" fill="#090e17" stroke="#38bdf8" strokeWidth="2.5" />
-                    <circle cx="28" cy="18" r="4" fill="#090e17" stroke="#818cf8" strokeWidth="2.5" />
-                    <circle cx="45" cy="10" r="4" fill="#090e17" stroke="#c084fc" strokeWidth="2.5" />
-                    <circle cx="61" cy="20" r="4" fill="#090e17" stroke="#c084fc" strokeWidth="2.5" />
-                  </svg>
-                </div>
-              </div>
-            </section>
-          )}
+                  <div className="today-grid-mini-cal-weekdays">
+                    {["m", "t", "w", "t", "f", "s", "s"].map((w, i) => (
+                      <span key={i} className="today-grid-mini-cal-weekday">{w}</span>
+                    ))}
+                  </div>
 
-          {/* Overdue / Missed Sessions Alert Banner */}
-          {overdueTasks.length > 0 && (
-            <aside className="today-v2-overdue-alert" role="alert" aria-label="Missed study sessions notice">
-              <div className="today-v2-alert-copy">
-                <div className="today-v2-alert-icon-box" aria-hidden="true">
-                  <Icon name="clock" size={17} />
+                  <div className="today-grid-mini-cal-days-grid">
+                    {miniCalData.cells.map((cell, idx) => {
+                      const isSel = selectedDay === cell.isoDate;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          className={`today-grid-mini-cal-day-cell ${cell.isCurrentMonth ? "" : "outside-month"} ${cell.isToday ? "is-today" : ""} ${isSel ? "selected" : ""}`}
+                          onClick={() => jumpToDate(cell.date)}
+                        >
+                          {cell.dayNum}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div>
-                  <strong className="block text-white font-semibold">
-                    {overdueTasks.length} overdue or missed {overdueTasks.length === 1 ? "session" : "sessions"}
-                  </strong>
-                  <span className="text-xs text-learnos-muted">Keep your rhythm on track by auto-rebalancing across your study days.</span>
-                </div>
-              </div>
-              <button
-                className="today-v2-rebalance-btn"
-                type="button"
-                disabled={rebalancing}
-                onClick={rebalanceSchedule}
+              )}
+            </div>
+
+            {/* Course Filter Dropdown (Kitai-Gorod selector from Image 2) */}
+            <div className="flex items-center gap-3">
+              <select
+                className="today-grid-filter-select"
+                value={courseFilter}
+                onChange={(e) => setCourseFilter(e.target.value)}
+                aria-label="Filter schedule by course"
               >
-                {rebalancing ? <><span className="btn-spinner" /> Rebalancing…</> : <>Rebalance schedule ↻</>}
-              </button>
-            </aside>
-          )}
+                <option value="all">All Courses ({data.courses?.length || 0})</option>
+                {(data.courses || []).map((c) => (
+                  <option key={c.id} value={c.id}>{c.title}</option>
+                ))}
+              </select>
 
-          {/* Interactive Week Strip & Month Navigation (Matching Image 1 & 2) */}
-          <nav className="today-v2-week-strip-card" aria-label="Weekly timetable navigation">
-            <div className="today-v2-week-strip-header">
-              <div className="today-v2-week-month-nav">
+              {/* Action Cluster */}
+              {overdueTasks.length > 0 && (
                 <button
                   type="button"
-                  className="today-v2-week-nav-btn"
-                  title="Previous week"
-                  aria-label="Previous week"
-                  onClick={() => setWeekOffset((w) => w - 1)}
+                  className="today-grid-rebalance-btn"
+                  onClick={rebalanceSchedule}
+                  disabled={rebalancing}
+                  title="Rebalance overdue sessions across study days"
                 >
-                  <Icon name="chevronLeft" size={15} />
+                  <Icon name="clock" size={13} />
+                  <span>{rebalancing ? "Rebalancing…" : `Rebalance (${overdueTasks.length}) ↻`}</span>
                 </button>
-                <span className="today-v2-week-month-label">{weekData.monthLabel}</span>
-                <button
-                  type="button"
-                  className="today-v2-week-nav-btn"
-                  title="Next week"
-                  aria-label="Next week"
-                  onClick={() => setWeekOffset((w) => w + 1)}
-                >
-                  <Icon name="chevronRight" size={15} />
-                </button>
-              </div>
-
-              <div className="today-v2-week-actions">
-                <button
-                  type="button"
-                  className={`today-v2-pill-btn ${weekOffset === 0 ? "active" : ""}`}
-                  onClick={() => {
-                    setWeekOffset(0);
-                    setSelectedDay(new Date().toISOString().slice(0, 10));
-                  }}
-                >
-                  Today
-                </button>
-                <button
-                  type="button"
-                  className={`today-v2-pill-btn ${selectedDay === "all" ? "active" : ""}`}
-                  onClick={() => setSelectedDay("all")}
-                >
-                  All Days
-                </button>
-              </div>
+              )}
             </div>
-
-            {/* 7 Days Row */}
-            <div className="today-v2-week-days-row" role="tablist" aria-label="Days of week">
-              {weekData.days.map((day) => {
-                const isSelected = selectedDay === day.isoDate;
-                return (
-                  <button
-                    key={day.isoDate}
-                    type="button"
-                    role="tab"
-                    aria-selected={isSelected}
-                    className={`today-v2-day-chip ${day.isToday ? "is-today" : ""} ${isSelected ? "selected" : ""}`}
-                    onClick={() => setSelectedDay(day.isoDate)}
-                  >
-                    <span className="today-v2-day-name">{day.dayName}</span>
-                    <span className="today-v2-day-number">{day.dayNum}</span>
-                    <span className={`today-v2-day-dot ${day.hasTasks ? "has-tasks" : ""}`} aria-hidden="true" />
-                  </button>
-                );
-              })}
-            </div>
-          </nav>
-
-          {/* Vertical Timetable / Timeline List */}
-          <div className="today-v2-timeline-section">
-            {tasks.length > 0 ? (
-              Object.entries(groups)
-                .filter(([dayPretty, dayTasks]) => {
-                  if (selectedDay === "all") return true;
-                  return dayTasks.some((t) => {
-                    if (!t.scheduled_at) return false;
-                    return new Date(t.scheduled_at).toISOString().slice(0, 10) === selectedDay;
-                  });
-                })
-                .map(([dayPretty, dayTasks]) => {
-                  const completedCount = dayTasks.filter((t) => t.status === "completed").length;
-                  const allDone = completedCount === dayTasks.length;
-                  return (
-                    <section key={dayPretty} className="today-v2-day-group" aria-label={`Schedule for ${dayPretty}`}>
-                      <div className="today-v2-day-header">
-                        <h3 className="today-v2-day-header-title">
-                          <span>{dayPretty}</span>
-                          {dayPretty === prettyDate(new Date().toISOString()) && (
-                            <span className="today-v2-day-header-pill">Today</span>
-                          )}
-                        </h3>
-                        <span className={`today-v2-day-completion-tag ${allDone ? "all-done" : ""}`}>
-                          {completedCount} / {dayTasks.length} complete
-                        </span>
-                      </div>
-
-                      <div className="today-v2-timeline-track">
-                        <div className="today-v2-timeline-spine" aria-hidden="true" />
-
-                        {dayTasks.map((task, idx) => {
-                          const isDone = task.status === "completed";
-                          const isPractice = task.task_type === "practice";
-                          const isReview = task.task_type === "review";
-                          const typeKey = isDone ? "completed" : isPractice ? "practice" : isReview ? "review" : "lesson";
-                          const timeStr = formatTaskTimeSlot(task, idx);
-
-                          const lessonMeta = (task.lesson_id && allLessonsMap.get(task.lesson_id)) || null;
-                          const taskTitle = task.title || lessonMeta?.title || (task.task_type === "review" ? "Spaced Repetition Review" : task.task_type === "practice" ? "Practice Drill & Checkpoint" : "Lesson Session");
-                          const courseTitle = task.course_title || lessonMeta?.courseTitle || p.activeCourse?.title || "Curriculum";
-
-                          const actionLabel = isDone
-                            ? "Review"
-                            : isReview
-                            ? "Review ↗"
-                            : isPractice
-                            ? "Practice ↗"
-                            : "Start Lesson ↗";
-
-                          const btnClass = isDone
-                            ? "completed-btn"
-                            : isReview
-                            ? "review-btn"
-                            : isPractice
-                            ? "practice-btn"
-                            : "";
-
-                          return (
-                            <article
-                              key={task.id}
-                              className="today-v2-timeline-item"
-                              data-task-type={task.task_type || "lesson"}
-                              data-task-status={task.status}
-                            >
-                              {/* Milestone Node on Spine */}
-                              <div className={`today-v2-milestone-node ${typeKey}`} aria-hidden="true">
-                                {isDone ? (
-                                  <Icon name="check" size={11} />
-                                ) : (
-                                  <span className="today-v2-milestone-inner-dot" />
-                                )}
-                              </div>
-
-                              {/* Timetable Card */}
-                              <div className={`today-v2-timetable-card ${typeKey}`}>
-                                <div className="today-v2-card-main">
-                                  <div className="today-v2-card-top-row">
-                                    <span className="today-v2-card-time">{timeStr}</span>
-                                    <span className={`today-v2-type-pill ${typeKey}`}>
-                                      {isDone ? "Completed" : task.task_type || "Lesson"}
-                                    </span>
-                                    {task.status === "in_progress" && (
-                                      <span className="today-v2-type-pill lesson">In Progress</span>
-                                    )}
-                                  </div>
-
-                                  <h4 className="today-v2-card-title" title={taskTitle}>
-                                    {taskTitle}
-                                  </h4>
-
-                                  <div className="today-v2-card-meta">
-                                    <span className="today-v2-card-course">
-                                      {courseTitle}
-                                    </span>
-                                    {lessonMeta?.moduleTitle && (
-                                      <>
-                                        <span>·</span>
-                                        <span>{lessonMeta.moduleTitle}</span>
-                                      </>
-                                    )}
-                                    <span>·</span>
-                                    <span>{minuteLabel(task.estimated_minutes || 25)}</span>
-                                  </div>
-                                </div>
-
-                                <div className="today-v2-card-actions">
-                                  <button
-                                    type="button"
-                                    className={`today-v2-card-btn ${btnClass}`}
-                                    onClick={() => handleLaunchTask(task)}
-                                  >
-                                    <span>{actionLabel}</span>
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    className="today-v2-card-reschedule-btn"
-                                    title="Reschedule session"
-                                    aria-label={`Reschedule ${task.title}`}
-                                    onClick={() => openRescheduleModal(task)}
-                                  >
-                                    <Icon name="calendar" size={15} />
-                                  </button>
-                                </div>
-                              </div>
-                            </article>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  );
-                })
-            ) : (
-              <EmptyState
-                title="No study sessions scheduled yet"
-                body="Build your course plan and approved roadmap sessions will appear on this interactive timetable."
-                action="Explore courses"
-                onAction={() => p.go("courses")}
-              />
-            )}
           </div>
-        </main>
 
-        {/* Right Sidebar: Study Rhythm, Review Due & Habits */}
-        <aside className="today-v2-side-col">
-          {/* Study Rhythm Glass Panel */}
-          <div className="today-v2-side-card">
-            <div className="today-v2-side-header">
-              <h3 className="today-v2-side-title">
-                <Icon name="calendar" size={18} />
-                <span>Study rhythm</span>
-              </h3>
-            </div>
-
-            <div className="today-v2-stat-display">
-              <span className="today-v2-stat-number">{totalIncomplete}</span>
-              <span className="today-v2-stat-label">sessions remaining</span>
-            </div>
-
-            <p className="today-v2-side-copy">
-              Plans are paced around your {Number(data.settings?.sessionMinutes) || 120} min session budget.
-            </p>
-
-            <div className="today-v2-days-pills-row" aria-label="Preferred study days">
-              {["S", "M", "T", "W", "T", "F", "S"].map((letter, i) => (
-                <span
-                  key={i}
-                  className={`today-v2-day-indicator ${preferredDays.includes(i) ? "active" : ""}`}
-                  title={`${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][i]} ${preferredDays.includes(i) ? "(Study Day)" : ""}`}
+          {/* Table Container */}
+          <div className="today-grid-table-wrap">
+            {/* Header Row: Corner + 7 Day Columns */}
+            <div className="today-grid-header-row">
+              <div className="today-grid-time-corner">Time</div>
+              {weekData.days.map((day) => (
+                <div
+                  key={day.isoDate}
+                  className={`today-grid-header-day ${day.isToday ? "is-today" : ""}`}
                 >
-                  {letter}
-                </span>
+                  <span className="today-grid-header-day-label">{day.dayName}</span>
+                  <span className="today-grid-header-day-num">{day.dayNum}</span>
+                </div>
               ))}
             </div>
 
-            <button
-              type="button"
-              className="today-v2-side-link-btn"
-              onClick={() => p.go("settings")}
-            >
-              <span>Edit study schedule in Settings</span>
-              <span aria-hidden="true">↗</span>
-            </button>
-          </div>
+            {/* Grid Body */}
+            <div className="today-grid-body">
+              {/* Horizontal Current Time Indicator Line (Matching Image 2) */}
+              {currentTimeTopPx !== null && weekOffset === 0 && (
+                <div
+                  className="today-grid-now-line"
+                  style={{ top: `${currentTimeTopPx}px` }}
+                  title={`Current time: ${now.toLocaleTimeString()}`}
+                >
+                  <div className="today-grid-now-dot" />
+                </div>
+              )}
 
-          {/* Review Due Glass Panel */}
-          {(p.dueCards?.length > 0 || tasks.length > 0) && (
+              {/* Left Time Axis (8:00 AM to 8:00 PM) */}
+              <div className="today-grid-time-axis">
+                {hourTicks.map((hour) => {
+                  const ampm = hour >= 12 ? "PM" : "AM";
+                  const h12 = hour % 12 || 12;
+                  return (
+                    <div key={hour} className="today-grid-time-tick">
+                      {h12}:00 {ampm}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* 7 Columns for Days */}
+              {weekData.days.map((day, colIdx) => {
+                return (
+                  <div
+                    key={day.isoDate}
+                    className={`today-grid-column ${day.isToday ? "is-today" : ""}`}
+                  >
+                    {/* Hourly dashed dividing lines */}
+                    {hourTicks.map((h) => (
+                      <div key={h} className="today-grid-slot-hour" />
+                    ))}
+
+                    {/* Task Event Blocks inside this day column */}
+                    {day.tasks.map((task, taskIdx) => {
+                      const isDone = task.status === "completed";
+                      const isPractice = task.task_type === "practice";
+                      const isReview = task.task_type === "review";
+                      const typeKey = isDone ? "completed" : isPractice ? "practice" : isReview ? "review" : "lesson";
+
+                      const lessonMeta = (task.lesson_id && allLessonsMap.get(task.lesson_id)) || null;
+                      const taskTitle = task.title || lessonMeta?.title || (task.task_type === "review" ? "Spaced Repetition Review" : task.task_type === "practice" ? "Practice Drill" : "Scheduled Lesson");
+                      const courseTitle = task.course_title || lessonMeta?.courseTitle || p.activeCourse?.title || "Curriculum";
+
+                      // Calculate top offset and height inside grid
+                      const taskDate = task.scheduled_at ? new Date(task.scheduled_at) : null;
+                      let startH = taskDate ? taskDate.getHours() : 9;
+                      let startM = taskDate ? taskDate.getMinutes() : 0;
+                      if (startH < 8 || startH >= 20) {
+                        startH = 9 + (taskIdx % 4) * 2;
+                        startM = 0;
+                      }
+                      if (taskIdx > 0 && startH === 18 && startM === 0) {
+                        startH = 9 + (taskIdx % 4) * 2;
+                      }
+
+                      const duration = Number(task.estimated_minutes) || 25;
+                      const topPx = Math.max(0, ((startH - 8) * 60 + startM) * (64 / 60));
+                      const heightPx = Math.max(54, duration * (64 / 60));
+                      const timeStr = formatTaskTimeSlot(task, taskIdx);
+
+                      return (
+                        <div
+                          key={task.id}
+                          className={`today-grid-event-block ${typeKey}`}
+                          style={{
+                            top: `${topPx}px`,
+                            height: `${heightPx}px`,
+                          }}
+                          onClick={() => handleLaunchTask(task)}
+                          title={`${taskTitle} (${timeStr}) - Click to start`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="today-grid-event-time">{timeStr}</span>
+                            <span className={`today-grid-event-pill ${typeKey}`}>
+                              {isDone ? "Done" : task.task_type || "Lesson"}
+                            </span>
+                          </div>
+
+                          <h5 className="today-grid-event-title">{taskTitle}</h5>
+
+                          <div className="today-grid-event-footer">
+                            <span className="text-[11px] text-learnos-muted truncate max-w-[90px]">
+                              {courseTitle}
+                            </span>
+                            <button
+                              type="button"
+                              className="today-grid-event-action-icon"
+                              title="Reschedule session"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openRescheduleModal(task);
+                              }}
+                            >
+                              <Icon name="calendar" size={11} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ====================================================================
+          VIEW 2 & 3: TIMELINE & AGENDA VIEWS (Matching Image 1)
+          ==================================================================== */}
+      {viewMode !== "grid" && (
+        <div className="today-v2-grid">
+          <main className="today-v2-main-col">
+            {/* Featured Hero "Now / Next Up" Card (Matching Image 1) */}
+            {next && (
+              <section className="today-v2-hero-card" aria-label="Featured next study session">
+                <div className="today-v2-hero-ambient-glow" aria-hidden="true" />
+                <div className="today-v2-hero-inner">
+                  <div className="today-v2-hero-content">
+                    <div className="today-v2-hero-tag-row">
+                      <span className="today-v2-hero-now-badge">
+                        <span className="today-v2-pulse-dot" aria-hidden="true" />
+                        <span>{next.status === "in_progress" ? "Now" : "Up Next"}</span>
+                      </span>
+                      <span className="today-v2-hero-time-pill">
+                        <Icon name="clock" size={13} />
+                        <span>{formatTaskTimeSlot(next, 0)}</span>
+                      </span>
+                    </div>
+
+                    {(() => {
+                      const nextLessonMeta = next?.lesson_id ? allLessonsMap.get(next.lesson_id) : null;
+                      const nextTitle = next?.title || nextLessonMeta?.title || (next?.task_type === "review" ? "Spaced Repetition Review" : next?.task_type === "practice" ? "Checkpoint Practice Drill" : "Scheduled Lesson");
+                      const nextCourse = next?.course_title || nextLessonMeta?.courseTitle || p.activeCourse?.title || "Core Curriculum";
+                      return (
+                        <>
+                          <h2 className="today-v2-hero-title">{nextTitle}</h2>
+                          <div className="today-v2-hero-meta">
+                            <span className="today-v2-hero-course-tag">
+                              <Icon name="book" size={14} />
+                              <span>{nextCourse}</span>
+                            </span>
+                            {nextLessonMeta?.moduleTitle && (
+                              <>
+                                <span>·</span>
+                                <span>{nextLessonMeta.moduleTitle}</span>
+                              </>
+                            )}
+                            <span>·</span>
+                            <span>{minuteLabel(next?.estimated_minutes || 25)}</span>
+                          </div>
+                        </>
+                      );
+                    })()}
+
+                    <div className="today-v2-hero-action-row">
+                      <button
+                        className="today-v2-hero-cta"
+                        type="button"
+                        onClick={() => handleLaunchTask(next)}
+                      >
+                        <Icon name="play" size={16} />
+                        <span>{next.task_type === "review" ? "Start review" : next.task_type === "practice" ? "Start practice drill" : "Join the lesson"}</span>
+                        <span aria-hidden="true">↗</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Glass Graphic Tile (Stylized Graph from Mockup 1) */}
+                  <div className="today-v2-hero-graphic-tile" aria-hidden="true">
+                    <div className="today-v2-graphic-reflection" />
+                    <svg className="today-v2-graphic-svg" viewBox="0 0 72 64" fill="none">
+                      <defs>
+                        <linearGradient id="todayBarGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.85" />
+                          <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.2" />
+                        </linearGradient>
+                        <linearGradient id="todayLineGrad" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#38bdf8" />
+                          <stop offset="50%" stopColor="#818cf8" />
+                          <stop offset="100%" stopColor="#c084fc" />
+                        </linearGradient>
+                      </defs>
+                      <rect x="8" y="34" width="10" height="26" rx="4" fill="url(#todayBarGrad)" />
+                      <rect x="24" y="24" width="10" height="36" rx="4" fill="url(#todayBarGrad)" />
+                      <rect x="40" y="14" width="10" height="46" rx="4" fill="url(#todayBarGrad)" />
+                      <rect x="56" y="28" width="10" height="32" rx="4" fill="url(#todayBarGrad)" />
+                      <path d="M12 28L28 18L45 10L61 20" stroke="url(#todayLineGrad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="12" cy="28" r="4" fill="#090e17" stroke="#38bdf8" strokeWidth="2.5" />
+                      <circle cx="28" cy="18" r="4" fill="#090e17" stroke="#818cf8" strokeWidth="2.5" />
+                      <circle cx="45" cy="10" r="4" fill="#090e17" stroke="#c084fc" strokeWidth="2.5" />
+                      <circle cx="61" cy="20" r="4" fill="#090e17" stroke="#c084fc" strokeWidth="2.5" />
+                    </svg>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Overdue / Missed Sessions Alert Banner */}
+            {overdueTasks.length > 0 && (
+              <aside className="today-v2-overdue-alert" role="alert" aria-label="Missed study sessions notice">
+                <div className="today-v2-alert-copy">
+                  <div className="today-v2-alert-icon-box" aria-hidden="true">
+                    <Icon name="clock" size={17} />
+                  </div>
+                  <div>
+                    <strong className="block text-white font-semibold">
+                      {overdueTasks.length} overdue or missed {overdueTasks.length === 1 ? "session" : "sessions"}
+                    </strong>
+                    <span className="text-xs text-learnos-muted">Keep your rhythm on track by auto-rebalancing across your study days.</span>
+                  </div>
+                </div>
+                <button
+                  className="today-v2-rebalance-btn"
+                  type="button"
+                  disabled={rebalancing}
+                  onClick={rebalanceSchedule}
+                >
+                  {rebalancing ? <><span className="btn-spinner" /> Rebalancing…</> : <>Rebalance schedule ↻</>}
+                </button>
+              </aside>
+            )}
+
+            {/* Interactive Week Strip & Month Navigation (Matching Image 1 & 2) */}
+            <nav className="today-v2-week-strip-card" aria-label="Weekly timetable navigation">
+              <div className="today-v2-week-strip-header">
+                <div className="today-v2-week-month-nav">
+                  <button
+                    type="button"
+                    className="today-v2-week-nav-btn"
+                    title="Previous week"
+                    aria-label="Previous week"
+                    onClick={() => setWeekOffset((w) => w - 1)}
+                  >
+                    <Icon name="chevronLeft" size={15} />
+                  </button>
+                  <span className="today-v2-week-month-label">{weekData.monthLabel}</span>
+                  <button
+                    type="button"
+                    className="today-v2-week-nav-btn"
+                    title="Next week"
+                    aria-label="Next week"
+                    onClick={() => setWeekOffset((w) => w + 1)}
+                  >
+                    <Icon name="chevronRight" size={15} />
+                  </button>
+                </div>
+
+                <div className="today-v2-week-actions">
+                  <button
+                    type="button"
+                    className={`today-v2-pill-btn ${weekOffset === 0 ? "active" : ""}`}
+                    onClick={() => {
+                      setWeekOffset(0);
+                      setSelectedDay(new Date().toISOString().slice(0, 10));
+                    }}
+                  >
+                    Today
+                  </button>
+                  <button
+                    type="button"
+                    className={`today-v2-pill-btn ${selectedDay === "all" ? "active" : ""}`}
+                    onClick={() => setSelectedDay("all")}
+                  >
+                    All Days
+                  </button>
+                </div>
+              </div>
+
+              {/* 7 Days Row */}
+              <div className="today-v2-week-days-row" role="tablist" aria-label="Days of week">
+                {weekData.days.map((day) => {
+                  const isSelected = selectedDay === day.isoDate;
+                  return (
+                    <button
+                      key={day.isoDate}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      className={`today-v2-day-chip ${day.isToday ? "is-today" : ""} ${isSelected ? "selected" : ""}`}
+                      onClick={() => setSelectedDay(day.isoDate)}
+                    >
+                      <span className="today-v2-day-name">{day.dayName}</span>
+                      <span className="today-v2-day-number">{day.dayNum}</span>
+                      <span className={`today-v2-day-dot ${day.hasTasks ? "has-tasks" : ""}`} aria-hidden="true" />
+                    </button>
+                  );
+                })}
+              </div>
+            </nav>
+
+            {/* Vertical Timetable / Timeline List */}
+            <div className="today-v2-timeline-section">
+              {tasks.length > 0 ? (
+                Object.entries(groups)
+                  .filter(([dayPretty, dayTasks]) => {
+                    if (selectedDay === "all") return true;
+                    return dayTasks.some((t) => {
+                      if (!t.scheduled_at) return false;
+                      return new Date(t.scheduled_at).toISOString().slice(0, 10) === selectedDay;
+                    });
+                  })
+                  .map(([dayPretty, dayTasks]) => {
+                    const completedCount = dayTasks.filter((t) => t.status === "completed").length;
+                    const allDone = completedCount === dayTasks.length;
+                    return (
+                      <section key={dayPretty} className="today-v2-day-group" aria-label={`Schedule for ${dayPretty}`}>
+                        <div className="today-v2-day-header">
+                          <h3 className="today-v2-day-header-title">
+                            <span>{dayPretty}</span>
+                            {dayPretty === prettyDate(new Date().toISOString()) && (
+                              <span className="today-v2-day-header-pill">Today</span>
+                            )}
+                          </h3>
+                          <span className={`today-v2-day-completion-tag ${allDone ? "all-done" : ""}`}>
+                            {completedCount} / {dayTasks.length} complete
+                          </span>
+                        </div>
+
+                        <div className="today-v2-timeline-track">
+                          <div className="today-v2-timeline-spine" aria-hidden="true" />
+
+                          {dayTasks.map((task, idx) => {
+                            const isDone = task.status === "completed";
+                            const isPractice = task.task_type === "practice";
+                            const isReview = task.task_type === "review";
+                            const typeKey = isDone ? "completed" : isPractice ? "practice" : isReview ? "review" : "lesson";
+                            const timeStr = formatTaskTimeSlot(task, idx);
+
+                            const lessonMeta = (task.lesson_id && allLessonsMap.get(task.lesson_id)) || null;
+                            const taskTitle = task.title || lessonMeta?.title || (task.task_type === "review" ? "Spaced Repetition Review" : task.task_type === "practice" ? "Practice Drill & Checkpoint" : "Lesson Session");
+                            const courseTitle = task.course_title || lessonMeta?.courseTitle || p.activeCourse?.title || "Curriculum";
+
+                            const actionLabel = isDone
+                              ? "Review"
+                              : isReview
+                              ? "Review ↗"
+                              : isPractice
+                              ? "Practice ↗"
+                              : "Start Lesson ↗";
+
+                            const btnClass = isDone
+                              ? "completed-btn"
+                              : isReview
+                              ? "review-btn"
+                              : isPractice
+                              ? "practice-btn"
+                              : "";
+
+                            return (
+                              <article
+                                key={task.id}
+                                className="today-v2-timeline-item"
+                                data-task-type={task.task_type || "lesson"}
+                                data-task-status={task.status}
+                              >
+                                {/* Milestone Node on Spine */}
+                                <div className={`today-v2-milestone-node ${typeKey}`} aria-hidden="true">
+                                  {isDone ? (
+                                    <Icon name="check" size={11} />
+                                  ) : (
+                                    <span className="today-v2-milestone-inner-dot" />
+                                  )}
+                                </div>
+
+                                {/* Timetable Card */}
+                                <div className={`today-v2-timetable-card ${typeKey}`}>
+                                  <div className="today-v2-card-main">
+                                    <div className="today-v2-card-top-row">
+                                      <span className="today-v2-card-time">{timeStr}</span>
+                                      <span className={`today-v2-type-pill ${typeKey}`}>
+                                        {isDone ? "Completed" : task.task_type || "Lesson"}
+                                      </span>
+                                      {task.status === "in_progress" && (
+                                        <span className="today-v2-type-pill lesson">In Progress</span>
+                                      )}
+                                    </div>
+
+                                    <h4 className="today-v2-card-title" title={taskTitle}>
+                                      {taskTitle}
+                                    </h4>
+
+                                    <div className="today-v2-card-meta">
+                                      <span className="today-v2-card-course">
+                                        {courseTitle}
+                                      </span>
+                                      {lessonMeta?.moduleTitle && (
+                                        <>
+                                          <span>·</span>
+                                          <span>{lessonMeta.moduleTitle}</span>
+                                        </>
+                                      )}
+                                      <span>·</span>
+                                      <span>{minuteLabel(task.estimated_minutes || 25)}</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="today-v2-card-actions">
+                                    <button
+                                      type="button"
+                                      className={`today-v2-card-btn ${btnClass}`}
+                                      onClick={() => handleLaunchTask(task)}
+                                    >
+                                      <span>{actionLabel}</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      className="today-v2-card-reschedule-btn"
+                                      title="Reschedule session"
+                                      aria-label={`Reschedule ${taskTitle}`}
+                                      onClick={() => openRescheduleModal(task)}
+                                    >
+                                      <Icon name="calendar" size={15} />
+                                    </button>
+                                  </div>
+                                </div>
+                              </article>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    );
+                  })
+              ) : (
+                <EmptyState
+                  title="No study sessions scheduled yet"
+                  body="Build your course plan and approved roadmap sessions will appear on this interactive timetable."
+                  action="Explore courses"
+                  onAction={() => p.go("courses")}
+                />
+              )}
+            </div>
+          </main>
+
+          {/* Right Sidebar: Study Rhythm & Spaced Review */}
+          <aside className="today-v2-side-col">
+            {/* Study Rhythm Glass Panel */}
             <div className="today-v2-side-card">
               <div className="today-v2-side-header">
-                <h3 className="today-v2-side-title review-title">
-                  <Icon name="cards" size={18} />
-                  <span>Spaced Review</span>
+                <h3 className="today-v2-side-title">
+                  <Icon name="calendar" size={18} />
+                  <span>Study rhythm</span>
                 </h3>
               </div>
 
               <div className="today-v2-stat-display">
-                <span className="today-v2-stat-number review-color">{p.dueCards?.length || 0}</span>
-                <span className="today-v2-stat-label">cards due now</span>
+                <span className="today-v2-stat-number">{totalIncomplete}</span>
+                <span className="today-v2-stat-label">sessions remaining</span>
               </div>
 
               <p className="today-v2-side-copy">
-                Prompt spaced repetition recall to lock lessons into your long-term memory.
+                Plans are paced around your {Number(data.settings?.sessionMinutes) || 120} min session budget.
               </p>
+
+              <div className="today-v2-days-pills-row" aria-label="Preferred study days">
+                {["S", "M", "T", "W", "T", "F", "S"].map((letter, i) => (
+                  <span
+                    key={i}
+                    className={`today-v2-day-indicator ${preferredDays.includes(i) ? "active" : ""}`}
+                    title={`${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][i]} ${preferredDays.includes(i) ? "(Study Day)" : ""}`}
+                  >
+                    {letter}
+                  </span>
+                ))}
+              </div>
 
               <button
                 type="button"
-                className="today-v2-side-cta-btn"
-                onClick={() => p.go("flashcards")}
+                className="today-v2-side-link-btn"
+                onClick={() => p.go("settings")}
               >
-                <span>Launch Spaced Review</span>
+                <span>Edit study schedule in Settings</span>
                 <span aria-hidden="true">↗</span>
               </button>
             </div>
-          )}
-        </aside>
-      </div>
+
+            {/* Review Due Glass Panel */}
+            {(p.dueCards?.length > 0 || tasks.length > 0) && (
+              <div className="today-v2-side-card">
+                <div className="today-v2-side-header">
+                  <h3 className="today-v2-side-title review-title">
+                    <Icon name="cards" size={18} />
+                    <span>Spaced Review</span>
+                  </h3>
+                </div>
+
+                <div className="today-v2-stat-display">
+                  <span className="today-v2-stat-number review-color">{p.dueCards?.length || 0}</span>
+                  <span className="today-v2-stat-label">cards due now</span>
+                </div>
+
+                <p className="today-v2-side-copy">
+                  Prompt spaced repetition recall to lock lessons into your long-term memory.
+                </p>
+
+                <button
+                  type="button"
+                  className="today-v2-side-cta-btn"
+                  onClick={() => p.go("flashcards")}
+                >
+                  <span>Launch Spaced Review</span>
+                  <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+            )}
+          </aside>
+        </div>
+      )}
 
       {/* Reschedule Modal */}
       {rescheduleTask && (
@@ -762,7 +1148,7 @@ export function TodayPage(p) {
 
             <div className="today-v2-modal-task-preview">
               <span className="text-xs text-learnos-muted">Task to move</span>
-              <strong>{rescheduleTask.title}</strong>
+              <strong>{rescheduleTask.title || "Study Session"}</strong>
               <small className="text-learnos-muted">
                 Currently: {prettyDate(rescheduleTask.scheduled_at)}
               </small>
