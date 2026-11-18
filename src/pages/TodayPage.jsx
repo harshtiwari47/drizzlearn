@@ -4,23 +4,30 @@ import { Icon, Panel, EmptyState, minuteLabel, prettyDate } from "../components/
 function formatTaskTimeSlot(task, index = 0) {
   const baseMinutes = Number(task?.estimated_minutes) || 25;
   if (!task?.scheduled_at) {
-    const startHour = 9 + Math.floor((index * 45) / 60);
-    const startMin = (index * 45) % 60;
+    const startHour = 9 + (index % 4) * 2;
+    const startMin = 0;
     const endTotal = startHour * 60 + startMin + baseMinutes;
     const endH = Math.floor(endTotal / 60);
     const endM = endTotal % 60;
     const pad = (n) => String(n).padStart(2, "0");
-    return `${startHour}:${pad(startMin)} – ${endH}:${pad(endM)}`;
+    const ampm = startHour >= 12 ? "PM" : "AM";
+    const h12 = startHour % 12 || 12;
+    const endAmpm = endH >= 12 ? "PM" : "AM";
+    const endH12 = endH % 12 || 12;
+    return `${h12}:${pad(startMin)} ${ampm} – ${endH12}:${pad(endM)} ${endAmpm}`;
   }
   const date = new Date(task.scheduled_at);
   if (Number.isNaN(date.getTime())) return `${baseMinutes}m`;
   let startHour = date.getHours();
   let startMin = date.getMinutes();
-  if (startHour === 0 && startMin === 0) {
-    startHour = 9;
+  
+  // If the time falls between midnight and 6 AM or is default 00:00, map to realistic study hours
+  if (startHour >= 0 && startHour < 6) {
+    startHour = 9 + (index % 4) * 2;
+    startMin = 0;
   }
   if (index > 0 && startHour === 18 && startMin === 0) {
-    const totalMin = startHour * 60 + startMin + index * 40;
+    const totalMin = startHour * 60 + startMin + (index % 3) * 45;
     startHour = Math.floor(totalMin / 60) % 24;
     startMin = totalMin % 60;
   }
@@ -43,6 +50,23 @@ export function TodayPage(p) {
   const [rescheduleTask, setRescheduleTask] = useState(null);
   const [targetDateVal, setTargetDateVal] = useState("");
   const [rebalancing, setRebalancing] = useState(false);
+
+  // All lessons map for fast lookup of titles and module context
+  const allLessons = p.allLessons || [];
+  const allLessonsMap = useMemo(() => {
+    const map = new Map();
+    allLessons.forEach((l) => map.set(l.id, l));
+    (data.courses || []).forEach((c) => {
+      (c.modules || []).forEach((m) => {
+        (m.lessons || []).forEach((l) => {
+          if (l.id && !map.has(l.id)) {
+            map.set(l.id, { ...l, courseTitle: c.title, moduleTitle: m.title });
+          }
+        });
+      });
+    });
+    return map;
+  }, [allLessons, data.courses]);
 
   // Roadmap & task sorting
   const { lessonOrderMap, courseOrderMap } = useMemo(() => {
@@ -333,16 +357,30 @@ export function TodayPage(p) {
                     </span>
                   </div>
 
-                  <h2 className="today-v2-hero-title">{next.title}</h2>
-
-                  <div className="today-v2-hero-meta">
-                    <span className="today-v2-hero-course-tag">
-                      <Icon name="book" size={14} />
-                      <span>{next.course_title || p.activeCourse?.title || "Core Curriculum"}</span>
-                    </span>
-                    <span>·</span>
-                    <span>{minuteLabel(next.estimated_minutes || 25)}</span>
-                  </div>
+                  {(() => {
+                    const nextLessonMeta = next?.lesson_id ? allLessonsMap.get(next.lesson_id) : null;
+                    const nextTitle = next?.title || nextLessonMeta?.title || (next?.task_type === "review" ? "Spaced Repetition Review" : next?.task_type === "practice" ? "Checkpoint Practice Drill" : "Scheduled Lesson");
+                    const nextCourse = next?.course_title || nextLessonMeta?.courseTitle || p.activeCourse?.title || "Core Curriculum";
+                    return (
+                      <>
+                        <h2 className="today-v2-hero-title">{nextTitle}</h2>
+                        <div className="today-v2-hero-meta">
+                          <span className="today-v2-hero-course-tag">
+                            <Icon name="book" size={14} />
+                            <span>{nextCourse}</span>
+                          </span>
+                          {nextLessonMeta?.moduleTitle && (
+                            <>
+                              <span>·</span>
+                              <span>{nextLessonMeta.moduleTitle}</span>
+                            </>
+                          )}
+                          <span>·</span>
+                          <span>{minuteLabel(next?.estimated_minutes || 25)}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
 
                   <div className="today-v2-hero-action-row">
                     <button
@@ -518,6 +556,10 @@ export function TodayPage(p) {
                           const typeKey = isDone ? "completed" : isPractice ? "practice" : isReview ? "review" : "lesson";
                           const timeStr = formatTaskTimeSlot(task, idx);
 
+                          const lessonMeta = (task.lesson_id && allLessonsMap.get(task.lesson_id)) || null;
+                          const taskTitle = task.title || lessonMeta?.title || (task.task_type === "review" ? "Spaced Repetition Review" : task.task_type === "practice" ? "Practice Drill & Checkpoint" : "Lesson Session");
+                          const courseTitle = task.course_title || lessonMeta?.courseTitle || p.activeCourse?.title || "Curriculum";
+
                           const actionLabel = isDone
                             ? "Review"
                             : isReview
@@ -563,14 +605,20 @@ export function TodayPage(p) {
                                     )}
                                   </div>
 
-                                  <h4 className="today-v2-card-title" title={task.title}>
-                                    {task.title}
+                                  <h4 className="today-v2-card-title" title={taskTitle}>
+                                    {taskTitle}
                                   </h4>
 
                                   <div className="today-v2-card-meta">
                                     <span className="today-v2-card-course">
-                                      {task.course_title || p.activeCourse?.title || "Curriculum"}
+                                      {courseTitle}
                                     </span>
+                                    {lessonMeta?.moduleTitle && (
+                                      <>
+                                        <span>·</span>
+                                        <span>{lessonMeta.moduleTitle}</span>
+                                      </>
+                                    )}
                                     <span>·</span>
                                     <span>{minuteLabel(task.estimated_minutes || 25)}</span>
                                   </div>
