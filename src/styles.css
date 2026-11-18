@@ -21476,6 +21476,7 @@ body:has(.workspace-proposal-page),
   border-radius: 9999px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .course-v2-mod-pill.completed {
@@ -22039,7 +22040,10 @@ body:has(.workspace-proposal-page),
   }
   .course-v2-module-head {
     padding: 14px 14px;
-    gap: 10px;
+    gap: 12px;
+  }
+  .course-v2-mod-title-row {
+    gap: 8px;
   }
   .course-v2-mod-badge {
     width: 36px;
@@ -22051,7 +22055,11 @@ body:has(.workspace-proposal-page),
     font-size: 15px;
   }
   .course-v2-mod-mini-progress {
-    width: 48px;
+    display: none;
+  }
+  .course-v2-mod-pill {
+    font-size: 10px;
+    padding: 2px 7px;
   }
   .course-v2-module-body {
     padding: 0 12px 16px;
