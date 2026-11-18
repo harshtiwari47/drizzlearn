@@ -15,7 +15,6 @@ export function LoginPage({loginMode,setLoginMode,authSubmit,authError,authMessa
       <button type="button" className="login-brand-link" onClick={()=>go("home")} aria-label="Drizzlearn Home">
         <div className="brand-mark grid place-items-center">✦</div>
         <div className="brand-name font-bold text-lg">Drizzlearn</div>
-        <span className="brand-ai">AI</span>
       </button>
       <button type="button" className="login-back-btn" onClick={()=>go(backTarget)} aria-label="Back to workspace">
         <Icon name="arrowLeft" size={15}/>
@@ -187,7 +186,7 @@ export function LoginPage({loginMode,setLoginMode,authSubmit,authError,authMessa
       )}
     </main>
     <footer className="login-fullpage-footer">
-      <span>✦ Drizzlearn AI Learning Platform</span>
+      <span>✦ Drizzlearn Learning Platform</span>
     </footer>
   </div>;
 }

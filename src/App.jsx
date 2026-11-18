@@ -926,7 +926,7 @@ export default function App(){
     <SnowfallOverlay />
     {(syncing||activeRequests>0||busy)&&<div className="global-progress-bar" role="progressbar" aria-label="Loading workspace data"/>}
     <aside className="sidebar sticky top-0 h-screen flex flex-col overflow-hidden" aria-label="Main navigation">
-      <div className="brand-row flex items-center gap-3"><div className="brand-mark grid place-items-center">✦</div><div className="brand-name">Drizzlearn</div><span className="brand-ai">AI</span></div>
+      <div className="brand-row flex items-center gap-3"><div className="brand-mark grid place-items-center">✦</div><div className="brand-name">Drizzlearn</div></div>
       <div className="nav-section flex flex-col"><div className="nav-label">Workspace</div><nav className="nav-list grid gap-1.5" aria-label="Workspace">{primaryNavItems.map(([name,label,glyph])=>nav(name,label,glyph))}</nav></div>
       <div className="nav-section nav-tools-section flex flex-col"><div className="nav-label">Study tools</div><nav className="nav-list grid gap-1.5" aria-label="Study tools">{toolNavItems.map(([name,label,glyph])=>nav(name,label,glyph))}</nav></div>
       <button className={`nav-link mobile-more-trigger ${mobileMoreOpen||mobileToolPage?"active":""}`} type="button" aria-label="More study tools" aria-expanded={mobileMoreOpen} aria-controls="mobile-more-menu" onClick={()=>setMobileMoreOpen(open=>!open)}><span className="nav-icon"><Icon name="more" size={19}/></span><span>More</span></button>
