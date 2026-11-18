@@ -223,20 +223,6 @@ export function CoursePage(p) {
           >
             <Icon name="arrow-left" size={16} />
           </button>
-
-          <nav className="course-v2-breadcrumbs" aria-label="Breadcrumb">
-            <button type="button" onClick={() => p.go("home")} className="course-v2-crumb-link">
-              Home
-            </button>
-            <span className="course-v2-crumb-sep">/</span>
-            <button type="button" onClick={() => p.go("courses")} className="course-v2-crumb-link">
-              My Courses
-            </button>
-            <span className="course-v2-crumb-sep">/</span>
-            <span className="course-v2-crumb-current" title={course.title}>
-              {course.title}
-            </span>
-          </nav>
         </div>
 
         <div className="course-v2-header-actions">
@@ -246,11 +232,6 @@ export function CoursePage(p) {
               <span>Generating study materials in background…</span>
             </div>
           )}
-
-          <div className="course-v2-status-tag" data-status={course.status || "active"}>
-            <span className="course-v2-status-dot" aria-hidden="true" />
-            <span className="capitalize">{course.status || "active"}</span>
-          </div>
 
           {["active", "paused"].includes(course.status) && (
             <button
@@ -277,35 +258,30 @@ export function CoursePage(p) {
         </div>
       </header>
 
-      {/* Hero Overview Card */}
-      <section className="course-v2-hero-card">
-        <div className="course-v2-hero-body">
-          <div className="course-v2-hero-meta-row">
-            <span className="course-v2-hero-kicker">Course Blueprint</span>
-            <div className="course-v2-hero-chips">
-              <span className="course-v2-hero-chip">
-                <Icon name="calendar" size={13} />
-                <span>{targetWeeks} weeks</span>
-              </span>
-              <span className="course-v2-hero-chip">
-                <Icon name="book" size={13} />
-                <span>{totalLessons} lessons</span>
-              </span>
-              <span className="course-v2-hero-chip">
-                <Icon name="clock" size={13} />
-                <span>{totalHours} hrs estimated</span>
-              </span>
-            </div>
-          </div>
+      {/* Hero Overview (Clean, Borderless, No Outer Card Background) */}
+      <section className="course-v2-hero-clean">
+        <h1 className="course-v2-title">{course.title}</h1>
 
-          <h1 className="course-v2-title">{course.title}</h1>
-
-          {(course.summary || course.desired_outcome) && (
-            <p className="course-v2-desc">
-              {course.summary || course.desired_outcome}
-            </p>
-          )}
+        <div className="course-v2-hero-chips">
+          <span className="course-v2-hero-chip">
+            <Icon name="calendar" size={13} />
+            <span>{targetWeeks} weeks</span>
+          </span>
+          <span className="course-v2-hero-chip">
+            <Icon name="book" size={13} />
+            <span>{totalLessons} lessons</span>
+          </span>
+          <span className="course-v2-hero-chip">
+            <Icon name="clock" size={13} />
+            <span>{totalHours} hrs estimated</span>
+          </span>
         </div>
+
+        {(course.summary || course.desired_outcome) && (
+          <p className="course-v2-desc">
+            {course.summary || course.desired_outcome}
+          </p>
+        )}
       </section>
 
       {/* Modern Trending Bento Grid Hub */}
