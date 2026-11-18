@@ -662,35 +662,35 @@ export function CoursePage(p) {
               </filter>
             </defs>
 
-            {/* Aurora Sail 1 Fill & Stroke */}
+            {/* Aurora Sail 1 Fill & Stroke (Sweeping Wide Lens) */}
             <path
-              d="M 325 0 C 352 65, 340 148, 280 218 C 248 254, 218 272, 185 280 L 440 280 L 440 0 Z"
+              d="M 300 0 C 315 65, 275 145, 215 212 C 185 246, 155 268, 130 280 L 440 280 L 440 0 Z"
               fill="url(#paceBladeFill1)"
             />
             <path
-              d="M 325 0 C 352 65, 340 148, 280 218 C 248 254, 218 272, 185 280"
+              d="M 300 0 C 315 65, 275 145, 215 212 C 185 246, 155 268, 130 280"
               fill="none"
               stroke="url(#paceBladeStroke1)"
-              strokeWidth="2"
+              strokeWidth="2.2"
               filter="url(#paceGlow)"
             />
 
-            {/* Aurora Sail 2 (Intersecting Lens) Fill & Stroke */}
+            {/* Aurora Sail 2 (Intersecting Optical Lens) Fill & Stroke */}
             <path
-              d="M 440 85 C 385 118, 335 178, 320 280 L 440 280 Z"
+              d="M 440 70 C 365 105, 290 175, 275 280 L 440 280 Z"
               fill="url(#paceBladeFill2)"
             />
             <path
-              d="M 440 85 C 385 118, 335 178, 320 280"
+              d="M 440 70 C 365 105, 290 175, 275 280"
               fill="none"
               stroke="url(#paceBladeStroke2)"
-              strokeWidth="1.8"
+              strokeWidth="1.9"
               filter="url(#paceGlow)"
             />
 
             {/* Aurora Blade 3 (Subtle Bottom-Right Accent) */}
             <path
-              d="M 440 185 C 405 212, 380 248, 375 280"
+              d="M 440 160 C 395 192, 355 238, 345 280"
               fill="none"
               stroke="url(#paceBladeStroke3)"
               strokeWidth="1.4"
