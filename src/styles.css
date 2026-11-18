@@ -23459,31 +23459,56 @@ body:has(.app-shell-today-page) {
   padding-left: 24px;
 }
 
+.today-v2-day-group {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.today-v2-day-group.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .today-v2-timeline-spine {
   position: absolute;
   top: 14px;
   bottom: 14px;
   left: 9px;
   width: 2px;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(52, 67, 43, 0.6) 0px,
-    rgba(52, 67, 43, 0.6) 6px,
-    transparent 6px,
-    transparent 12px
+  background: linear-gradient(
+    180deg,
+    rgba(197, 232, 121, 0.75) 0%,
+    rgba(52, 67, 43, 0.65) 25%,
+    rgba(52, 67, 43, 0.45) 80%,
+    rgba(52, 67, 43, 0.15) 100%
   );
+  box-shadow: 0 0 6px rgba(197, 232, 121, 0.12);
   pointer-events: none;
+  transition: all 0.3s ease;
 }
 
-/* Timeline Item Row */
+/* Timeline Item Row with Smooth Scroll Slide-In */
 .today-v2-timeline-item {
   position: relative;
   display: flex;
   align-items: stretch;
   gap: 16px;
+  opacity: 0;
+  transform: translateY(22px) scale(0.985);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
 }
 
-/* Milestone Node on Spine */
+.today-v2-timeline-item.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Milestone Node on Spine - Pops in with Elastic Bounce */
 .today-v2-milestone-node {
   position: absolute;
   top: 24px;
@@ -23496,7 +23521,24 @@ body:has(.app-shell-today-page) {
   background: #0B1712;
   border: 2px solid #34432B;
   z-index: 2;
-  transition: all 0.2s ease;
+  transform: scale(0.4);
+  opacity: 0;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.3s ease,
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
+}
+
+.today-v2-timeline-item.is-visible .today-v2-milestone-node {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Interactive Node Glow on Card Hover */
+.today-v2-timeline-item:hover .today-v2-milestone-node {
+  transform: scale(1.18);
+  border-color: #D9F59A;
+  box-shadow: 0 0 16px rgba(217, 245, 154, 0.85);
 }
 
 .today-v2-milestone-node.lesson {
@@ -23527,7 +23569,7 @@ body:has(.app-shell-today-page) {
   background: currentColor;
 }
 
-/* Timetable Card */
+/* Timetable Card with Responsive Hover Lift & Glow */
 .today-v2-timetable-card {
   flex: 1;
   min-width: 0;
@@ -23537,18 +23579,21 @@ body:has(.app-shell-today-page) {
   gap: 16px;
   padding: 16px 20px;
   border-radius: 18px;
-  background: linear-gradient(135deg, rgba(16, 30, 23, 0.92) 0%, rgba(11, 23, 18, 0.96) 100%);
+  background: linear-gradient(135deg, rgba(16, 30, 23, 0.94) 0%, rgba(11, 23, 18, 0.98) 100%);
   border: 1px solid #34432B;
   border-left: 4px solid #C5E879;
   box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(217, 245, 154, 0.06);
   backdrop-filter: blur(18px);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease,
+              background 0.25s ease;
 }
 
 .today-v2-timetable-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(197, 232, 121, 0.3);
-  box-shadow: 0 14px 32px -8px rgba(0, 0, 0, 0.65), 0 0 20px rgba(217, 245, 154, 0.12);
+  transform: translateY(-2px) translateX(4px);
+  border-color: rgba(197, 232, 121, 0.4);
+  box-shadow: 0 14px 32px -8px rgba(0, 0, 0, 0.7), 0 0 22px rgba(217, 245, 154, 0.16);
 }
 
 .today-v2-timetable-card.lesson {
@@ -23566,6 +23611,16 @@ body:has(.app-shell-today-page) {
 .today-v2-timetable-card.completed {
   border-left-color: #34432B;
   opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .today-v2-day-group,
+  .today-v2-timeline-item,
+  .today-v2-milestone-node {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 .today-v2-card-main {
