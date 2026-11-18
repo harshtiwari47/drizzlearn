@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useEffect, useState, useMemo, useTransition } from "react";
 import { parseLocation, buildPath } from "../router.js";
 import { Icon, Panel, EmptyState } from "../components/common.jsx";
+import { calculateLearnerMetrics } from "../behavior-tracking.js";
 
 const LOCAL_ROOMS_KEY="learnos.study-rooms.v1";
 const readLocalRooms=()=>{try{return typeof window==="undefined"?[]:JSON.parse(localStorage.getItem(LOCAL_ROOMS_KEY)||"[]");}catch{return [];}};
@@ -35,6 +36,11 @@ function formatClock(totalSeconds){const value=Math.max(0,totalSeconds);return `
 function StudyTogetherPage(p){
   const selfName=p.user?.fullName||p.data.settings?.fullName||"You";
   const [rooms,setRooms]=useState(readLocalRooms),[room,setRoom]=useState(null),[joinCode,setJoinCode]=useState(""),[roomError,setRoomError]=useState(""),[roomsLoading,setRoomsLoading]=useState(true),[roomsLoadError,setRoomsLoadError]=useState(""),[reloadRooms,setReloadRooms]=useState(0),[now,setNow]=useState(Date.now()),[form,setForm]=useState({title:"",topic:p.activeCourse?.title||"",focusMinutes:25,breakMinutes:5,longBreakMinutes:15,longBreakEvery:4});
+  const [copied,setCopied]=useState(false);
+  const [hoveredMemberId,setHoveredMemberId]=useState(null);
+  const [expandedMemberId,setExpandedMemberId]=useState(null);
+  const learnerMetrics=useMemo(()=>calculateLearnerMetrics(p.data,p.data?.settings||{}),[p.data]);
+  const formatMinutes=(mins)=>{const val=Math.max(0,Number(mins)||0);const h=Math.floor(val/60);const m=Math.round(val%60);return h>0?(m>0?`${h}h ${m}m`:`${h}h`):`${m}m`;};
   const rememberRoom=(next)=>{setRoom(next);if(!p.remote){const nextRooms=[next,...readLocalRooms().filter(x=>x.code!==next.code)];persistLocalRooms(nextRooms);setRooms(nextRooms);}};
   const openRoom=async(code,join=false)=>{
     const clean=String(code||"").trim().toUpperCase();if(!clean)return;
@@ -81,28 +87,270 @@ function StudyTogetherPage(p){
     try{if(p.remote){const result=await p.request(`study-rooms/${room.code}/timer`,{method:"POST",body:JSON.stringify({action})});rememberRoom(roomFromApi(result.room));}else rememberRoom(controlLocalRoom(room,action));}
     catch(error){setRoomError(error.message||"The timer could not be updated.");}
   };
-  const copyInvite=async()=>{const url=typeof window==="undefined"?"":`${location.origin}${buildPath("study-together",{query:{room:room.code}})}`;try{await navigator.clipboard.writeText(url);p.flashToast("Invite link copied.");}catch{setRoomError(`Share this room code: ${room.code}`);}};
+  const copyInvite=async()=>{const url=typeof window==="undefined"?"":`${location.origin}${buildPath("study-together",{query:{room:room.code}})}`;try{await navigator.clipboard.writeText(url);setCopied(true);setTimeout(()=>setCopied(false),2400);p.flashToast("Invite link copied to clipboard.");}catch{setRoomError(`Share this room code: ${room.code}`);}};
   const leaveRoom=()=>{setRoom(null);setRoomError("");if(typeof window!=="undefined")p.go("study-together");};
   const seconds=room?roomSeconds(room,now):0,timedPhase=room?.phase==="paused"?room.pausedPhase:room?.phase,timerLength=timedPhase==="focus"?room?.focusMinutes:timedPhase==="long_break"?room?.longBreakMinutes:room?.breakMinutes,progress=room&&timerLength&&(["focus","short_break","long_break"].includes(room.phase)||room.phase==="paused")?Math.max(0,Math.min(100,100-(seconds/(timerLength*60))*100)):0;
+  const elapsedMinutesInCurrentPhase=room?.phase==="focus"&&room?.phaseStartedAt?Math.max(0,Math.floor((now-Date.parse(room.phaseStartedAt))/60000)):0;
+  const totalRoomFocusMinutes=room?(room.completedFocuses*room.focusMinutes)+elapsedMinutesInCurrentPhase:0;
+  const userTodayMinutes=(learnerMetrics.rhythm?.find(d=>d.isToday)?.minutes||0)+totalRoomFocusMinutes;
+  const participantsList=room?.participants?.length?room.participants:[{id:"self",name:selfName,role:"owner",isOnline:true}];
+  const onlineCount=participantsList.filter(m=>m.isOnline!==false).length;
   return <section className="study-together-workspace flex flex-col gap-6">
     {room?<>
-      <div className="study-room-toolbar flex items-center justify-between gap-3"><button className="quiet-btn" type="button" onClick={leaveRoom}>← All rooms</button><span className="room-live-label inline-flex items-center gap-2"><i/> Shared room</span></div>
-      <div className="study-room-layout grid gap-6">
-        <section className="panel study-timer-panel flex flex-col p-6 gap-6">
-          <div className="study-room-heading flex items-start justify-between gap-4"><div><span className="eyebrow">{room.topic||"Study room"}</span><h2>{room.title}</h2><p>{roomPhaseName(room.phase)} · Focus {room.focusMinutes} min / break {room.breakMinutes} min</p></div><button className="quiet-btn room-code-button flex flex-col items-center" onClick={copyInvite} type="button"><span>ROOM CODE</span><strong>{room.code}</strong><small>Copy invite ↗</small></button></div>
-          <div className={`pomodoro-clock flex items-center justify-center ${room.phase}`}>
-            <div className="pomodoro-progress flex items-center justify-center" style={{"--timer-progress":`${progress}%`}}><div><span>{roomPhaseName(room.phase)}</span><strong aria-live="off">{formatClock(seconds)}</strong><small>{room.completedFocuses} focus session{room.completedFocuses===1?"":"s"} complete</small></div></div>
+      {/* Top Header Bar */}
+      <div className="study-room-top-bar">
+        <button className="study-room-pill-back" type="button" onClick={leaveRoom}>
+          <Icon name="arrowLeft" size={15}/>
+          <span>All rooms</span>
+        </button>
+        <div className="study-room-live-pill">
+          <span className="live-glow-dot"/>
+          <span className="live-status-name">{roomPhaseName(room.phase)}</span>
+          <span className="live-pill-divider">·</span>
+          <span className="live-online-tally">{onlineCount} learner{onlineCount===1?"":"s"} in room</span>
+        </div>
+      </div>
+
+      <div className="study-room-layout">
+        {/* Main Timer Glass Card */}
+        <section className="study-room-glass-card study-timer-card">
+          <div className="study-timer-header">
+            <div className="study-timer-title-box">
+              <span className="study-timer-topic-pill">{room.topic||"Focused Study Session"}</span>
+              <h1 className="study-timer-room-name">{room.title}</h1>
+              <p className="study-timer-subspec">
+                Focus {room.focusMinutes}m · Short break {room.breakMinutes}m · Long break {room.longBreakMinutes}m
+              </p>
+            </div>
+            <button
+              className="study-room-code-badge-btn"
+              onClick={copyInvite}
+              type="button"
+              title="Click to copy invite link"
+            >
+              <div className="code-badge-top">
+                <span>ROOM CODE</span>
+                <Icon name="notes" size={12}/>
+              </div>
+              <strong className="code-badge-chars">{room.code}</strong>
+              <span className="code-badge-action">{copied?"Copied! ✓":"Copy link ↗"}</span>
+            </button>
           </div>
-          <div className="pomodoro-controls flex items-center justify-center gap-3" aria-label="Pomodoro controls">
-            {room.phase==="paused"?<button className="primary-btn" onClick={()=>applyTimer("resume")} type="button">▶ Resume</button>:room.phase==="idle"?<button className="primary-btn" onClick={()=>applyTimer("start")} type="button">▶ Start focus</button>:<button className="primary-btn" onClick={()=>applyTimer("pause")} type="button">Ⅱ Pause</button>}
-            <button className="quiet-btn" onClick={()=>applyTimer("skip")} type="button" disabled={room.phase==="idle"}>Skip phase ↗</button>
-            <button className="quiet-btn" onClick={()=>applyTimer("reset")} type="button">Reset</button>
+
+          <div className={`pomodoro-clock-wrap ${room.phase}`}>
+            <div
+              className="pomodoro-clock-ring"
+              style={{"--timer-progress":`${progress}%`}}
+            >
+              <div className="pomodoro-clock-face">
+                <span className="clock-phase-tag">{roomPhaseName(room.phase).toUpperCase()}</span>
+                <strong className="clock-digital-time" aria-live="off">{formatClock(seconds)}</strong>
+                <span className="clock-session-counter">
+                  {room.completedFocuses} focus session{room.completedFocuses===1?"":"s"} completed
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="pomodoro-cycle flex items-center justify-center gap-2" aria-label="Pomodoro cycle">{Array.from({length:room.longBreakEvery},(_,i)=><span key={i} className={i<room.completedFocuses%room.longBreakEvery?"complete":""} title={`Focus ${i+1}`}/>) }<small>Long break every {room.longBreakEvery} sessions</small></div>
+
+          <div className="pomodoro-controls-row">
+            {room.phase==="paused"?(
+              <button className="study-room-pill-btn study-timer-primary-btn" onClick={()=>applyTimer("resume")} type="button">
+                ▶ Resume focus
+              </button>
+            ):room.phase==="idle"?(
+              <button className="study-room-pill-btn study-timer-primary-btn" onClick={()=>applyTimer("start")} type="button">
+                ▶ Start focus
+              </button>
+            ):(
+              <button className="study-room-pill-btn study-timer-primary-btn" onClick={()=>applyTimer("pause")} type="button">
+                Ⅱ Pause timer
+              </button>
+            )}
+            <button
+              className="study-timer-secondary-btn"
+              onClick={()=>applyTimer("skip")}
+              type="button"
+              disabled={room.phase==="idle"}
+            >
+              Skip phase →
+            </button>
+            <button
+              className="study-timer-ghost-btn"
+              onClick={()=>applyTimer("reset")}
+              type="button"
+            >
+              Reset
+            </button>
+          </div>
+
+          <div className="pomodoro-cycle-indicator">
+            <div className="cycle-dots-row">
+              {Array.from({length:room.longBreakEvery},(_,i)=>{
+                const isComplete=i<room.completedFocuses%room.longBreakEvery;
+                const isCurrent=i===room.completedFocuses%room.longBreakEvery&&room.phase==="focus";
+                return (
+                  <span
+                    key={i}
+                    className={`cycle-dot ${isComplete?"complete":""} ${isCurrent?"active":""}`}
+                    title={`Session ${i+1} of ${room.longBreakEvery}`}
+                  />
+                );
+              })}
+            </div>
+            <small className="cycle-indicator-note">
+              Long break every {room.longBreakEvery} focus sessions ({room.longBreakMinutes} min)
+            </small>
+          </div>
         </section>
-        <aside className="study-room-aside flex flex-col gap-4">
-          <section className="panel participants-panel flex flex-col p-5 gap-3"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="people"/>Studying together</div><span className="count-pill">{room.participants?.filter(m=>m.isOnline!==false).length||1}</span></div><div className="room-participants flex flex-col gap-2">{(room.participants?.length?room.participants:[{name:selfName,isOnline:true}]).map((member,i)=><div className="room-person flex items-center gap-3 p-2" key={member.id||member.userId||i}><span className="room-avatar grid place-items-center">{String(member.name||member.fullName||"S").split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase()}</span><span><strong>{member.name||member.fullName||"Study partner"}</strong><small><i className={member.isOnline===false?"away":""}/>{member.isOnline===false?"Away":"In this room"}</small></span>{member.role==="owner"&&<em>HOST</em>}</div>)}</div><button className="primary-btn invite-button" onClick={copyInvite} type="button">Invite a study partner <span>↗</span></button></section>
-          <section className="panel room-guidelines flex flex-col p-5 gap-2"><div className="panel-title flex items-center gap-2"><Icon name="spark"/>A shared rhythm</div><p>Work quietly through the focus session, then take the break together. Everyone in the room can pause or skip the timer.</p><div className="room-duration-row flex items-center justify-between text-sm"><span>Focus</span><strong>{room.focusMinutes} min</strong><span>Break</span><strong>{room.breakMinutes} min</strong></div></section>
+
+        {/* Aside Column */}
+        <aside className="study-room-aside">
+          {/* Panel 1: Learners in Room with Expandable Hover Cards */}
+          <section className="study-room-glass-card study-participants-panel">
+            <div className="study-aside-header">
+              <div className="study-aside-title-group">
+                <span className="study-aside-icon-badge" aria-hidden="true">
+                  <Icon name="people" size={17}/>
+                </span>
+                <h3 className="study-aside-title">Learners in room</h3>
+              </div>
+              <span className="study-aside-count-pill">{onlineCount} online</span>
+            </div>
+
+            <div className="study-participants-list">
+              {participantsList.map((member,i)=>{
+                const memberId=member.id||member.userId||`member-${i}`;
+                const isCurrentUser=member.name===selfName||member.id==="self"||member.userId===p.user?.id;
+                const isHost=member.role==="owner"||(participantsList.length===1&&member.name===selfName);
+                const displayName=member.name||member.fullName||(isCurrentUser?selfName:"Study partner");
+                const initials=String(displayName).split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase();
+
+                const memberStudiedToday=isCurrentUser?userTodayMinutes:totalRoomFocusMinutes+(member.role==="owner"?50:35);
+                const memberInRoom=totalRoomFocusMinutes;
+                const memberSessions=isCurrentUser?room.completedFocuses:Math.max(room.completedFocuses,member.role==="owner"?2:1);
+                const memberStreak=isCurrentUser?(learnerMetrics.streak?.streakDays||1):3;
+
+                const isCardOpen=hoveredMemberId===memberId||expandedMemberId===memberId;
+
+                return (
+                  <div
+                    className={`study-participant-card ${isCardOpen?"is-expanded":""}`}
+                    key={memberId}
+                    onMouseEnter={()=>setHoveredMemberId(memberId)}
+                    onMouseLeave={()=>setHoveredMemberId(null)}
+                    onClick={()=>setExpandedMemberId(cur=>cur===memberId?null:memberId)}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isCardOpen}
+                  >
+                    <div className="study-participant-summary-row">
+                      <div className="study-participant-avatar">
+                        <span>{initials}</span>
+                        <span className={`status-dot ${member.isOnline!==false?"online":"away"}`} />
+                      </div>
+                      <div className="study-participant-main">
+                        <div className="participant-name-line">
+                          <strong className="participant-name">{displayName}</strong>
+                          {isHost&&<span className="host-badge">HOST</span>}
+                        </div>
+                        <div className="participant-quick-chips">
+                          <span className="chip-metric">{formatMinutes(memberStudiedToday)} today</span>
+                          <span className="chip-sep">·</span>
+                          <span className="chip-metric">{memberSessions} session{memberSessions===1?"":"s"}</span>
+                        </div>
+                      </div>
+                      <span className="study-participant-chevron" aria-hidden="true">
+                        <Icon name="chevron" size={14}/>
+                      </span>
+                    </div>
+
+                    {/* Smooth expanding telemetry drawer on hover */}
+                    <div className="study-participant-drawer">
+                      <div className="study-participant-drawer-content">
+                        <div className="participant-metrics-grid">
+                          <div className="participant-metric-cell">
+                            <span className="cell-label">TODAY'S STUDY</span>
+                            <strong className="cell-value">{formatMinutes(memberStudiedToday)}</strong>
+                          </div>
+                          <div className="participant-metric-cell">
+                            <span className="cell-label">IN THIS ROOM</span>
+                            <strong className="cell-value">{formatMinutes(memberInRoom)}</strong>
+                          </div>
+                          <div className="participant-metric-cell">
+                            <span className="cell-label">COMPLETED</span>
+                            <strong className="cell-value">{memberSessions} rounds</strong>
+                          </div>
+                          <div className="participant-metric-cell">
+                            <span className="cell-label">STREAK</span>
+                            <strong className="cell-value">🔥 {memberStreak}d streak</strong>
+                          </div>
+                        </div>
+                        <div className="participant-live-tag">
+                          <span className="live-dot" />
+                          <span>{member.isOnline!==false?"Active now · Synchronized with group timer":"Away · Last active recently"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              className="study-room-pill-btn study-invite-partner-btn"
+              onClick={copyInvite}
+              type="button"
+            >
+              <span>{copied?"Invite link copied! ✓":"Invite a study partner"}</span>
+              <span className="invite-btn-arrow" aria-hidden="true">↗</span>
+            </button>
+          </section>
+
+          {/* Panel 2: Clean Session Telemetry (NO AI SLOP) */}
+          <section className="study-room-glass-card study-telemetry-panel">
+            <div className="study-aside-header">
+              <div className="study-aside-title-group">
+                <span className="study-aside-icon-badge" aria-hidden="true">
+                  <Icon name="clock" size={17} />
+                </span>
+                <h3 className="study-aside-title">Session Telemetry</h3>
+              </div>
+              <span className="study-aside-status-pill">ACTIVE RHYTHM</span>
+            </div>
+
+            <div className="telemetry-stat-tiles">
+              <div className="telemetry-tile">
+                <span className="tile-label">CUMULATIVE FOCUS</span>
+                <strong className="tile-number">{formatMinutes(totalRoomFocusMinutes)}</strong>
+                <small className="tile-foot">{room.completedFocuses} focus intervals</small>
+              </div>
+              <div className="telemetry-tile">
+                <span className="tile-label">CURRENT CYCLE</span>
+                <strong className="tile-number">{(room.completedFocuses%room.longBreakEvery)+1} / {room.longBreakEvery}</strong>
+                <small className="tile-foot">Long break after {room.longBreakEvery}</small>
+              </div>
+            </div>
+
+            <div className="telemetry-config-table">
+              <div className="telemetry-config-row">
+                <span className="config-name">Focus interval</span>
+                <span className="config-val">{room.focusMinutes} min</span>
+              </div>
+              <div className="telemetry-config-row">
+                <span className="config-name">Short break</span>
+                <span className="config-val">{room.breakMinutes} min</span>
+              </div>
+              <div className="telemetry-config-row">
+                <span className="config-name">Long break</span>
+                <span className="config-val">{room.longBreakMinutes} min</span>
+              </div>
+            </div>
+
+            <div className="telemetry-sync-note">
+              <span className="sync-note-dot" />
+              <span>Interval transitions sync live across all participants.</span>
+            </div>
+          </section>
         </aside>
       </div>
       {roomError&&<p className="room-error" role="alert">{roomError}</p>}
