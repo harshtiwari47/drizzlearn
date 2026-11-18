@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Icon, Panel, parseMarkdownToHtml } from "../components/common.jsx";
+import { Icon, Panel, EmptyState, minuteLabel, parseMarkdownToHtml } from "../components/common.jsx";
 
 const LESSON_DEPTH_STORAGE_KEY = "learnos.lesson_depth.v1";
 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Icon, Panel, EmptyState, parseMarkdownToHtml } from "../components/common.jsx";
+import { Icon, Panel, EmptyState, parseMarkdownToHtml, prettyDate } from "../components/common.jsx";
 
 function formatSourceRelevance(value){
   const num=Number(value);
