@@ -333,8 +333,9 @@ function PageContent(props){
   const routeContext=getRouteContext({page,routeParams,routeQuery,activeCourse,activeLesson,proposalCourse:proposal||activeCourse,pageTitle:titles[page]||"Workspace",knownTitles:titles});
   const isCreatePage = page === "goal" || page === "create-course" || page === "create/course";
   const isProposalPage = page === "proposal";
-  const isDedicatedFlow = isCreatePage || isProposalPage;
-  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""}`}>
+  const isCourseDetailPage = page === "course";
+  const isDedicatedFlow = isCreatePage || isProposalPage || isCourseDetailPage;
+  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""} ${isCourseDetailPage ? "workspace-course-detail-page" : ""}`}>
     {!isDedicatedFlow && <PageContextBar context={routeContext} go={go}/>}
     {!isDedicatedFlow && (
       <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""} ${page==="goal"?"page-heading-goal":""}`}>
