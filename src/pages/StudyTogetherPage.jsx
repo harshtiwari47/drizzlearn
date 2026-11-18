@@ -107,16 +107,143 @@ function StudyTogetherPage(p){
       </div>
       {roomError&&<p className="room-error" role="alert">{roomError}</p>}
     </>:<>
-      <div className="study-together-grid grid grid-cols-1 md:grid-cols-2 gap-6">
-        <section className="panel create-room-panel flex flex-col p-6 gap-4"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="people"/>Create a room</div><span className="room-step">01</span></div><p className="room-panel-intro">Set a shared focus rhythm and invite someone to join your next session.</p>
-          <form className="room-create-form flex flex-col gap-3" onSubmit={createRoom}>
-            <label>Room name<input value={form.title} onChange={e=>setForm({...form,title:e.target.value})} maxLength="80" placeholder="e.g. Evening study session"/></label>
-            <label>What are you studying?<input value={form.topic} onChange={e=>setForm({...form,topic:e.target.value})} maxLength="120" placeholder="Topic or course"/></label>
-            <div className="room-duration-fields grid grid-cols-2 sm:grid-cols-4 gap-2.5"><label>Focus<select value={form.focusMinutes} onChange={e=>setForm({...form,focusMinutes:Number(e.target.value)})}>{[15,20,25,30,45,50].map(n=><option key={n} value={n}>{n} minutes</option>)}</select></label><label>Break<select value={form.breakMinutes} onChange={e=>setForm({...form,breakMinutes:Number(e.target.value)})}>{[5,10,15].map(n=><option key={n} value={n}>{n} minutes</option>)}</select></label><label>Long break<select value={form.longBreakMinutes} onChange={e=>setForm({...form,longBreakMinutes:Number(e.target.value)})}>{[10,15,20,30].map(n=><option key={n} value={n}>{n} minutes</option>)}</select></label><label>Long break after<select value={form.longBreakEvery} onChange={e=>setForm({...form,longBreakEvery:Number(e.target.value)})}>{[2,3,4,5].map(n=><option key={n} value={n}>{n} focus sessions</option>)}</select></label></div>
-            <button className="primary-btn" type="submit">Create study room <span>↗</span></button>
+      <div className="study-together-grid">
+        {/* Card 1: Create a room */}
+        <section className="study-room-glass-card create-room-card create-room-panel">
+          <div className="study-room-card-header">
+            <div className="study-room-title-group">
+              <span className="study-room-icon-badge" aria-hidden="true">
+                <Icon name="people" size={20}/>
+              </span>
+              <h2 className="study-room-card-title">Create a room</h2>
+            </div>
+            <span className="study-room-step-badge">01</span>
+          </div>
+          <p className="study-room-card-intro">Set a shared focus rhythm and invite someone to join your next session.</p>
+
+          <form className="study-room-form" onSubmit={createRoom}>
+            <label className="study-room-field">
+              <span className="study-room-label-text">Room name</span>
+              <input
+                className="study-room-pill-input"
+                value={form.title}
+                onChange={e=>setForm({...form,title:e.target.value})}
+                maxLength="80"
+                placeholder="e.g. Evening study session"
+              />
+            </label>
+
+            <label className="study-room-field">
+              <span className="study-room-label-text">What are you studying?</span>
+              <input
+                className="study-room-pill-input"
+                value={form.topic}
+                onChange={e=>setForm({...form,topic:e.target.value})}
+                maxLength="120"
+                placeholder="TypeScript for React: Type-Safe Web Development"
+              />
+            </label>
+
+            <div className="study-room-durations-grid">
+              <label className="study-room-field">
+                <span className="study-room-label-text">Focus</span>
+                <div className="study-room-select-wrap">
+                  <select
+                    className="study-room-pill-select"
+                    value={form.focusMinutes}
+                    onChange={e=>setForm({...form,focusMinutes:Number(e.target.value)})}
+                  >
+                    {[15,20,25,30,45,50].map(n=><option key={n} value={n}>{n} minutes</option>)}
+                  </select>
+                </div>
+              </label>
+
+              <label className="study-room-field">
+                <span className="study-room-label-text">Break</span>
+                <div className="study-room-select-wrap">
+                  <select
+                    className="study-room-pill-select"
+                    value={form.breakMinutes}
+                    onChange={e=>setForm({...form,breakMinutes:Number(e.target.value)})}
+                  >
+                    {[5,10,15].map(n=><option key={n} value={n}>{n} minutes</option>)}
+                  </select>
+                </div>
+              </label>
+
+              <label className="study-room-field">
+                <span className="study-room-label-text">Long break</span>
+                <div className="study-room-select-wrap">
+                  <select
+                    className="study-room-pill-select"
+                    value={form.longBreakMinutes}
+                    onChange={e=>setForm({...form,longBreakMinutes:Number(e.target.value)})}
+                  >
+                    {[10,15,20,30].map(n=><option key={n} value={n}>{n} minutes</option>)}
+                  </select>
+                </div>
+              </label>
+
+              <label className="study-room-field">
+                <span className="study-room-label-text">Long break after</span>
+                <div className="study-room-select-wrap">
+                  <select
+                    className="study-room-pill-select"
+                    value={form.longBreakEvery}
+                    onChange={e=>setForm({...form,longBreakEvery:Number(e.target.value)})}
+                  >
+                    {[2,3,4,5].map(n=><option key={n} value={n}>{n} focus sessions</option>)}
+                  </select>
+                </div>
+              </label>
+            </div>
+
+            <button className="study-room-pill-btn study-room-btn-create" type="submit">
+              <span>Create study room</span>
+              <span className="study-room-btn-arrow" aria-hidden="true">→</span>
+            </button>
           </form>
         </section>
-        <section className="panel join-room-panel flex flex-col p-6 gap-4"><div className="panel-head flex items-center justify-between"><div className="panel-title flex items-center gap-2.5"><Icon name="arrow"/>Join a room</div><span className="room-step">02</span></div><p className="room-panel-intro">Have an invite code? Enter it to join the shared timer and study session.</p><form className="room-join-form flex flex-col gap-3" onSubmit={e=>{e.preventDefault();openRoom(joinCode,true);}}><label htmlFor="study-room-code">Room code</label><div className="flex items-center gap-2"><input id="study-room-code" value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8))} placeholder="8 character code" maxLength="8"/><button className="primary-btn" type="submit" disabled={joinCode.length!==8}>Join</button></div></form></section>
+
+        {/* Card 2: Join a room */}
+        <section className="study-room-glass-card join-room-card">
+          <div className="study-room-card-header">
+            <div className="study-room-title-group">
+              <span className="study-room-icon-badge" aria-hidden="true">
+                <Icon name="arrow" size={20}/>
+              </span>
+              <h2 className="study-room-card-title">Join a room</h2>
+            </div>
+            <span className="study-room-step-badge">02</span>
+          </div>
+          <p className="study-room-card-intro">Have an invite code? Enter it to join the shared timer and study session.</p>
+
+          <form
+            className="study-room-form"
+            onSubmit={e=>{e.preventDefault();openRoom(joinCode,true);}}
+          >
+            <label className="study-room-field" htmlFor="study-room-code">
+              <span className="study-room-label-text">Room code</span>
+            </label>
+            <div className="study-room-join-row">
+              <input
+                id="study-room-code"
+                className="study-room-pill-input study-room-code-input"
+                value={joinCode}
+                onChange={e=>setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8))}
+                placeholder="8 CHARACTER CODE"
+                maxLength="8"
+              />
+              <button
+                className="study-room-pill-btn study-room-btn-join"
+                type="submit"
+                disabled={joinCode.length!==8}
+              >
+                Join
+              </button>
+            </div>
+          </form>
+        </section>
       </div>
       {roomError&&<p className="room-error" role="alert">{roomError}</p>}
       <section className="saved-rooms-section flex flex-col gap-4 mt-2"><div className="saved-rooms-heading flex items-center justify-between gap-4"><div><span className="eyebrow">Your sessions</span><h2>Recent rooms</h2></div>{!roomsLoading&&!roomsLoadError&&<span className="text-sm text-learnos-muted">{rooms.length} room{rooms.length===1?"":"s"}</span>}</div>{roomsLoading?<div className="empty-rooms flex items-center gap-3.5"><span className="empty-rooms-icon grid place-items-center"><Icon name="clock"/></span><div><strong>Loading your rooms…</strong><p>Checking for rooms you’ve created or joined.</p></div></div>:roomsLoadError?<div className="empty-rooms flex items-center gap-3.5" role="alert"><span className="empty-rooms-icon grid place-items-center"><Icon name="spark"/></span><div><strong>Your rooms could not be loaded</strong><p>{roomsLoadError}</p><button className="text-button" type="button" onClick={()=>setReloadRooms(value=>value+1)}>Try again ↻</button></div></div>:rooms.length?<div className="saved-room-list grid grid-cols-1 md:grid-cols-2 gap-3.5">{rooms.map(saved=><button type="button" className="saved-room-card flex items-center gap-3 p-3.5 text-left cursor-pointer" key={saved.code} onClick={()=>openRoom(saved.code)}><span className="saved-room-icon grid place-items-center"><Icon name="people"/></span><span className="saved-room-copy flex flex-col flex-1 min-w-0"><strong>{saved.title}</strong><small>{saved.topic||"Study session"} · {saved.participants?.length||1} participant{(saved.participants?.length||1)===1?"":"s"}</small></span><span className="saved-room-status text-sm">{roomPhaseName(saved.phase||"idle")}</span><span className="saved-room-open text-sm">↗</span></button>)}</div>:<div className="empty-rooms flex items-center gap-3.5"><span className="empty-rooms-icon grid place-items-center"><Icon name="clock"/></span><div><strong>Your rooms will show up here</strong><p>Create a room for your next session, or join with a code from a study partner.</p></div></div>}</section>
