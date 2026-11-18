@@ -4145,7 +4145,7 @@
       transform: translate(2px, -2px);
     }
 
-    /* Session Telemetry Panel (Replaces AI slop) */
+    /* Focus Summary Panel */
     .study-telemetry-panel {
       padding: 26px 26px 28px;
     }

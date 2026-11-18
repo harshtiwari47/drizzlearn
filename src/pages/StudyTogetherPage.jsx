@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useTransition } from "react";
 import { parseLocation, buildPath } from "../router.js";
 import { Icon, Panel, EmptyState } from "../components/common.jsx";
-import { calculateLearnerMetrics } from "../behavior-tracking.js";
+import { recordBehavior, calculateLearnerMetrics } from "../behavior-tracking.js";
 
 const LOCAL_ROOMS_KEY="learnos.study-rooms.v1";
 const readLocalRooms=()=>{try{return typeof window==="undefined"?[]:JSON.parse(localStorage.getItem(LOCAL_ROOMS_KEY)||"[]");}catch{return [];}};
@@ -10,6 +10,7 @@ const roomFromApi=(r)=>({...r,code:r.code||r.room_code,title:r.title||r.room_tit
 function nextRoomPhase(room,now){
   if(room.phase==="focus"){
     const completedFocuses=room.completedFocuses+1,phase=completedFocuses%room.longBreakEvery===0?"long_break":"short_break",minutes=phase==="long_break"?room.longBreakMinutes:room.breakMinutes;
+    try{recordBehavior("focus_session",{minutes:room.focusMinutes,topic:room.topic||room.title});}catch{}
     return {...room,phase,completedFocuses,phaseStartedAt:new Date(now).toISOString(),phaseEndsAt:new Date(now+minutes*60000).toISOString(),pausedRemainingSeconds:0};
   }
   return {...room,phase:"focus",phaseStartedAt:new Date(now).toISOString(),phaseEndsAt:new Date(now+room.focusMinutes*60000).toISOString(),pausedRemainingSeconds:0};
@@ -41,6 +42,7 @@ function StudyTogetherPage(p){
   const [expandedMemberId,setExpandedMemberId]=useState(null);
   const learnerMetrics=useMemo(()=>calculateLearnerMetrics(p.data,p.data?.settings||{}),[p.data]);
   const formatMinutes=(mins)=>{const val=Math.max(0,Number(mins)||0);const h=Math.floor(val/60);const m=Math.round(val%60);return h>0?(m>0?`${h}h ${m}m`:`${h}h`):`${m}m`;};
+  const formatFocusDuration=(totalSecs)=>{const s=Math.max(0,Math.floor(totalSecs||0));const hrs=Math.floor(s/3600);const mins=Math.floor((s%3600)/60);const secs=s%60;if(hrs>0)return `${hrs}h ${mins}m`;if(mins>0)return `${mins}m ${secs}s`;return `${secs}s`;};
   const rememberRoom=(next)=>{setRoom(next);if(!p.remote){const nextRooms=[next,...readLocalRooms().filter(x=>x.code!==next.code)];persistLocalRooms(nextRooms);setRooms(nextRooms);}};
   const openRoom=async(code,join=false)=>{
     const clean=String(code||"").trim().toUpperCase();if(!clean)return;
@@ -90,9 +92,10 @@ function StudyTogetherPage(p){
   const copyInvite=async()=>{const url=typeof window==="undefined"?"":`${location.origin}${buildPath("study-together",{query:{room:room.code}})}`;try{await navigator.clipboard.writeText(url);setCopied(true);setTimeout(()=>setCopied(false),2400);p.flashToast("Invite link copied to clipboard.");}catch{setRoomError(`Share this room code: ${room.code}`);}};
   const leaveRoom=()=>{setRoom(null);setRoomError("");if(typeof window!=="undefined")p.go("study-together");};
   const seconds=room?roomSeconds(room,now):0,timedPhase=room?.phase==="paused"?room.pausedPhase:room?.phase,timerLength=timedPhase==="focus"?room?.focusMinutes:timedPhase==="long_break"?room?.longBreakMinutes:room?.breakMinutes,progress=room&&timerLength&&(["focus","short_break","long_break"].includes(room.phase)||room.phase==="paused")?Math.max(0,Math.min(100,100-(seconds/(timerLength*60))*100)):0;
-  const elapsedMinutesInCurrentPhase=room?.phase==="focus"&&room?.phaseStartedAt?Math.max(0,Math.floor((now-Date.parse(room.phaseStartedAt))/60000)):0;
-  const totalRoomFocusMinutes=room?(room.completedFocuses*room.focusMinutes)+elapsedMinutesInCurrentPhase:0;
-  const userTodayMinutes=(learnerMetrics.rhythm?.find(d=>d.isToday)?.minutes||0)+totalRoomFocusMinutes;
+  const isFocusing=timedPhase==="focus"&&["focus","paused"].includes(room?.phase);
+  const currentIntervalElapsedSeconds=isFocusing&&room?Math.max(0,(room.focusMinutes*60)-seconds):0;
+  const totalRoomFocusSeconds=room?(room.completedFocuses*room.focusMinutes*60)+currentIntervalElapsedSeconds:0;
+  const userTodayMinutes=(learnerMetrics.rhythm?.find(d=>d.isToday)?.minutes||0)+Math.floor(totalRoomFocusSeconds/60);
   const participantsList=room?.participants?.length?room.participants:[{id:"self",name:selfName,role:"owner",isOnline:true}];
   const onlineCount=participantsList.filter(m=>m.isOnline!==false).length;
   return <section className="study-together-workspace flex flex-col gap-6">
@@ -227,8 +230,8 @@ function StudyTogetherPage(p){
                 const displayName=member.name||member.fullName||(isCurrentUser?selfName:"Study partner");
                 const initials=String(displayName).split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase();
 
-                const memberStudiedToday=isCurrentUser?userTodayMinutes:totalRoomFocusMinutes+(member.role==="owner"?50:35);
-                const memberInRoom=totalRoomFocusMinutes;
+                const memberStudiedToday=isCurrentUser?userTodayMinutes:Math.floor(totalRoomFocusSeconds/60)+(member.role==="owner"?50:35);
+                const memberInRoomSeconds=totalRoomFocusSeconds;
                 const memberSessions=isCurrentUser?room.completedFocuses:Math.max(room.completedFocuses,member.role==="owner"?2:1);
                 const memberStreak=isCurrentUser?(learnerMetrics.streak?.streakDays||1):3;
 
@@ -276,7 +279,7 @@ function StudyTogetherPage(p){
                           </div>
                           <div className="participant-metric-cell">
                             <span className="cell-label">IN THIS ROOM</span>
-                            <strong className="cell-value">{formatMinutes(memberInRoom)}</strong>
+                            <strong className="cell-value">{formatFocusDuration(memberInRoomSeconds)}</strong>
                           </div>
                           <div className="participant-metric-cell">
                             <span className="cell-label">COMPLETED</span>
@@ -304,34 +307,50 @@ function StudyTogetherPage(p){
             </button>
           </section>
 
-          {/* Panel 2: Clean Session Telemetry (NO AI SLOP) */}
+          {/* Panel 2: Focus Summary */}
           <section className="study-room-glass-card study-telemetry-panel">
             <div className="study-aside-header">
               <div className="study-aside-title-group">
                 <span className="study-aside-icon-badge" aria-hidden="true">
                   <Icon name="clock" size={17} />
                 </span>
-                <h3 className="study-aside-title">Session Telemetry</h3>
+                <h3 className="study-aside-title">Focus Summary</h3>
               </div>
-              <span className="study-aside-status-pill">ACTIVE RHYTHM</span>
+              <span className="study-aside-status-pill">
+                {room.phase==="focus"?"FOCUSING":room.phase==="paused"?"PAUSED":"SCHEDULE"}
+              </span>
             </div>
 
             <div className="telemetry-stat-tiles">
               <div className="telemetry-tile">
-                <span className="tile-label">CUMULATIVE FOCUS</span>
-                <strong className="tile-number">{formatMinutes(totalRoomFocusMinutes)}</strong>
-                <small className="tile-foot">{room.completedFocuses} focus intervals</small>
+                <span className="tile-label">TIME FOCUSED</span>
+                <strong className="tile-number">{formatFocusDuration(totalRoomFocusSeconds)}</strong>
+                <small className="tile-foot">
+                  {room.phase==="focus"
+                    ?"Session in progress"
+                    :room.phase==="paused"
+                    ?"Session paused"
+                    :room.completedFocuses>0
+                    ?`${room.completedFocuses} session${room.completedFocuses===1?"":"s"} completed`
+                    :"Ready to start"}
+                </small>
               </div>
               <div className="telemetry-tile">
-                <span className="tile-label">CURRENT CYCLE</span>
-                <strong className="tile-number">{(room.completedFocuses%room.longBreakEvery)+1} / {room.longBreakEvery}</strong>
-                <small className="tile-foot">Long break after {room.longBreakEvery}</small>
+                <span className="tile-label">CURRENT ROUND</span>
+                <strong className="tile-number">
+                  {(room.completedFocuses%room.longBreakEvery)+1} / {room.longBreakEvery}
+                </strong>
+                <small className="tile-foot">
+                  {room.longBreakEvery-(room.completedFocuses%room.longBreakEvery)===1
+                    ?"Next is a long break"
+                    :`Long break in ${room.longBreakEvery-(room.completedFocuses%room.longBreakEvery)} rounds`}
+                </small>
               </div>
             </div>
 
             <div className="telemetry-config-table">
               <div className="telemetry-config-row">
-                <span className="config-name">Focus interval</span>
+                <span className="config-name">Focus</span>
                 <span className="config-val">{room.focusMinutes} min</span>
               </div>
               <div className="telemetry-config-row">
