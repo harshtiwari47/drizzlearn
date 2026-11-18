@@ -26376,22 +26376,39 @@ body:has(.app-shell-today-page) {
    Harmonized Surfaces & Multi-Breakpoint Responsiveness
    ========================================================================== */
 
-.workspace-profile-page {
+.workspace-profile-page,
+.workspace-page.workspace-profile-page,
+.app-shell[data-page="profile"] .workspace-page,
+.app-shell[data-page="settings"] .workspace-page,
+.workspace-page:has(.profile-page-wrapper) {
   background-color: #070E12 !important;
   background-image:
     radial-gradient(circle at 18% 12%, rgba(56, 189, 248, 0.08) 0%, transparent 45%),
     radial-gradient(circle at 82% 16%, rgba(244, 114, 182, 0.07) 0%, transparent 42%),
     linear-gradient(180deg, #070E12 0%, #060B0E 100%) !important;
   min-height: 100vh;
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.app-shell[data-page="profile"] .main,
+.app-shell[data-page="settings"] .main {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 32px 48px !important;
+  margin: 0 !important;
 }
 
 .profile-page-wrapper {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
   box-sizing: border-box;
 }
 
@@ -27064,8 +27081,13 @@ body:has(.app-shell-today-page) {
 
 /* 1. Ultrawide Monitors (>= 1920px) */
 @media (min-width: 1920px) {
+  .app-shell[data-page="profile"] .main,
+  .app-shell[data-page="settings"] .main {
+    padding: 0 48px 60px !important;
+  }
   .profile-page-wrapper {
-    max-width: 1520px;
+    width: 100% !important;
+    max-width: 100% !important;
     gap: 28px;
   }
   .profile-hero-card {
@@ -27082,7 +27104,7 @@ body:has(.app-shell-today-page) {
     font-size: 32px !important;
   }
   .profile-content-grid {
-    grid-template-columns: minmax(0, 1.4fr) minmax(380px, 0.9fr);
+    grid-template-columns: minmax(0, 1.5fr) minmax(380px, 1fr);
     gap: 28px;
   }
   .stat-value {
@@ -27092,8 +27114,13 @@ body:has(.app-shell-today-page) {
 
 /* 2. Large Desktops (1536px to 1919px) */
 @media (min-width: 1536px) and (max-width: 1919px) {
+  .app-shell[data-page="profile"] .main,
+  .app-shell[data-page="settings"] .main {
+    padding: 0 40px 52px !important;
+  }
   .profile-page-wrapper {
-    max-width: 1340px;
+    width: 100% !important;
+    max-width: 100% !important;
     gap: 26px;
   }
   .profile-hero-card {
@@ -27107,15 +27134,21 @@ body:has(.app-shell-today-page) {
     font-size: 28px !important;
   }
   .profile-content-grid {
-    grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.85fr);
+    grid-template-columns: minmax(0, 1.4fr) minmax(340px, 0.95fr);
     gap: 24px;
   }
 }
 
 /* 3. Standard Desktops (1280px to 1535px) */
 @media (min-width: 1280px) and (max-width: 1535px) {
+  .app-shell[data-page="profile"] .main,
+  .app-shell[data-page="settings"] .main {
+    padding: 0 32px 48px !important;
+  }
   .profile-page-wrapper {
-    max-width: 1180px;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 24px;
   }
   .profile-hero-card {
     padding: 26px 28px;
@@ -27128,8 +27161,13 @@ body:has(.app-shell-today-page) {
 
 /* 4. Compact Desktops & Landscape Tablets (1024px to 1279px) */
 @media (min-width: 1024px) and (max-width: 1279px) {
+  .app-shell[data-page="profile"] .main,
+  .app-shell[data-page="settings"] .main {
+    padding: 0 24px 40px !important;
+  }
   .profile-page-wrapper {
-    max-width: 960px;
+    width: 100% !important;
+    max-width: 100% !important;
     gap: 20px;
   }
   .profile-hero-card {
@@ -27153,6 +27191,10 @@ body:has(.app-shell-today-page) {
 
 /* 5. Portrait Tablets & Small Desktops (768px to 1023px) */
 @media (min-width: 768px) and (max-width: 1023px) {
+  .app-shell[data-page="profile"] .main,
+  .app-shell[data-page="settings"] .main {
+    padding: 0 20px 36px !important;
+  }
   .profile-content-grid {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -27170,6 +27212,10 @@ body:has(.app-shell-today-page) {
 
 /* 6. Phablets & Large Phones (480px to 767px) */
 @media (min-width: 480px) and (max-width: 767px) {
+  .app-shell[data-page="profile"] .main,
+  .app-shell[data-page="settings"] .main {
+    padding: 0 16px 28px !important;
+  }
   .profile-content-grid {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -27199,6 +27245,10 @@ body:has(.app-shell-today-page) {
 
 /* 7. Compact Mobile (< 480px) */
 @media (max-width: 479px) {
+  .app-shell[data-page="profile"] .main,
+  .app-shell[data-page="settings"] .main {
+    padding: 0 12px 24px !important;
+  }
   .profile-page-wrapper {
     gap: 16px;
   }
