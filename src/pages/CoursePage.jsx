@@ -599,28 +599,48 @@ export function CoursePage(p) {
           </div>
         </div>
 
-        {/* Bento 3: Weekly Pace & Schedule Card */}
+        {/* Bento 3: Weekly Pace & Schedule Card (Glassmorphic Redesign) */}
         <div className="course-v2-bento-card course-v2-col-4 course-v2-pace-card">
-          <h3 className="course-v2-card-title">
-            <Icon name="clock" size={16} />
-            <span>Target Pacing</span>
-          </h3>
+          {/* Subtle Ambient Radial Glows */}
+          <div className="course-v2-pace-glow-top" aria-hidden="true" />
+          <div className="course-v2-pace-glow-bottom" aria-hidden="true" />
 
-          <div className="course-v2-pace-content">
-            <div className="course-v2-pace-hero-metric">
-              <span className="course-v2-pace-val">~{weeklyHours}</span>
-              <span className="course-v2-pace-unit">hrs / week</span>
+          {/* Translucent Overlapping CSS Shapes */}
+          <div className="course-v2-pace-shape-outer" aria-hidden="true" />
+          <div className="course-v2-pace-shape-inner" aria-hidden="true" />
+
+          <div className="course-v2-pace-card-inner">
+            {/* Top Row: Activity Tile + Divider + Title */}
+            <div className="course-v2-pace-header">
+              <div className="course-v2-pace-icon-tile">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="3 16 8 11 13 15 21 7" />
+                </svg>
+              </div>
+              <span className="course-v2-pace-divider" aria-hidden="true" />
+              <h3 className="course-v2-pace-title">Target Pacing</h3>
             </div>
-            <p className="course-v2-pace-note">
+
+            {/* Middle Row: Large Metric + Unit in Secondary Pill */}
+            <div className="course-v2-pace-metric-row">
+              <span className="course-v2-pace-big-val">~{weeklyHours}</span>
+              <span className="course-v2-pace-unit-pill">hrs / week</span>
+            </div>
+
+            {/* Description Text */}
+            <p className="course-v2-pace-desc">
               Paced over {targetWeeks} weeks to fit your routine with small, repeatable sessions.
             </p>
+
+            {/* Bottom Row: Glass CTA Button with Calendar and Arrow Icons */}
             <button
               type="button"
-              className="course-v2-secondary-link-btn"
+              className="course-v2-pace-glass-btn"
               onClick={() => p.go("today")}
             >
-              <Icon name="calendar" size={14} />
+              <Icon name="calendar" size={15} />
               <span>View in Daily Plan</span>
+              <Icon name="arrow-right" size={14} className="course-v2-pace-btn-arrow" />
             </button>
           </div>
         </div>
