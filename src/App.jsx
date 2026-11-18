@@ -922,8 +922,9 @@ export default function App(){
   const isCoursePage = page === "courses" || page === "course";
   const isCreateCoursePage = page === "create-course" || page === "create/course" || page === "goal";
   const isTodayAppPage = page === "today";
+  const isSettingsOrProfilePage = page === "settings" || page === "profile";
 
-  return <div className={`app-shell flex min-h-screen relative ${isCoursePage ? "app-shell-course-page" : ""} ${isCreateCoursePage ? "app-shell-create-course-page" : ""} ${isTodayAppPage ? "app-shell-today-page" : ""}`} data-page={page}>
+  return <div className={`app-shell flex min-h-screen relative ${isCoursePage ? "app-shell-course-page" : ""} ${isCreateCoursePage ? "app-shell-create-course-page" : ""} ${isTodayAppPage ? "app-shell-today-page" : ""} ${isSettingsOrProfilePage ? "app-shell-settings-page" : ""}`} data-page={page}>
     <SnowfallOverlay />
     {(syncing||activeRequests>0||busy)&&<div className="global-progress-bar" role="progressbar" aria-label="Loading workspace data"/>}
     <aside className="sidebar sticky top-0 h-screen flex flex-col overflow-hidden" aria-label="Main navigation">
