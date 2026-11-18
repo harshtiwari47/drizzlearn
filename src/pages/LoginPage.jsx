@@ -18,7 +18,7 @@ export function LoginPage({loginMode,setLoginMode,authSubmit,authError,authMessa
         <span className="brand-ai">AI</span>
       </button>
       <button type="button" className="login-back-btn" onClick={()=>go(backTarget)} aria-label="Back to workspace">
-        <span>←</span>
+        <Icon name="arrowLeft" size={15}/>
         <span>Back to workspace</span>
       </button>
     </header>
