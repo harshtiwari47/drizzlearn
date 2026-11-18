@@ -22135,6 +22135,11 @@ body:has(.workspace-proposal-page),
    ========================================================================== */
 
 /* Full Width Space Utilization (Edge-to-Edge Grid on Wide Screens) */
+html:has(.app-shell-today-page),
+body:has(.app-shell-today-page) {
+  overflow-x: clip !important;
+}
+
 .app-shell-today-page {
   background-color: #0B1712 !important; /* Deep Forest */
 }
@@ -22954,6 +22959,13 @@ body:has(.workspace-proposal-page),
   position: sticky;
   top: 24px;
   align-self: start;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.today-v2-side-col::-webkit-scrollbar {
+  display: none;
 }
 
 /* Hero "Now / Next Up" Card */
