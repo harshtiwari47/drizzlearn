@@ -762,12 +762,12 @@ export function AiEngineRagPanel({remote,request,openAccount,flashToast}){
   }
 
   const statusBadge=!remote
-    ?<span className="status-pill unavailable">Sign in required</span>
+    ?<span className="profile-status-pill">Local</span>
     :engineState==="loading"
-      ?<span className="status-pill">Loading…</span>
+      ?<span className="profile-status-pill">Checking…</span>
       :engineState==="error"
-        ?<span className="status-pill paused">Unavailable</span>
-        :<span className="status-pill connected">Ready</span>;
+        ?<span className="profile-status-pill error">Offline</span>
+        :<span className="profile-status-pill connected">Synced</span>;
 
   const models=Array.isArray(aiStatus?.models)?aiStatus.models:[];
   const visibleModels=showAllModels?models:models.slice(0,4);
@@ -780,27 +780,34 @@ export function AiEngineRagPanel({remote,request,openAccount,flashToast}){
   };
 
   return (
-    <section className="panel flex flex-col ai-rag-panel">
-      <div className="panel-head flex items-center justify-between gap-2">
-        <div className="panel-title flex items-center gap-2.5"><Icon name="spark"/>Tutor Knowledge Base</div>
+    <section className="profile-glass-card profile-side-card profile-rag-card ai-rag-panel">
+      <div className="profile-card-head flex items-center justify-between">
+        <div className="card-head-title">
+          <span className="card-head-icon-box teal" aria-hidden="true"><Icon name="spark" size={16}/></span>
+          <h3>Knowledge Base</h3>
+        </div>
         {statusBadge}
       </div>
       {!remote?(
-        <div className="side-panel-copy flex flex-col gap-2.5 p-4">
-          <p>Sign in to sync your study materials with your personal AI Tutor and keep answers tailored to your courses.</p>
-          <button type="button" className="text-button" onClick={openAccount}>Sign in to sync tutor memory ↗</button>
+        <div className="profile-side-card-body flex flex-col gap-3">
+          <p className="profile-rag-muted">Sign in to sync your study materials and keep tutor answers tailored to your courses.</p>
+          <button type="button" className="profile-action-btn secondary" onClick={openAccount}>Sign in to sync memory ↗</button>
         </div>
       ):engineState==="loading"?(
-        <div className="engine-state-box" role="status" aria-busy="true">
-          <p>Checking your tutor's memory and learning materials…</p>
+        <div className="profile-side-card-body">
+          <div className="engine-state-box" role="status" aria-busy="true">
+            <p>Checking knowledge base &amp; models…</p>
+          </div>
         </div>
       ):engineState==="error"?(
-        <div className="engine-error-box" role="alert">
-          <p>{engineError||"Tutor memory status is temporarily unavailable."}</p>
-          <button type="button" className="secondary-btn compact" onClick={()=>setReloadTick(t=>t+1)}>Retry ↻</button>
+        <div className="profile-side-card-body flex flex-col gap-2.5">
+          <div className="engine-error-box compact" role="alert">
+            <span>{engineError||"Status temporarily unavailable."}</span>
+            <button type="button" className="text-button" onClick={()=>setReloadTick(t=>t+1)}>Retry ↻</button>
+          </div>
         </div>
       ):(
-        <div className="ai-rag-content">
+        <div className="profile-rag-body">
           {engineError&&(
             <div className="engine-error-box compact" role="alert">
               <span>{engineError}</span>
@@ -809,13 +816,6 @@ export function AiEngineRagPanel({remote,request,openAccount,flashToast}){
           )}
 
           <div className="engine-section">
-            <div className="engine-section-head">
-              <div>
-                <strong>Tutor Knowledge Base</strong>
-                <p className="engine-section-sub">Materials your AI Tutor reads to explain concepts and quote your lessons.</p>
-              </div>
-              <span className="rag-mode-pill">Auto-Synced</span>
-            </div>
             {ragStatus?(
               <>
                 <div className="rag-summary-bar">
@@ -831,31 +831,29 @@ export function AiEngineRagPanel({remote,request,openAccount,flashToast}){
                 <div className="rag-footer-row flex flex-col items-start gap-1.5">
                   <button
                     type="button"
-                    className="secondary-btn compact rag-reindex-btn"
+                    className="rag-reindex-btn"
                     disabled={reindexing}
                     aria-busy={reindexing}
                     onClick={handleReindex}
                   >
-                    {reindexing?"Refreshing memory…":"Refresh tutor memory ↻"}
+                    {reindexing?"Refreshing memory…":"Refresh memory ↻"}
                   </button>
-                  <small className="muted-copy text-xs">Click only if the AI Tutor seems unaware of recent edits or new lessons.</small>
                 </div>
               </>
             ):(
               <div className="engine-error-box compact" role="alert">
-                <span>Tutor knowledge base status unavailable.</span>
+                <span>Knowledge base status unavailable.</span>
                 <button type="button" className="text-button" onClick={()=>setReloadTick(t=>t+1)}>Retry ↻</button>
               </div>
             )}
           </div>
 
+          <div className="profile-rag-divider" />
+
           <div className="engine-section">
             <div className="engine-section-head">
-              <div>
-                <strong>AI Reliability &amp; Models</strong>
-                <p className="engine-section-sub">Multi-model backup pool so course generation never stalls.</p>
-              </div>
-              <button type="button" className="text-button" onClick={()=>setReloadTick(t=>t+1)} aria-label="Refresh AI models">Check status ↻</button>
+              <strong>Model Network</strong>
+              <button type="button" className="text-button" onClick={()=>setReloadTick(t=>t+1)} aria-label="Refresh models">Check status ↻</button>
             </div>
             {aiStatus?(
               <>
@@ -912,7 +910,7 @@ export function AiEngineRagPanel({remote,request,openAccount,flashToast}){
                     )}
                   </>
                 ):(
-                  <p className="muted-copy">No active models reported yet.</p>
+                  <p className="profile-rag-muted">No active models reported yet.</p>
                 )}
               </>
             ):(
