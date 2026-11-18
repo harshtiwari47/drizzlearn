@@ -601,19 +601,107 @@ export function CoursePage(p) {
 
         {/* Bento 3: Weekly Pace & Schedule Card (Glassmorphic Redesign) */}
         <div className="course-v2-bento-card course-v2-col-4 course-v2-pace-card">
-          {/* Subtle Ambient Radial Glows */}
+          {/* Luminous Edge-lit Top Rim Light */}
+          <div className="course-v2-pace-rim-light" aria-hidden="true" />
+
+          {/* Celestial Aurora Radial Glows */}
           <div className="course-v2-pace-glow-top" aria-hidden="true" />
           <div className="course-v2-pace-glow-bottom" aria-hidden="true" />
 
-          {/* Translucent Overlapping CSS Shapes */}
-          <div className="course-v2-pace-shape-outer" aria-hidden="true" />
-          <div className="course-v2-pace-shape-inner" aria-hidden="true" />
+          {/* Luminous Volumetric Aurora Blades & Translucent Curves */}
+          <svg
+            className="course-v2-pace-curves-svg"
+            viewBox="0 0 440 280"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <defs>
+              {/* Arc 1 Gradient Stroke */}
+              <linearGradient id="paceBladeStroke1" x1="65%" y1="0%" x2="10%" y2="100%">
+                <stop offset="0%" stopColor="#a7f3d0" stopOpacity="0.95" />
+                <stop offset="25%" stopColor="#4ade80" stopOpacity="0.85" />
+                <stop offset="60%" stopColor="#10b981" stopOpacity="0.38" />
+                <stop offset="100%" stopColor="#047857" stopOpacity="0.05" />
+              </linearGradient>
+
+              {/* Arc 1 Translucent Aurora Fill */}
+              <radialGradient id="paceBladeFill1" cx="80%" cy="15%" r="75%">
+                <stop offset="0%" stopColor="#4ade80" stopOpacity="0.22" />
+                <stop offset="35%" stopColor="#10b981" stopOpacity="0.1" />
+                <stop offset="70%" stopColor="#047857" stopOpacity="0.02" />
+                <stop offset="100%" stopColor="#047857" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Arc 2 Gradient Stroke */}
+              <linearGradient id="paceBladeStroke2" x1="100%" y1="15%" x2="35%" y2="100%">
+                <stop offset="0%" stopColor="#86efac" stopOpacity="0.8" />
+                <stop offset="45%" stopColor="#34d399" stopOpacity="0.55" />
+                <stop offset="100%" stopColor="#059669" stopOpacity="0.08" />
+              </linearGradient>
+
+              {/* Arc 2 Translucent Aurora Fill */}
+              <radialGradient id="paceBladeFill2" cx="88%" cy="60%" r="65%">
+                <stop offset="0%" stopColor="#34d399" stopOpacity="0.14" />
+                <stop offset="50%" stopColor="#10b981" stopOpacity="0.05" />
+                <stop offset="100%" stopColor="#047857" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Arc 3 Gradient Stroke */}
+              <linearGradient id="paceBladeStroke3" x1="100%" y1="0%" x2="20%" y2="100%">
+                <stop offset="0%" stopColor="#6ee7b7" stopOpacity="0.45" />
+                <stop offset="100%" stopColor="#059669" stopOpacity="0.04" />
+              </linearGradient>
+
+              {/* Soft Ethereal Glow Filter */}
+              <filter id="paceGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2.5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Aurora Sail 1 Fill & Stroke */}
+            <path
+              d="M 325 0 C 352 65, 340 148, 280 218 C 248 254, 218 272, 185 280 L 440 280 L 440 0 Z"
+              fill="url(#paceBladeFill1)"
+            />
+            <path
+              d="M 325 0 C 352 65, 340 148, 280 218 C 248 254, 218 272, 185 280"
+              fill="none"
+              stroke="url(#paceBladeStroke1)"
+              strokeWidth="2"
+              filter="url(#paceGlow)"
+            />
+
+            {/* Aurora Sail 2 (Intersecting Lens) Fill & Stroke */}
+            <path
+              d="M 440 85 C 385 118, 335 178, 320 280 L 440 280 Z"
+              fill="url(#paceBladeFill2)"
+            />
+            <path
+              d="M 440 85 C 385 118, 335 178, 320 280"
+              fill="none"
+              stroke="url(#paceBladeStroke2)"
+              strokeWidth="1.8"
+              filter="url(#paceGlow)"
+            />
+
+            {/* Aurora Blade 3 (Subtle Bottom-Right Accent) */}
+            <path
+              d="M 440 185 C 405 212, 380 248, 375 280"
+              fill="none"
+              stroke="url(#paceBladeStroke3)"
+              strokeWidth="1.4"
+            />
+          </svg>
 
           <div className="course-v2-pace-card-inner">
             {/* Top Row: Activity Tile + Divider + Title */}
             <div className="course-v2-pace-header">
               <div className="course-v2-pace-icon-tile">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <polyline points="3 16 8 11 13 15 21 7" />
                 </svg>
               </div>
@@ -638,9 +726,9 @@ export function CoursePage(p) {
               className="course-v2-pace-glass-btn"
               onClick={() => p.go("today")}
             >
-              <Icon name="calendar" size={15} />
+              <Icon name="calendar" size={16} />
               <span>View in Daily Plan</span>
-              <Icon name="arrow-right" size={14} className="course-v2-pace-btn-arrow" />
+              <Icon name="arrow-right" size={15} className="course-v2-pace-btn-arrow" />
             </button>
           </div>
         </div>

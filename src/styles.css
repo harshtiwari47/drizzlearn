@@ -20574,15 +20574,16 @@ body:has(.workspace-proposal-page),
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border-radius: 20px;
-  background: linear-gradient(135deg, rgba(14, 26, 24, 0.78) 0%, rgba(9, 18, 17, 0.85) 100%) !important;
-  backdrop-filter: blur(24px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
+  border-radius: 24px !important;
+  background: radial-gradient(circle at 75% 15%, rgba(24, 54, 48, 0.75) 0%, rgba(13, 27, 29, 0.82) 48%, rgba(8, 16, 18, 0.9) 100%) !important;
+  backdrop-filter: blur(28px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(150%) !important;
   border: 1px solid rgba(74, 222, 128, 0.22) !important;
-  border-top: 1.5px solid rgba(134, 239, 172, 0.65) !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.32), 0 0 24px rgba(74, 222, 128, 0.08) !important;
+  border-top-color: rgba(167, 243, 208, 0.4) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45), 0 0 35px rgba(52, 211, 153, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
   overflow: hidden;
-  padding: 24px 26px !important;
+  padding: 28px 30px !important;
+  isolation: isolate;
   transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1),
               border-color 0.26s ease,
               box-shadow 0.26s ease !important;
@@ -20590,59 +20591,76 @@ body:has(.workspace-proposal-page),
 
 .course-v2-pace-card:hover {
   transform: translateY(-2px) !important;
-  border-color: rgba(74, 222, 128, 0.42) !important;
-  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.38), 0 0 32px rgba(74, 222, 128, 0.16) !important;
+  border-color: rgba(74, 222, 128, 0.45) !important;
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.5), 0 0 45px rgba(74, 222, 128, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.22) !important;
 }
 
+/* Edge-lit Top Rim Light Beam */
+.course-v2-pace-rim-light {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 20%,
+    rgba(52, 211, 153, 0.15) 45%,
+    rgba(74, 222, 128, 0.88) 68%,
+    rgba(167, 243, 208, 1) 78%,
+    rgba(74, 222, 128, 0.75) 86%,
+    transparent 96%
+  );
+  pointer-events: none;
+  z-index: 6;
+  filter: drop-shadow(0 0 8px rgba(134, 239, 172, 0.95)) drop-shadow(0 0 18px rgba(74, 222, 128, 0.75));
+}
+
+/* Celestial Ambient Glows */
 .course-v2-pace-glow-top {
   position: absolute;
-  top: -30px;
+  top: -50px;
   right: -20px;
-  width: 260px;
-  height: 240px;
-  background: radial-gradient(circle at 75% 25%, rgba(74, 222, 128, 0.28) 0%, rgba(52, 211, 153, 0.1) 45%, transparent 70%);
+  width: 320px;
+  height: 260px;
+  background: radial-gradient(
+    ellipse at 78% 22%,
+    rgba(110, 231, 183, 0.42) 0%,
+    rgba(52, 211, 153, 0.25) 30%,
+    rgba(16, 185, 129, 0.1) 60%,
+    transparent 80%
+  );
   pointer-events: none;
-  filter: blur(28px);
+  filter: blur(34px);
   z-index: 1;
 }
 
 .course-v2-pace-glow-bottom {
   position: absolute;
   bottom: -40px;
-  right: 10px;
-  width: 220px;
+  right: 0px;
+  width: 260px;
   height: 220px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.16) 0%, transparent 65%);
+  background: radial-gradient(
+    ellipse at 70% 80%,
+    rgba(52, 211, 153, 0.24) 0%,
+    rgba(16, 185, 129, 0.09) 50%,
+    transparent 75%
+  );
   pointer-events: none;
-  filter: blur(32px);
+  filter: blur(36px);
   z-index: 1;
 }
 
-.course-v2-pace-shape-outer {
+/* Translucent Aurora Curves SVG Overlay */
+.course-v2-pace-curves-svg {
   position: absolute;
-  top: -40px;
-  right: -70px;
-  width: 280px;
-  height: 340px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(74, 222, 128, 0.4);
-  background: radial-gradient(circle at 70% 30%, rgba(74, 222, 128, 0.08) 0%, rgba(74, 222, 128, 0.02) 50%, transparent 70%);
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   z-index: 2;
-  box-shadow: inset 0 0 24px rgba(74, 222, 128, 0.06);
-}
-
-.course-v2-pace-shape-inner {
-  position: absolute;
-  bottom: -70px;
-  right: -30px;
-  width: 250px;
-  height: 290px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(52, 211, 153, 0.32);
-  background: radial-gradient(circle at 40% 60%, rgba(52, 211, 153, 0.07) 0%, transparent 65%);
-  pointer-events: none;
-  z-index: 2;
+  overflow: visible;
 }
 
 .course-v2-pace-card-inner {
@@ -20650,41 +20668,47 @@ body:has(.workspace-proposal-page),
   z-index: 5;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   height: 100%;
 }
 
 .course-v2-pace-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .course-v2-pace-icon-tile {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 11px;
-  background: rgba(18, 44, 36, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(74, 222, 128, 0.35);
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(32, 68, 56, 0.85) 0%, rgba(14, 32, 27, 0.9) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(74, 222, 128, 0.42);
   color: #4ade80;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.3),
+              0 6px 18px rgba(0, 0, 0, 0.3),
+              0 0 16px rgba(74, 222, 128, 0.2);
   flex-shrink: 0;
+}
+
+.course-v2-pace-icon-tile svg {
+  filter: drop-shadow(0 0 5px rgba(74, 222, 128, 0.7));
 }
 
 .course-v2-pace-divider {
   width: 1px;
-  height: 18px;
+  height: 20px;
   background: rgba(255, 255, 255, 0.16);
 }
 
 .course-v2-pace-title {
   margin: 0;
   font-family: var(--font-display, 'Space Grotesk', sans-serif);
-  font-size: 16px;
+  font-size: 17.5px;
   font-weight: 700;
   color: #ffffff;
   letter-spacing: -0.01em;
@@ -20693,13 +20717,13 @@ body:has(.workspace-proposal-page),
 .course-v2-pace-metric-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 2px;
+  gap: 14px;
+  margin-top: 4px;
 }
 
 .course-v2-pace-big-val {
   font-family: var(--font-display, 'Space Grotesk', sans-serif);
-  font-size: 42px;
+  font-size: 52px;
   font-weight: 800;
   color: #ffffff;
   letter-spacing: -0.04em;
@@ -20709,53 +20733,57 @@ body:has(.workspace-proposal-page),
 .course-v2-pace-unit-pill {
   display: inline-flex;
   align-items: center;
-  padding: 5px 13px;
+  padding: 6px 15px;
   border-radius: 9999px;
-  background: rgba(18, 44, 36, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(74, 222, 128, 0.35);
+  background: linear-gradient(135deg, rgba(24, 56, 46, 0.85) 0%, rgba(14, 34, 28, 0.9) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.22),
+              0 2px 8px rgba(0, 0, 0, 0.25);
   color: #86efac;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
 .course-v2-pace-desc {
   margin: 0;
-  font-size: 13.5px;
-  line-height: 1.55;
+  font-size: 14px;
+  line-height: 1.6;
   color: #94a3b8;
-  max-width: 320px;
+  max-width: 330px;
 }
 
 .course-v2-pace-glass-btn {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 18px;
-  border-radius: 12px;
-  background: rgba(16, 38, 32, 0.65);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(74, 222, 128, 0.32);
-  color: #f1f5f9;
+  padding: 12px 22px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(22, 46, 40, 0.72) 0%, rgba(12, 28, 24, 0.82) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(74, 222, 128, 0.34);
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.2),
+              0 4px 18px rgba(0, 0, 0, 0.32);
+  color: #ffffff;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
   width: fit-content;
   margin-top: auto;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .course-v2-pace-glass-btn:hover {
-  background: rgba(24, 52, 42, 0.8);
-  border-color: rgba(74, 222, 128, 0.6);
+  background: linear-gradient(135deg, rgba(28, 60, 52, 0.88) 0%, rgba(16, 38, 32, 0.92) 100%);
+  border-color: rgba(74, 222, 128, 0.65);
   color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(74, 222, 128, 0.2);
+  transform: translateY(-1.5px);
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.28),
+              0 8px 24px rgba(74, 222, 128, 0.25);
 }
 
 .course-v2-pace-glass-btn:active {
@@ -20764,11 +20792,11 @@ body:has(.workspace-proposal-page),
 
 .course-v2-pace-btn-arrow {
   color: #86efac;
-  transition: transform 0.2s ease, color 0.2s ease;
+  transition: transform 0.22s ease, color 0.22s ease;
 }
 
 .course-v2-pace-glass-btn:hover .course-v2-pace-btn-arrow {
-  transform: translateX(3px);
+  transform: translateX(4px);
   color: #ffffff;
 }
 
