@@ -287,14 +287,20 @@ export function CoursePage(p) {
       {/* Modern Trending Bento Grid Hub */}
       <section className="course-v2-bento-grid" aria-label="Course Highlights and Utilities">
         
-        {/* Bento 1: Primary "Next Up" / "Continue Learning" Spotlight Card */}
+        {/* Bento 1: Primary "Next Up" / "Continue Learning" Spotlight Card (Organic Frosted-Glass) */}
         <div className="course-v2-bento-card course-v2-col-7 course-v2-spotlight-card">
-          <div className="course-v2-card-glow" aria-hidden="true" />
+          {/* Ambient Layered Gradients (Sage-Green & Warm Olive Blurred Lighting) */}
+          <div className="course-v2-spotlight-glow-sage" aria-hidden="true" />
+          <div className="course-v2-spotlight-glow-olive" aria-hidden="true" />
+          <div className="course-v2-spotlight-glow-subtle" aria-hidden="true" />
+
           <div className="course-v2-spotlight-inner">
             <div className="course-v2-spotlight-head">
-              <span className="course-v2-card-badge">
-                <Icon name="play" size={11} />
-                <span>{nextLesson ? "Up Next" : "Completed"}</span>
+              <span className="course-v2-spotlight-status-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polygon points="6 3 20 12 6 21 6 3" />
+                </svg>
+                <span>{nextLesson ? "UP NEXT" : "COMPLETED"}</span>
               </span>
               <span className="course-v2-spotlight-meta">
                 {completedCount} of {totalLessons} lessons completed
@@ -312,15 +318,15 @@ export function CoursePage(p) {
                 <div className="course-v2-next-actions-row">
                   <button
                     type="button"
-                    className="course-v2-primary-cta-btn"
+                    className="course-v2-luminous-green-btn"
                     onClick={() => p.openLesson(nextLesson.id)}
                   >
                     <span>{completedCount === 0 ? "Start First Lesson" : "Continue Learning"}</span>
-                    <Icon name="arrow-right" size={16} />
+                    <Icon name="arrow-right" size={15} />
                   </button>
                   <span className="course-v2-next-duration">
-                    <Icon name="clock" size={14} />
-                    <span>{minuteLabel(nextLesson.estimated_minutes || 25)}</span>
+                    <Icon name="clock" size={15} />
+                    <span>{minuteLabel(nextLesson.estimated_minutes || 20)}</span>
                   </span>
                 </div>
               </div>
@@ -355,7 +361,7 @@ export function CoursePage(p) {
               </div>
               <div className="course-v2-progress-track-labels">
                 <span>Course Progress</span>
-                <span className="font-mono">{progressPercent}%</span>
+                <span>{progressPercent}%</span>
               </div>
             </div>
           </div>
