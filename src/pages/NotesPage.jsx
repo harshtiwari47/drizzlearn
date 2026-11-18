@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useDeferredValue } from "react";
+import React, { useState, useEffect, useMemo, useDeferredValue } from "react";
 import { Icon, Panel, EmptyState, parseMarkdownToHtml, prettyDate } from "../components/common.jsx";
 
 function NotesPage(p){

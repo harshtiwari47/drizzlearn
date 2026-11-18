@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Icon, Panel, EmptyState } from "../components/common.jsx";
 
 function FlashcardsPage(p){

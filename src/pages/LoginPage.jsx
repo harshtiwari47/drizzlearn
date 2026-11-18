@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Icon } from "../components/common.jsx";
 
 export function LoginPage({loginMode,setLoginMode,authSubmit,authError,authMessage,setAuthError,setAuthMessage,go,user,logout,returnPage="home",authBusy=false}){

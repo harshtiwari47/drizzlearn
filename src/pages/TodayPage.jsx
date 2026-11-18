@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Icon, Panel, EmptyState, minuteLabel } from "../components/common.jsx";
 
 function TodayPage(p){
