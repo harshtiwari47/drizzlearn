@@ -298,6 +298,14 @@ export function TodayPage(p) {
   const todayCount = tasks.filter((t) => new Date(t.scheduled_at || 0).toDateString() === new Date().toDateString() && t.status !== "completed").length;
   const totalIncomplete = (data.tasks || []).filter((t) => t.status !== "completed").length;
 
+  const todayTasks = useMemo(() => {
+    const todayStr = new Date().toDateString();
+    return tasks.filter((t) => new Date(t.scheduled_at || 0).toDateString() === todayStr);
+  }, [tasks]);
+  const todayCompletedCount = todayTasks.filter((t) => t.status === "completed").length;
+  const todayTotalCount = todayTasks.length;
+  const todayPercent = todayTotalCount > 0 ? Math.round((todayCompletedCount / todayTotalCount) * 100) : 0;
+
   // Rebalance Schedule logic
   async function rebalanceSchedule() {
     if (rebalancing) return;
@@ -451,7 +459,7 @@ export function TodayPage(p) {
           </p>
         </div>
 
-        {/* View Format Selector (Grid for Desktop, Timeline for Mobile/Focus, Agenda) */}
+        {/* View Format Selector (Grid for Desktop, Timeline for Focus) */}
         <div className="today-v2-view-toggles" role="group" aria-label="Schedule view format">
           <button
             type="button"
@@ -472,16 +480,6 @@ export function TodayPage(p) {
           >
             <Icon name="clock" size={14} />
             <span>Timeline</span>
-          </button>
-          <button
-            type="button"
-            className={`today-v2-view-btn ${viewMode === "compact" ? "active" : ""}`}
-            onClick={() => setViewMode("compact")}
-            aria-pressed={viewMode === "compact"}
-            title="Agenda List View"
-          >
-            <Icon name="list" size={14} />
-            <span>Agenda</span>
           </button>
         </div>
       </header>
@@ -1071,8 +1069,37 @@ export function TodayPage(p) {
             </div>
           </main>
 
-          {/* Right Sidebar: Study Rhythm & Spaced Review */}
+          {/* Right Sidebar: Study Rhythm, Spaced Review & Daily Momentum */}
           <aside className="today-v2-side-col">
+            {/* Daily Momentum / Completion Card */}
+            <div className="today-v2-side-card">
+              <div className="today-v2-side-header">
+                <h3 className="today-v2-side-title">
+                  <Icon name="check" size={18} />
+                  <span>Daily momentum</span>
+                </h3>
+                <span className="today-v2-stat-pill">{todayPercent}%</span>
+              </div>
+
+              <div className="today-v2-stat-display">
+                <span className="today-v2-stat-number">{todayCompletedCount}<span className="text-xl text-[#91AA7A]">/{todayTotalCount}</span></span>
+                <span className="today-v2-stat-label">completed today</span>
+              </div>
+
+              {/* Progress bar */}
+              <div className="today-v2-progress-track" role="progressbar" aria-valuenow={todayPercent} aria-valuemin="0" aria-valuemax="100">
+                <div className="today-v2-progress-fill" style={{ width: `${todayPercent}%` }} />
+              </div>
+
+              <p className="today-v2-side-copy">
+                {todayPercent === 100 && todayTotalCount > 0
+                  ? "All daily sessions complete! Outstanding consistency."
+                  : todayTotalCount === 0
+                  ? "No sessions scheduled for today. Take a breather or explore upcoming modules."
+                  : `${todayTotalCount - todayCompletedCount} more session${todayTotalCount - todayCompletedCount === 1 ? "" : "s"} to complete today's plan.`}
+              </p>
+            </div>
+
             {/* Study Rhythm Glass Panel */}
             <div className="today-v2-side-card">
               <div className="today-v2-side-header">
