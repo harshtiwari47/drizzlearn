@@ -31,27 +31,175 @@ export function LoginPage({loginMode,setLoginMode,authSubmit,authError,authMessa
           <button type="button" className="secondary-btn flex-1" onClick={logout}>Sign out</button>
           <button type="button" className="primary-btn flex-1" onClick={()=>go("home")}>Open workspace ↗</button>
         </div>
-      </section>:<section className="auth-page-card panel flex flex-col gap-4" aria-labelledby="authTitle">
-        <div className="auth-heading flex flex-col items-start gap-1">
-          <span className="auth-kicker eyebrow self-start">ACCOUNT</span>
-          <h1 id="authTitle" className="text-2xl font-bold tracking-tight">{loginMode==="login"?"Welcome back":loginMode==="signup"?"Create your account":"Reset your password"}</h1>
-          <p className="text-sm text-learnos-muted">{loginMode==="login"?"Sign in to continue your personalized learning.":loginMode==="signup"?"Save your courses, flashcards, notes, and study progress.":"Enter your email address and we’ll send a reset link."}</p>
+      </section>:(
+        <div className="auth-master-card">
+          {/* Left Column: Interactive Auth Form */}
+          <section className="auth-form-column" aria-labelledby="authTitle">
+            <div className="auth-heading">
+              <span className="auth-kicker">ACCOUNT</span>
+              <h1 id="authTitle">
+                {loginMode==="login"?"Welcome back":loginMode==="signup"?"Create an account":"Reset password"}
+              </h1>
+              <p className="auth-subtitle">
+                {loginMode==="login"
+                  ?"Continue with one of the following options"
+                  :loginMode==="signup"
+                  ?"Save your courses, flashcards, notes, and study progress."
+                  :"Enter your email address and we’ll send a reset link."}
+              </p>
+            </div>
+
+            {loginMode!=="forgot"&&(
+              <div className="auth-tabs" role="group" aria-label="Account type">
+                {["login","signup"].map(id=>(
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={loginMode===id}
+                    className={`auth-tab-btn ${loginMode===id?"active":""}`}
+                    onClick={()=>switchAuthMode(id)}
+                  >
+                    {id==="login"?"Sign in":"Create account"}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {loginMode==="forgot"&&(
+              <button className="auth-back text-button text-sm self-start" type="button" onClick={()=>switchAuthMode("login")}>
+                ← Back to sign in
+              </button>
+            )}
+
+            <form id="auth-form" className="auth-form" onSubmit={authSubmit}>
+              {loginMode==="signup"&&(
+                <label className="auth-field-label">
+                  <span>Full name</span>
+                  <input name="fullName" autoComplete="name" minLength="2" required placeholder="Your name" />
+                </label>
+              )}
+
+              <label className="auth-field-label">
+                <span>Email</span>
+                <input name="email" type="email" autoComplete="email" required placeholder="Email Address" autoFocus />
+              </label>
+
+              {loginMode!=="forgot"&&(
+                <label className="auth-field-label">
+                  <span>Password</span>
+                  <input
+                    name="password"
+                    type="password"
+                    autoComplete={loginMode==="login"?"current-password":"new-password"}
+                    minLength="10"
+                    required
+                    placeholder="Password 8-16 characters"
+                  />
+                </label>
+              )}
+
+              {loginMode==="login"&&(
+                <div className="auth-remember-row">
+                  <label className="auth-checkbox-label">
+                    <input type="checkbox" defaultChecked />
+                    <span>Remember me</span>
+                  </label>
+                  <button className="auth-forgot-link" type="button" onClick={()=>switchAuthMode("forgot")}>
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
+
+              {authError&&<p className="form-error" role="alert">{authError}</p>}
+              {authMessage&&<p className="form-success" role="status">{authMessage}</p>}
+
+              <button className="auth-submit-btn" type="submit" disabled={authBusy}>
+                {authBusy?(
+                  <><span className="btn-spinner"/> {loginMode==="signup"?"Creating account…":loginMode==="forgot"?"Sending link…":"Signing in…"}</>
+                ):(
+                  loginMode==="login"?"Sign in":loginMode==="signup"?"Create account":"Send reset link"
+                )}
+              </button>
+
+              {loginMode!=="forgot"&&(
+                <button
+                  type="button"
+                  className="auth-google-btn"
+                  onClick={()=>{
+                    const guestEmail=`learner-${Math.random().toString(36).slice(2,7)}@drizzlearn.local`;
+                    const input=document.querySelector('input[name="email"]');
+                    if(input){input.value=guestEmail;input.focus();}
+                  }}
+                  title="Demo one-click sign in"
+                >
+                  <svg className="google-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                  </svg>
+                  <span>Continue with Google</span>
+                </button>
+              )}
+            </form>
+
+            <div className="auth-switch-note">
+              {loginMode==="login"?(
+                <span>Already have an account? <button type="button" className="auth-mode-link" onClick={()=>switchAuthMode("signup")}>Sign up</button></span>
+              ):loginMode==="signup"?(
+                <span>Already have an account? <button type="button" className="auth-mode-link" onClick={()=>switchAuthMode("login")}>Log In</button></span>
+              ):(
+                <button type="button" className="auth-mode-link" onClick={()=>switchAuthMode("login")}>Return to Log In</button>
+              )}
+            </div>
+          </section>
+
+          {/* Right Column: 3D Robot Mascot & Floating Books Showcase Window */}
+          <aside className="auth-showcase-column" aria-hidden="true">
+            <div className="auth-showcase-window">
+              {/* Radial ambient glow orbs */}
+              <div className="showcase-ambient-glow glow-top-right" />
+              <div className="showcase-ambient-glow glow-bottom-left" />
+              <div className="showcase-ambient-glow glow-center" />
+
+              {/* Realistic Cute Robot Floating with Weightless Books */}
+              <div className="robot-mascot-wrapper">
+                <img
+                  src="/images/auth-robot-mascot.jpg"
+                  alt="Realistic 3D cute learning robot floating with books"
+                  className="robot-mascot-img"
+                  loading="eager"
+                />
+              </div>
+
+              {/* Zero-gravity Floating Study Badges */}
+              <div className="floating-badge badge-1">
+                <span className="badge-icon">📖</span>
+                <div className="badge-text-group">
+                  <strong>Deep Focus</strong>
+                  <small>Weightless Study</small>
+                </div>
+              </div>
+
+              <div className="floating-badge badge-2">
+                <span className="badge-icon">✨</span>
+                <div className="badge-text-group">
+                  <strong>AI Companion</strong>
+                  <small>Real-time Knowledge</small>
+                </div>
+              </div>
+
+              <div className="floating-badge badge-3">
+                <span className="badge-icon">📚</span>
+                <div className="badge-text-group">
+                  <strong>Mastery Loops</strong>
+                  <small>Spaced Retention</small>
+                </div>
+              </div>
+            </div>
+          </aside>
         </div>
-        {loginMode!=="forgot"&&<div className="auth-tabs" role="group" aria-label="Account type">{["login","signup"].map(id=><button key={id} type="button" aria-pressed={loginMode===id} className={`auth-tab-btn ${loginMode===id?"active":""}`} onClick={()=>switchAuthMode(id)}>{id==="login"?"Sign in":"Create account"}</button>)}</div>}
-        {loginMode==="forgot"&&<button className="auth-back text-button text-sm self-start" type="button" onClick={()=>switchAuthMode("login")}>← Back to sign in</button>}
-        <form id="auth-form" className="auth-form flex flex-col gap-3" onSubmit={authSubmit}>
-          {loginMode==="signup"&&<label className="flex flex-col gap-1 text-sm font-semibold">Full name<input name="fullName" autoComplete="name" minLength="2" required placeholder="Your name"/></label>}
-          <label className="flex flex-col gap-1 text-sm font-semibold">Email address<input name="email" type="email" autoComplete="email" required placeholder="you@example.com" autoFocus/></label>
-          {loginMode!=="forgot"&&<label className="flex flex-col gap-1 text-sm font-semibold">Password<input name="password" type="password" autoComplete={loginMode==="login"?"current-password":"new-password"} minLength="10" required placeholder="At least 10 characters"/></label>}
-          {loginMode==="login"&&<button className="auth-forgot text-button text-sm self-start" type="button" onClick={()=>switchAuthMode("forgot")}>Forgot password?</button>}
-          {authError&&<p className="form-error" role="alert">{authError}</p>}
-          {authMessage&&<p className="form-success" role="status">{authMessage}</p>}
-          <button className="primary-btn mt-2" type="submit" disabled={authBusy}>{authBusy?<><span className="btn-spinner"/> {loginMode==="signup"?"Creating account…":loginMode==="forgot"?"Sending link…":"Signing in…"}</>:loginMode==="login"?"Sign in":loginMode==="signup"?"Create account":"Send reset link"}</button>
-        </form>
-        <div className="auth-switch-note text-center pt-2 border-t border-learnos-line/40 text-sm text-learnos-muted">
-          {loginMode==="login"?<span>Don&apos;t have an account? <button type="button" className="text-button text-sm font-semibold underline text-learnos-purple" onClick={()=>switchAuthMode("signup")}>Create one</button></span>:loginMode==="signup"?<span>Already have an account? <button type="button" className="text-button text-sm font-semibold underline text-learnos-purple" onClick={()=>switchAuthMode("login")}>Sign in</button></span>:<button type="button" className="text-button text-sm font-semibold text-learnos-purple" onClick={()=>switchAuthMode("login")}>Return to sign in</button>}
-        </div>
-      </section>}
+      )}
     </main>
     <footer className="login-fullpage-footer">
       <span>✦ Drizzlearn AI Learning Platform</span>
