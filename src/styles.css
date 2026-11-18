@@ -20160,6 +20160,8 @@ body:has(.workspace-proposal-page),
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .course-v2-spotlight-meta {
@@ -20167,6 +20169,7 @@ body:has(.workspace-proposal-page),
   font-size: 13.5px;
   font-weight: 500;
   color: #cbd5e1;
+  white-space: nowrap;
 }
 
 .course-v2-next-lesson-wrap {
@@ -21989,6 +21992,12 @@ body:has(.workspace-proposal-page),
   .course-v2-bento-card {
     padding: 16px 14px;
     border-radius: 14px;
+  }
+  .course-v2-spotlight-card {
+    padding: 20px 18px !important;
+  }
+  .course-v2-spotlight-meta {
+    font-size: 12px;
   }
   .course-v2-next-lesson-title {
     font-size: 18px;
