@@ -264,7 +264,7 @@ export function TodayPage(p) {
   const currentTimeTopPx = useMemo(() => {
     if (currentHour < 8 || currentHour >= 20) return null;
     const totalMinutesSince8am = (currentHour - 8) * 60 + currentMin;
-    return totalMinutesSince8am * (72 / 60); // 72px per hour (1.2px/min)
+    return totalMinutesSince8am * (84 / 60); // 84px per hour (1.4px/min)
   }, [currentHour, currentMin]);
 
   // User Greeting
@@ -640,6 +640,7 @@ export function TodayPage(p) {
 
               {/* 7 Columns for Days */}
               {weekData.days.map((day, colIdx) => {
+                let lastBottomPx = -1;
                 return (
                   <div
                     key={day.isoDate}
@@ -669,14 +670,20 @@ export function TodayPage(p) {
                         startH = 9 + (taskIdx % 4) * 2;
                         startM = 0;
                       }
-                      if (taskIdx > 0 && startH === 18 && startM === 0) {
-                        startH = 9 + (taskIdx % 4) * 2;
-                      }
 
                       const duration = Number(task.estimated_minutes) || 25;
-                      const topPx = Math.max(0, ((startH - 8) * 60 + startM) * (72 / 60));
-                      const heightPx = Math.max(62, duration * (72 / 60));
+                      const scale = 84 / 60; // 84px per hour = 1.4px per minute
+                      let topPx = Math.max(0, ((startH - 8) * 60 + startM) * scale);
+                      const heightPx = Math.max(82, Math.round(duration * scale));
+
+                      // Prevent card collisions on the same day
+                      if (topPx < lastBottomPx + 6) {
+                        topPx = lastBottomPx + 6;
+                      }
+                      lastBottomPx = topPx + heightPx;
+
                       const timeStr = formatTaskTimeSlot(task, taskIdx);
+                      const animDelayMs = colIdx * 40 + taskIdx * 60;
 
                       return (
                         <div
@@ -685,11 +692,12 @@ export function TodayPage(p) {
                           style={{
                             top: `${topPx}px`,
                             height: `${heightPx}px`,
+                            animationDelay: `${animDelayMs}ms`,
                           }}
                           onClick={() => handleLaunchTask(task)}
                           title={`${taskTitle} (${timeStr}) - Click to start`}
                         >
-                          <div className="flex items-center justify-between gap-1">
+                          <div className="today-grid-event-header">
                             <span className="today-grid-event-time">{timeStr}</span>
                             <span className={`today-grid-event-pill ${typeKey}`}>
                               {isDone ? "Done" : task.task_type || "Lesson"}
@@ -699,7 +707,7 @@ export function TodayPage(p) {
                           <h5 className="today-grid-event-title">{taskTitle}</h5>
 
                           <div className="today-grid-event-footer">
-                            <span className="text-[11px] text-[#91AA7A] truncate flex-1 min-w-0">
+                            <span className="today-grid-event-course truncate">
                               {courseTitle}
                             </span>
                             <button
