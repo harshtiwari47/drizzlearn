@@ -328,7 +328,7 @@ function RouteSuspenseFallback() {
 function PageContent(props){
   const {page,routeParams,routeQuery,data,activeCourse,lessons,activeLesson,dueCards,nextTask,stats,progressPercent,pendingTasks,proposal,busy,go,openLesson}=props;
   const common={...props};
-  const titles={courses:"My Courses",today:"Today’s plan","study-together":"Study Together",notes:"Notes",flashcards:"Flashcards",practice:"Practice",progress:"Your progress",tutor:"AI Tutor",settings:"Settings","create-course":"Create a course","create/course":"Create a course",goal:"Create a course",proposal:"Your course proposal",course:"Course roadmap",lesson:"Lesson workspace",search:"Search results",verify:"Verify your email", "reset-password":"Choose a new password",verified:"Email verified",login:"Account",signup:"Create account",auth:"Account"};
+  const titles={courses:"My Courses",today:"Today’s plan","study-together":"Study Together",notes:"Notes",flashcards:"Flashcards",practice:"Practice",progress:"Your progress",tutor:"AI Tutor",settings:"Settings",profile:"Learner Profile","create-course":"Create a course","create/course":"Create a course",goal:"Create a course",proposal:"Your course proposal",course:"Course roadmap",lesson:"Lesson workspace",search:"Search results",verify:"Verify your email", "reset-password":"Choose a new password",verified:"Email verified",login:"Account",signup:"Create account",auth:"Account"};
   if(page==="home")return <Home {...common} />;
   const routeContext=getRouteContext({page,routeParams,routeQuery,activeCourse,activeLesson,proposalCourse:proposal||activeCourse,pageTitle:titles[page]||"Workspace",knownTitles:titles});
   const isCreatePage = page === "goal" || page === "create-course" || page === "create/course";
@@ -336,8 +336,9 @@ function PageContent(props){
   const isCourseDetailPage = page === "course";
   const isTodayPage = page === "today";
   const isStudyTogetherPage = page === "study-together";
-  const isDedicatedFlow = isCreatePage || isProposalPage || isCourseDetailPage || isTodayPage || isStudyTogetherPage;
-  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""} ${isCourseDetailPage ? "workspace-course-detail-page" : ""} ${isTodayPage ? "workspace-today-page" : ""} ${isStudyTogetherPage ? "workspace-study-together-page" : ""}`}>
+  const isProfilePage = page === "profile" || page === "settings";
+  const isDedicatedFlow = isCreatePage || isProposalPage || isCourseDetailPage || isTodayPage || isStudyTogetherPage || isProfilePage;
+  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""} ${isCourseDetailPage ? "workspace-course-detail-page" : ""} ${isTodayPage ? "workspace-today-page" : ""} ${isStudyTogetherPage ? "workspace-study-together-page" : ""} ${isProfilePage ? "workspace-profile-page" : ""}`}>
     {!isDedicatedFlow && <PageContextBar context={routeContext} go={go}/>}
     {!isDedicatedFlow && (
       <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""} ${page==="goal"?"page-heading-goal":""}`}>
@@ -354,7 +355,7 @@ function PageContent(props){
       {page==="practice"&&<PracticePage {...common}/>}
       {page==="progress"&&<ProgressPage {...common}/>}
       {page==="tutor"&&<TutorPage {...common}/>}
-      {page==="settings"&&<SettingsPage {...common}/>}
+      {(page==="settings"||page==="profile")&&<SettingsPage {...common} isProfilePage={page==="profile"}/>}
       {isCreatePage&&<CreateCoursePage {...common}/>}
       {page==="proposal"&&<ProposalPage {...common}/>}
       {page==="course"&&<CoursePage {...common}/>}
@@ -1012,7 +1013,7 @@ export default function App(){
                 onSubmit={submitSearch}
                 placeholder="Search..."
               />
-              <button className={`avatar grid place-items-center ${!(user?.fullName||data.settings.fullName)?"logged-out":""}`} type="button" aria-label={user?.fullName||data.settings.fullName||"Sign in"} title={user?.fullName||data.settings.fullName||"Sign in to your account"} onClick={()=>user?go("settings"):openAccount()}>
+              <button className={`avatar grid place-items-center ${!(user?.fullName||data.settings.fullName)?"logged-out":""}`} type="button" aria-label={user?.fullName||data.settings.fullName||"Sign in"} title={user?.fullName||data.settings.fullName||"Sign in to your account"} onClick={()=>user?go("profile"):openAccount()}>
                 {(user?.fullName||data.settings.fullName||"?").split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase()}
               </button>
             </div>

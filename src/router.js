@@ -12,6 +12,7 @@ const PAGE_TITLES = {
   progress: "Your Progress — Drizzlearn",
   tutor: "AI Tutor — Drizzlearn",
   settings: "Settings — Drizzlearn",
+  profile: "Profile & Settings — Drizzlearn",
   "create-course": "Create Course — Drizzlearn",
   "create/course": "Create Course — Drizzlearn",
   goal: "Create Course — Drizzlearn",
@@ -38,6 +39,7 @@ const PAGE_DESCRIPTIONS = {
   progress: "Track your completed sessions, checkpoint evidence, and retention mastery across all courses.",
   tutor: "Engage with your personalized AI tutor for explanations, hints, quizzes, and code reviews.",
   settings: "Customize your learner profile, weekly study budget, and notification preferences.",
+  profile: "Customize your learner profile, weekly study budget, and notification preferences.",
   "create-course": "Define your subject and capability to generate a structured AI course roadmap on Drizzlearn.",
   "create/course": "Define your subject and capability to generate a structured AI course roadmap on Drizzlearn.",
   goal: "Define your subject and capability to generate a structured AI course roadmap on Drizzlearn.",
@@ -393,7 +395,7 @@ export function getRouteContext({
     };
   }
 
-  if (["settings", "search", "verify", "reset-password", "verified"].includes(page) || !knownTitles?.[page]) {
+  if (["settings", "profile", "search", "verify", "reset-password", "verified"].includes(page) || !knownTitles?.[page]) {
     return {
       back: { label: "Back to Home", page: "home" },
       breadcrumbs: [
