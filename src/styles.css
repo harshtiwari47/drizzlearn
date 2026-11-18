@@ -20326,9 +20326,9 @@ body:has(.workspace-proposal-page),
 .course-v2-radial-body {
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  gap: 20px;
-  padding: 8px 0;
+  justify-content: center;
+  gap: 32px;
+  padding: 14px 8px;
 }
 
 .course-v2-donut-wrap {
@@ -20388,6 +20388,7 @@ body:has(.workspace-proposal-page),
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 120px;
 }
 
 .course-v2-stat-pair {
@@ -21224,18 +21225,6 @@ body:has(.workspace-proposal-page),
   .workspace-course-detail-page {
     padding: 0 16px 80px !important;
   }
-  .course-v2-col-7 {
-    grid-column: span 12;
-  }
-  .course-v2-col-5 {
-    grid-column: span 12;
-  }
-  .course-v2-col-4 {
-    grid-column: span 5;
-  }
-  .course-v2-col-8 {
-    grid-column: span 7;
-  }
 }
 
 /* 769px to 1024px — Tablet Landscape */
@@ -21243,6 +21232,8 @@ body:has(.workspace-proposal-page),
   .course-v2-bento-grid {
     gap: 16px;
   }
+  .course-v2-col-7,
+  .course-v2-col-5,
   .course-v2-col-4,
   .course-v2-col-8 {
     grid-column: span 12;

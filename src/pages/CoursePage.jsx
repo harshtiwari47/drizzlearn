@@ -553,9 +553,6 @@ export function CoursePage(p) {
         <div className="course-v2-roadmap-header">
           <div className="course-v2-roadmap-title-wrap">
             <h2 className="course-v2-section-title">Course Roadmap</h2>
-            <p className="course-v2-section-subtitle">
-              Follow the connected milestones from foundational concepts to capstone execution.
-            </p>
           </div>
 
           <div className="course-v2-roadmap-controls">
