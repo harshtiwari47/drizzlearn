@@ -20331,57 +20331,210 @@ body:has(.workspace-proposal-page),
   padding: 14px 8px;
 }
 
-.course-v2-donut-wrap {
+/* ==========================================================================
+   LUMINOUS FLUID ORB PROGRESS BAR (2026 TRENDING UI)
+   ========================================================================== */
+.course-v2-fluid-orb-wrap {
   position: relative;
-  width: 108px;
-  height: 108px;
+  width: 136px;
+  height: 136px;
   flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
 }
 
-.course-v2-donut-svg {
-  transform: rotate(-90deg);
-}
-
-.course-v2-donut-bg {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.06);
-  stroke-width: 8;
-}
-
-.course-v2-donut-meter {
-  fill: none;
-  stroke-width: 8;
-  stroke-linecap: round;
-  stroke-dasharray: 276.46;
-  transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.course-v2-donut-text {
+/* Outer Glowing Radiant Aura */
+.course-v2-orb-aura {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset: -14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.35) 0%, rgba(0, 229, 255, 0.18) 40%, transparent 72%);
+  filter: blur(18px);
+  pointer-events: none;
+  animation: orbAuraBreath 4s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+  z-index: 1;
+  will-change: transform, opacity;
+}
+
+@keyframes orbAuraBreath {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+/* Continuous Light Sheen Sweep */
+.course-v2-orb-sheen {
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.04) 30%, transparent 60%);
+  pointer-events: none;
+  z-index: 6;
+  overflow: hidden;
+  mask-image: radial-gradient(circle, black 65%, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle, black 65%, transparent 70%);
+}
+
+.course-v2-orb-sheen::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 60%
+  );
+  animation: orbShinePass 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes orbShinePass {
+  0%, 20% {
+    transform: translateX(-100%) rotate(25deg);
+  }
+  50%, 100% {
+    transform: translateX(100%) rotate(25deg);
+  }
+}
+
+.course-v2-fluid-orb-svg {
+  position: relative;
+  z-index: 3;
+  overflow: visible;
+}
+
+/* Orbital Rings & Progress Arc */
+.course-v2-orb-orbit-faint {
+  fill: none;
+  stroke: rgba(52, 211, 153, 0.14);
+  stroke-width: 1;
+  stroke-dasharray: 2 6;
+  animation: orbitRotate 30s linear infinite;
+  transform-origin: 70px 70px;
+}
+
+@keyframes orbitRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.course-v2-orb-meter-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.05);
+  stroke-width: 6;
+}
+
+.course-v2-orb-meter {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transform-origin: 70px 70px;
+  transform: rotate(-90deg);
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.6));
+}
+
+.course-v2-orb-bead-halo {
+  fill: rgba(52, 211, 153, 0.4);
+  filter: drop-shadow(0 0 6px #34d399);
+  animation: beadPulse 2s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+.course-v2-orb-bead-core {
+  fill: #ffffff;
+  stroke: #34d399;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 4px #ffffff);
+}
+
+@keyframes beadPulse {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(1.25); opacity: 1; }
+}
+
+/* Continuous Fluid Waves */
+.course-v2-wave-level-group {
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.course-v2-wave-front {
+  animation: fluidWaveMove1 4.5s linear infinite;
+  will-change: transform;
+}
+
+.course-v2-wave-back {
+  animation: fluidWaveMove2 6s linear infinite;
+  will-change: transform;
+}
+
+.course-v2-wave-crest {
+  animation: fluidWaveMove1 4.5s linear infinite;
+  will-change: transform;
+}
+
+@keyframes fluidWaveMove1 {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-70px);
+  }
+}
+
+@keyframes fluidWaveMove2 {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-105px);
+  }
+}
+
+/* Luminous Center Readout */
+.course-v2-orb-center-text {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  z-index: 10;
   pointer-events: none;
 }
 
-.course-v2-donut-value {
+.course-v2-orb-value {
   font-family: var(--font-display, 'Space Grotesk', sans-serif);
-  font-size: 20px;
+  font-size: 26px;
   font-weight: 800;
   color: #ffffff;
   line-height: 1;
+  letter-spacing: -0.02em;
+  text-shadow:
+    0 0 16px rgba(52, 211, 153, 0.75),
+    0 0 32px rgba(0, 229, 255, 0.45),
+    0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
-.course-v2-donut-sub {
+.course-v2-orb-sub {
   font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #64748b;
-  margin-top: 2px;
+  letter-spacing: 0.14em;
+  color: #a7f3d0;
+  margin-top: 3px;
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
 }
 
 .course-v2-donut-stats {

@@ -193,8 +193,18 @@ export function CoursePage(p) {
     return true;
   };
 
-  // Circumference for radial progress ring (radius 44 => 2 * pi * 44 ≈ 276.46)
-  const strokeDashoffset = 276.46 - (276.46 * progressPercent) / 100;
+  // Luminous Fluid Orb Progress calculations (viewBox 140x140)
+  const meterRadius = 56;
+  const meterCircumference = 2 * Math.PI * meterRadius; // ≈ 351.86
+  const strokeDashoffset = meterCircumference - (meterCircumference * Math.max(0, Math.min(100, progressPercent))) / 100;
+
+  // Luminous bead position at progress head (-90 deg offset)
+  const beadAngleRad = (-0.5 + 2 * (Math.max(0, Math.min(100, progressPercent)) / 100)) * Math.PI;
+  const beadX = Math.round((70 + meterRadius * Math.cos(beadAngleRad)) * 100) / 100;
+  const beadY = Math.round((70 + meterRadius * Math.sin(beadAngleRad)) * 100) / 100;
+
+  // Liquid level Y (from 118 down to 22 within 140x140)
+  const liquidY = Math.round((118 - (96 * Math.max(0, Math.min(100, progressPercent))) / 100) * 100) / 100;
 
   return (
     <div className="course-v2-container">
@@ -393,33 +403,185 @@ export function CoursePage(p) {
           </div>
 
           <div className="course-v2-radial-body">
-            <div className="course-v2-donut-wrap">
-              <svg className="course-v2-donut-svg" width="108" height="108" viewBox="0 0 108 108">
+            {/* Luminous Glowing Fluid Orb Container */}
+            <div className="course-v2-fluid-orb-wrap">
+              {/* Outer Glowing Radiant Aura */}
+              <div className="course-v2-orb-aura" aria-hidden="true" />
+              {/* Continuous Light Sheen Sweep */}
+              <div className="course-v2-orb-sheen" aria-hidden="true" />
+
+              <svg
+                className="course-v2-fluid-orb-svg"
+                width="136"
+                height="136"
+                viewBox="0 0 140 140"
+                aria-hidden="true"
+              >
                 <defs>
-                  <linearGradient id="courseProgressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  {/* Progress Arc Neon Gradient */}
+                  <linearGradient id="orbProgressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#00e5ff" />
-                    <stop offset="60%" stopColor="#38bdf8" />
-                    <stop offset="100%" stopColor="#34d399" />
+                    <stop offset="50%" stopColor="#38bdf8" />
+                    <stop offset="100%" stopColor="#4ade80" />
+                  </linearGradient>
+
+                  {/* Soft Neon Glow Filter */}
+                  <filter id="orbNeonGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+
+                  {/* Glass Sphere Mask */}
+                  <clipPath id="sphereClip">
+                    <circle cx="70" cy="70" r="48" />
+                  </clipPath>
+
+                  {/* Sphere Deep Base Gradient */}
+                  <radialGradient id="sphereBaseGrad" cx="50%" cy="80%" r="75%">
+                    <stop offset="0%" stopColor="rgba(16, 185, 129, 0.2)" />
+                    <stop offset="60%" stopColor="rgba(10, 16, 24, 0.95)" />
+                    <stop offset="100%" stopColor="rgba(6, 10, 16, 0.98)" />
+                  </radialGradient>
+
+                  {/* Primary Wave Gradient (Emerald Front) */}
+                  <linearGradient id="waveGradFront" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="rgba(74, 222, 128, 0.88)" />
+                    <stop offset="35%" stopColor="rgba(16, 185, 129, 0.72)" />
+                    <stop offset="100%" stopColor="rgba(6, 78, 59, 0.9)" />
+                  </linearGradient>
+
+                  {/* Secondary Wave Gradient (Cyan Back) */}
+                  <linearGradient id="waveGradBack" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="rgba(0, 229, 255, 0.65)" />
+                    <stop offset="50%" stopColor="rgba(5, 150, 105, 0.5)" />
+                    <stop offset="100%" stopColor="rgba(4, 47, 46, 0.8)" />
+                  </linearGradient>
+
+                  {/* Glass Highlight Top Reflection */}
+                  <linearGradient id="glassTopReflection" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="rgba(255, 255, 255, 0.45)" />
+                    <stop offset="70%" stopColor="rgba(255, 255, 255, 0.08)" />
+                    <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
+                  </linearGradient>
+
+                  {/* Glass Sphere Rim Lighting */}
+                  <linearGradient id="glassRimGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+                    <stop offset="0%" stopColor="rgba(255, 255, 255, 0.35)" />
+                    <stop offset="50%" stopColor="rgba(52, 211, 153, 0.2)" />
+                    <stop offset="100%" stopColor="rgba(0, 229, 255, 0.35)" />
                   </linearGradient>
                 </defs>
+
+                {/* 1. Subtle Outer Orbit Track */}
                 <circle
-                  className="course-v2-donut-bg"
-                  cx="54"
-                  cy="54"
-                  r="44"
+                  cx="70"
+                  cy="70"
+                  r="62"
+                  className="course-v2-orb-orbit-faint"
                 />
+
+                {/* 2. Outer Progress Arc Background Track */}
                 <circle
-                  className="course-v2-donut-meter"
-                  cx="54"
-                  cy="54"
-                  r="44"
-                  style={{ strokeDashoffset }}
-                  stroke="url(#courseProgressGrad)"
+                  cx="70"
+                  cy="70"
+                  r="56"
+                  className="course-v2-orb-meter-bg"
+                />
+
+                {/* 3. Luminous Glowing Progress Arc */}
+                <circle
+                  cx="70"
+                  cy="70"
+                  r="56"
+                  className="course-v2-orb-meter"
+                  stroke="url(#orbProgressGrad)"
+                  strokeDasharray={meterCircumference}
+                  strokeDashoffset={strokeDashoffset}
+                  filter="url(#orbNeonGlow)"
+                />
+
+                {/* 4. Luminous Bead at Progress Head */}
+                {progressPercent > 0 && (
+                  <g className="course-v2-orb-bead-group" transform={`translate(${beadX}, ${beadY})`}>
+                    <circle r="7.5" className="course-v2-orb-bead-halo" />
+                    <circle r="3.5" className="course-v2-orb-bead-core" />
+                  </g>
+                )}
+
+                {/* 5. Clipped Glass Fluid Sphere */}
+                <g clipPath="url(#sphereClip)">
+                  {/* Sphere Dark Glass Base */}
+                  <circle cx="70" cy="70" r="48" fill="url(#sphereBaseGrad)" />
+
+                  {/* Fluid Wave Level Group */}
+                  <g
+                    className="course-v2-wave-level-group"
+                    style={{ transform: `translateY(${liquidY}px)` }}
+                  >
+                    {/* Secondary Background Wave (Cyan) */}
+                    <path
+                      className="course-v2-wave-back"
+                      d="M -70 0 Q -35 -9 0 0 T 70 0 T 140 0 T 210 0 T 280 0 V 130 H -70 Z"
+                      fill="url(#waveGradBack)"
+                    />
+                    {/* Primary Foreground Wave (Emerald) */}
+                    <path
+                      className="course-v2-wave-front"
+                      d="M -70 0 Q -35 -10 0 0 T 70 0 T 140 0 T 210 0 T 280 0 V 130 H -70 Z"
+                      fill="url(#waveGradFront)"
+                    />
+                    {/* Glowing Wave Crest Line */}
+                    <path
+                      className="course-v2-wave-crest"
+                      d="M -70 0 Q -35 -10 0 0 T 70 0 T 140 0 T 210 0 T 280 0"
+                      fill="none"
+                      stroke="#86efac"
+                      strokeWidth="1.6"
+                      filter="url(#orbNeonGlow)"
+                    />
+                  </g>
+
+                  {/* 3D Glass Specular Highlights */}
+                  <path
+                    d="M 40 30 A 36 20 0 0 1 100 30 A 36 12 0 0 0 40 30 Z"
+                    fill="url(#glassTopReflection)"
+                  />
+                  <ellipse
+                    cx="44"
+                    cy="40"
+                    rx="2.5"
+                    ry="4.5"
+                    fill="rgba(255, 255, 255, 0.45)"
+                    transform="rotate(-28 44 40)"
+                  />
+                  <ellipse
+                    cx="70"
+                    cy="114"
+                    rx="22"
+                    ry="4"
+                    fill="rgba(52, 211, 153, 0.22)"
+                    filter="blur(2px)"
+                  />
+                </g>
+
+                {/* 6. Glass Sphere Rim Lighting Ring */}
+                <circle
+                  cx="70"
+                  cy="70"
+                  r="48"
+                  fill="none"
+                  stroke="url(#glassRimGrad)"
+                  strokeWidth="1.5"
                 />
               </svg>
-              <div className="course-v2-donut-text">
-                <span className="course-v2-donut-value">{progressPercent}%</span>
-                <span className="course-v2-donut-sub">mastered</span>
+
+              {/* Luminous Center Readout */}
+              <div className="course-v2-orb-center-text">
+                <span className="course-v2-orb-value">{progressPercent}%</span>
+                <span className="course-v2-orb-sub">MASTERED</span>
               </div>
             </div>
 
