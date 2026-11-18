@@ -733,83 +733,251 @@ export function CoursePage(p) {
           </div>
         </div>
 
-        {/* Bento 4: Quick Study Tools Dock */}
-        <div className="course-v2-bento-card course-v2-col-8 course-v2-tools-dock-card">
-          <div className="course-v2-tools-head">
-            <h3 className="course-v2-card-title">
-              <Icon name="spark" size={16} />
-              <span>Course Study Tools</span>
-            </h3>
-            <span className="course-v2-tools-sub">Direct access to course resources</span>
+        {/* Bento 4: Quick Study Tools Dock (Modern Dark Glassmorphism, 4 Independent Cards) */}
+        <div className="course-v2-col-8 course-v2-study-tools-container">
+          <div className="course-v2-study-tools-header">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="course-v2-study-tools-sparkle"
+              aria-hidden="true"
+            >
+              <path d="M12 1L14.5 9.5L23 12L14.5 14.5L12 23L9.5 14.5L1 12L9.5 9.5L12 1Z" />
+            </svg>
+            <h3 className="course-v2-study-tools-title">Course Study Tools</h3>
           </div>
 
-          <div className="course-v2-tools-grid">
-            {/* Tool 1: Notes */}
+          <div className="course-v2-study-tools-grid">
+            {/* Tool 1: Course Notes (Cyan) */}
             <button
               type="button"
-              className="course-v2-tool-tile"
+              className="course-v2-study-tool-card course-v2-tool-cyan"
               onClick={() => p.go("notes", { query: { course: course.id } })}
             >
-              <span className="course-v2-tool-icon">
-                <Icon name="notes" size={18} />
-              </span>
-              <div className="course-v2-tool-text">
-                <strong className="course-v2-tool-name">Course Notes</strong>
-                <span className="course-v2-tool-count">{courseNotes.length} notes drafted</span>
+              <div className="course-v2-study-card-glow" aria-hidden="true" />
+              <svg
+                className="course-v2-study-wave-svg"
+                viewBox="0 0 320 90"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id="toolWaveCyanStroke" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#00e5ff" stopOpacity="0" />
+                    <stop offset="35%" stopColor="#00e5ff" stopOpacity="0.75" />
+                    <stop offset="80%" stopColor="#38bdf8" stopOpacity="1" />
+                    <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.9" />
+                  </linearGradient>
+                  <radialGradient id="toolWaveCyanFill" cx="92%" cy="85%" r="70%">
+                    <stop offset="0%" stopColor="#00e5ff" stopOpacity="0.22" />
+                    <stop offset="60%" stopColor="#0284c7" stopOpacity="0.05" />
+                    <stop offset="100%" stopColor="#0284c7" stopOpacity="0" />
+                  </radialGradient>
+                  <filter id="toolWaveGlowCyan" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <path
+                  d="M 150 90 C 190 90, 225 65, 255 50 C 275 40, 298 34, 320 32 L 320 90 Z"
+                  fill="url(#toolWaveCyanFill)"
+                />
+                <path
+                  d="M 150 90 C 190 90, 225 65, 255 50 C 275 40, 298 34, 320 32"
+                  fill="none"
+                  stroke="url(#toolWaveCyanStroke)"
+                  strokeWidth="1.8"
+                  filter="url(#toolWaveGlowCyan)"
+                />
+              </svg>
+              <div className="course-v2-study-card-content">
+                <div className="course-v2-study-icon-tile">
+                  <Icon name="notes" size={20} />
+                </div>
+                <div className="course-v2-study-text">
+                  <h4 className="course-v2-study-title">Course Notes</h4>
+                  <p className="course-v2-study-desc">{courseNotes.length} notes drafted</p>
+                </div>
+                <Icon name="arrow-right" size={16} className="course-v2-study-arrow" />
               </div>
-              <Icon name="arrow-right" size={14} className="course-v2-tool-arrow" />
             </button>
 
-            {/* Tool 2: Flashcards */}
+            {/* Tool 2: Flashcards (Purple) */}
             <button
               type="button"
-              className="course-v2-tool-tile"
+              className="course-v2-study-tool-card course-v2-tool-purple"
               onClick={() => p.go("flashcards", { query: { course: course.id } })}
             >
-              <span className="course-v2-tool-icon">
-                <Icon name="cards" size={18} />
-              </span>
-              <div className="course-v2-tool-text">
-                <strong className="course-v2-tool-name">Flashcards</strong>
-                <span className="course-v2-tool-count">
-                  {courseFlashcards.length} cards {dueFlashcardsCount > 0 && `(${dueFlashcardsCount} due)`}
-                </span>
+              <div className="course-v2-study-card-glow" aria-hidden="true" />
+              <svg
+                className="course-v2-study-wave-svg"
+                viewBox="0 0 320 90"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id="toolWavePurpleStroke" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#a855f7" stopOpacity="0" />
+                    <stop offset="35%" stopColor="#a855f7" stopOpacity="0.75" />
+                    <stop offset="80%" stopColor="#c084fc" stopOpacity="1" />
+                    <stop offset="100%" stopColor="#f0abfc" stopOpacity="0.9" />
+                  </linearGradient>
+                  <radialGradient id="toolWavePurpleFill" cx="92%" cy="85%" r="70%">
+                    <stop offset="0%" stopColor="#c084fc" stopOpacity="0.22" />
+                    <stop offset="60%" stopColor="#7e22ce" stopOpacity="0.05" />
+                    <stop offset="100%" stopColor="#7e22ce" stopOpacity="0" />
+                  </radialGradient>
+                  <filter id="toolWaveGlowPurple" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <path
+                  d="M 150 90 C 190 90, 225 65, 255 50 C 275 40, 298 34, 320 32 L 320 90 Z"
+                  fill="url(#toolWavePurpleFill)"
+                />
+                <path
+                  d="M 150 90 C 190 90, 225 65, 255 50 C 275 40, 298 34, 320 32"
+                  fill="none"
+                  stroke="url(#toolWavePurpleStroke)"
+                  strokeWidth="1.8"
+                  filter="url(#toolWaveGlowPurple)"
+                />
+              </svg>
+              <div className="course-v2-study-card-content">
+                <div className="course-v2-study-icon-tile">
+                  <Icon name="cards" size={20} />
+                </div>
+                <div className="course-v2-study-text">
+                  <h4 className="course-v2-study-title">Flashcards</h4>
+                  <p className="course-v2-study-desc">
+                    {courseFlashcards.length} cards {dueFlashcardsCount > 0 && `(${dueFlashcardsCount} due)`}
+                  </p>
+                </div>
+                <Icon name="arrow-right" size={16} className="course-v2-study-arrow" />
               </div>
-              <Icon name="arrow-right" size={14} className="course-v2-tool-arrow" />
             </button>
 
-            {/* Tool 3: Practice Studio */}
+            {/* Tool 3: Practice Studio (Amber) */}
             <button
               type="button"
-              className="course-v2-tool-tile"
+              className="course-v2-study-tool-card course-v2-tool-amber"
               onClick={() => p.go("practice", { query: { course: course.id } })}
             >
-              <span className="course-v2-tool-icon">
-                <Icon name="practice" size={18} />
-              </span>
-              <div className="course-v2-tool-text">
-                <strong className="course-v2-tool-name">Practice Studio</strong>
-                <span className="course-v2-tool-count">
-                  {practiceTasks.length} checkpoints
-                </span>
+              <div className="course-v2-study-card-glow" aria-hidden="true" />
+              <svg
+                className="course-v2-study-wave-svg"
+                viewBox="0 0 320 90"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id="toolWaveAmberStroke" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#f59e0b" stopOpacity="0" />
+                    <stop offset="35%" stopColor="#f59e0b" stopOpacity="0.75" />
+                    <stop offset="80%" stopColor="#fbbf24" stopOpacity="1" />
+                    <stop offset="100%" stopColor="#fef08a" stopOpacity="0.9" />
+                  </linearGradient>
+                  <radialGradient id="toolWaveAmberFill" cx="92%" cy="85%" r="70%">
+                    <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.22" />
+                    <stop offset="60%" stopColor="#b45309" stopOpacity="0.05" />
+                    <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+                  </radialGradient>
+                  <filter id="toolWaveGlowAmber" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <path
+                  d="M 150 90 C 190 90, 225 65, 255 50 C 275 40, 298 34, 320 32 L 320 90 Z"
+                  fill="url(#toolWaveAmberFill)"
+                />
+                <path
+                  d="M 150 90 C 190 90, 225 65, 255 50 C 275 40, 298 34, 320 32"
+                  fill="none"
+                  stroke="url(#toolWaveAmberStroke)"
+                  strokeWidth="1.8"
+                  filter="url(#toolWaveGlowAmber)"
+                />
+              </svg>
+              <div className="course-v2-study-card-content">
+                <div className="course-v2-study-icon-tile">
+                  <Icon name="practice" size={20} />
+                </div>
+                <div className="course-v2-study-text">
+                  <h4 className="course-v2-study-title">Practice Studio</h4>
+                  <p className="course-v2-study-desc">{practiceTasks.length} checkpoints</p>
+                </div>
+                <Icon name="arrow-right" size={16} className="course-v2-study-arrow" />
               </div>
-              <Icon name="arrow-right" size={14} className="course-v2-tool-arrow" />
             </button>
 
-            {/* Tool 4: AI Tutor */}
+            {/* Tool 4: Ask AI Tutor (Green) */}
             <button
               type="button"
-              className="course-v2-tool-tile"
+              className="course-v2-study-tool-card course-v2-tool-green"
               onClick={() => p.go("tutor", { query: { course: course.id } })}
             >
-              <span className="course-v2-tool-icon">
-                <Icon name="tutor" size={18} />
-              </span>
-              <div className="course-v2-tool-text">
-                <strong className="course-v2-tool-name">Ask AI Tutor</strong>
-                <span className="course-v2-tool-count">Grounded in this course</span>
+              <div className="course-v2-study-card-glow" aria-hidden="true" />
+              <svg
+                className="course-v2-study-wave-svg"
+                viewBox="0 0 320 90"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id="toolWaveGreenStroke" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity="0" />
+                    <stop offset="35%" stopColor="#22c55e" stopOpacity="0.75" />
+                    <stop offset="80%" stopColor="#4ade80" stopOpacity="1" />
+                    <stop offset="100%" stopColor="#bbf7d0" stopOpacity="0.9" />
+                  </linearGradient>
+                  <radialGradient id="toolWaveGreenFill" cx="92%" cy="85%" r="70%">
+                    <stop offset="0%" stopColor="#4ade80" stopOpacity="0.22" />
+                    <stop offset="60%" stopColor="#15803d" stopOpacity="0.05" />
+                    <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+                  </radialGradient>
+                  <filter id="toolWaveGlowGreen" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <path
+                  d="M 150 90 C 190 90, 225 65, 255 50 C 275 40, 298 34, 320 32 L 320 90 Z"
+                  fill="url(#toolWaveGreenFill)"
+                />
+                <path
+                  d="M 150 90 C 190 90, 225 65, 255 50 C 275 40, 298 34, 320 32"
+                  fill="none"
+                  stroke="url(#toolWaveGreenStroke)"
+                  strokeWidth="1.8"
+                  filter="url(#toolWaveGlowGreen)"
+                />
+              </svg>
+              <div className="course-v2-study-card-content">
+                <div className="course-v2-study-icon-tile">
+                  <Icon name="tutor" size={20} />
+                </div>
+                <div className="course-v2-study-text">
+                  <h4 className="course-v2-study-title">Ask AI Tutor</h4>
+                  <p className="course-v2-study-desc">Grounded in this course</p>
+                </div>
+                <Icon name="arrow-right" size={16} className="course-v2-study-arrow" />
               </div>
-              <Icon name="arrow-right" size={14} className="course-v2-tool-arrow" />
             </button>
           </div>
         </div>
