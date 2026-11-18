@@ -100,37 +100,6 @@ export function TodayPage(p) {
     }
   }, [calendarOpen]);
 
-  // Smooth scroll-reveal observer for timeline list items
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    if (!("IntersectionObserver" in window)) {
-      document.querySelectorAll(".today-v2-day-group, .today-v2-timeline-item").forEach((el) => {
-        el.classList.add("is-visible");
-      });
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      const elements = document.querySelectorAll(".today-v2-day-group, .today-v2-timeline-item");
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add("is-visible");
-            }
-          });
-        },
-        { threshold: 0.08, rootMargin: "0px 0px -20px 0px" }
-      );
-
-      elements.forEach((el) => observer.observe(el));
-      return () => observer.disconnect();
-    }, 40);
-
-    return () => clearTimeout(timer);
-  }, [tasks, selectedDay, weekOffset, viewMode]);
-
   // Lessons map for lookup of titles and module context
   const allLessons = p.allLessons || [];
   const allLessonsMap = useMemo(() => {
@@ -336,6 +305,37 @@ export function TodayPage(p) {
   const todayCompletedCount = todayTasks.filter((t) => t.status === "completed").length;
   const todayTotalCount = todayTasks.length;
   const todayPercent = todayTotalCount > 0 ? Math.round((todayCompletedCount / todayTotalCount) * 100) : 0;
+
+  // Smooth scroll-reveal observer for timeline list items
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (!("IntersectionObserver" in window)) {
+      document.querySelectorAll(".today-v2-day-group, .today-v2-timeline-item").forEach((el) => {
+        el.classList.add("is-visible");
+      });
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const elements = document.querySelectorAll(".today-v2-day-group, .today-v2-timeline-item");
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+            }
+          });
+        },
+        { threshold: 0.08, rootMargin: "0px 0px -20px 0px" }
+      );
+
+      elements.forEach((el) => observer.observe(el));
+      return () => observer.disconnect();
+    }, 40);
+
+    return () => clearTimeout(timer);
+  }, [tasks, selectedDay, weekOffset, viewMode]);
 
   // Rebalance Schedule logic
   async function rebalanceSchedule() {
