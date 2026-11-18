@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { Icon, Panel, EmptyState } from "../components/common.jsx";
+import { Icon, Panel, EmptyState, collectAllCourseLessons } from "../components/common.jsx";
+import { calculateLearnerMetrics } from "../behavior-tracking.js";
+import { EvidenceList } from "./PracticePage.jsx";
 
 function ProgressPage(p){
   const [courseFilter,setCourseFilter]=useState(()=>p.routeQuery?.get?.("course")||"all");

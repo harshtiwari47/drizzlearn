@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Icon, Panel, EmptyState, prettyDate } from "../components/common.jsx";
+import { Icon, Panel, EmptyState, prettyDate, collectAllCourseLessons } from "../components/common.jsx";
+import { previewFlashcardIntervals } from "../srs.js";
+import { TutorMarkdown } from "../tutor-markdown.jsx";
+import { FlashcardPortalModal } from "../flashcard-portal.jsx";
 
 function FlashcardsPage(p){
   const [index,setIndex]=useState(0),[revealed,setRevealed]=useState(false),[showHint,setShowHint]=useState(false);

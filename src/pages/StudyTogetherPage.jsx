@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useTransition } from "react";
-import { parseLocation } from "../router.js";
+import { parseLocation, buildPath } from "../router.js";
 import { Icon, Panel, EmptyState } from "../components/common.jsx";
 
 const LOCAL_ROOMS_KEY="learnos.study-rooms.v1";

@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Icon, Panel, EmptyState, parseMarkdownToHtml, prettyDate } from "../components/common.jsx";
+import { Icon, Panel, EmptyState, parseMarkdownToHtml, prettyDate, collectAllCourseLessons } from "../components/common.jsx";
+import { TutorMarkdown } from "../tutor-markdown.jsx";
+import { buildTutorThreadId, clearTutorThread, listTutorThreads, loadTutorThread, saveTutorThread } from "../tutor-db.js";
 
 function formatSourceRelevance(value){
   const num=Number(value);
@@ -689,7 +691,7 @@ export function TutorPage(p){
   </div>;
 }
 
-function AiEngineRagPanel({remote,request,openAccount,flashToast}){
+export function AiEngineRagPanel({remote,request,openAccount,flashToast}){
   const [aiStatus,setAiStatus]=useState(null);
   const [ragStatus,setRagStatus]=useState(null);
   const [engineState,setEngineState]=useState(()=>remote?"loading":"signed_out");

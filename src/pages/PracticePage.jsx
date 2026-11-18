@@ -1,5 +1,8 @@
 import React, { useState, useMemo, useDeferredValue, useEffect, useCallback, useRef } from "react";
-import { Icon, Panel, EmptyState, prettyDate } from "../components/common.jsx";
+import { Icon, Panel, EmptyState, prettyDate, collectAllCourseLessons } from "../components/common.jsx";
+import { buildPracticeSetKey, listLessonPracticeModes, loadPracticeSet, savePracticeSet } from "../practice-db.js";
+import { recordBehavior } from "../behavior-tracking.js";
+import { PracticeStudioRunner } from "../practice-exercises.jsx";
 
 const PRACTICE_MODES = [
   { id: "fill_blank", label: "Fill in the Blanks", hint: "Complete key ideas using a word bank" },
@@ -303,7 +306,7 @@ function PracticePage(p){
   </>:<EmptyState title="Choose a lesson first" body="Open a course to see its practice checkpoints." action="Browse courses" onAction={()=>p.go("courses")}/>}</div></section><aside className="practice-aside flex flex-col gap-4"><Panel title="Recent evidence" icon="progress"><EvidenceList attempts={scopedAttempts.slice(0,6)}/></Panel><Panel title="More practice" icon="tutor"><div className="side-panel-copy flex flex-col gap-2 p-4"><p>Ask the tutor for a hint, a new quiz question, or feedback on your approach.</p><button className="text-button" onClick={()=>p.go("tutor")}>Open AI Tutor ↗</button></div></Panel></aside></div>;
 }
 
-function EvidenceList({
+export function EvidenceList({
   attempts = [],
   pageSize = 0,
   showControls = false,
