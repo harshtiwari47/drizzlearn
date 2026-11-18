@@ -311,9 +311,9 @@ export function CoursePage(p) {
               <div className="course-v2-next-lesson-wrap">
                 <span className="course-v2-next-lesson-mod">{nextLesson.moduleTitle}</span>
                 <h3 className="course-v2-next-lesson-title">{nextLesson.title}</h3>
-                {nextLesson.objective && (
-                  <p className="course-v2-next-lesson-desc">{nextLesson.objective}</p>
-                )}
+                <p className="course-v2-next-lesson-desc">
+                  {nextLesson.objective || nextLesson.summary || nextLesson.description || "Master key principles, practical patterns, and interactive exercises in this session."}
+                </p>
 
                 <div className="course-v2-next-actions-row">
                   <button

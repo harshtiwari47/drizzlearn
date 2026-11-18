@@ -20053,17 +20053,17 @@ body:has(.workspace-proposal-page),
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border-radius: 24px !important;
-  background: linear-gradient(135deg, rgba(22, 34, 30, 0.78) 0%, rgba(14, 24, 22, 0.84) 48%, rgba(10, 18, 18, 0.9) 100%) !important;
-  backdrop-filter: blur(28px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  border-top: 1.5px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 26px !important;
+  background: linear-gradient(135deg, rgba(20, 32, 28, 0.72) 0%, rgba(14, 24, 22, 0.8) 48%, rgba(10, 18, 16, 0.88) 100%) !important;
+  backdrop-filter: blur(32px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(140%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.36) !important;
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.42),
-              inset 0 1px 1.5px rgba(255, 255, 255, 0.22),
-              0 0 40px rgba(163, 230, 53, 0.08) !important;
+              inset 0 1px 1.5px rgba(255, 255, 255, 0.28),
+              0 0 50px rgba(163, 230, 53, 0.1) !important;
   overflow: hidden;
-  padding: 28px 32px !important;
+  padding: 30px 34px !important;
   isolation: isolate;
   transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1),
               border-color 0.26s ease,
@@ -20081,37 +20081,37 @@ body:has(.workspace-proposal-page),
 /* Ambient Layered Gradients (Sage-Green & Warm Olive Blurred Lighting) */
 .course-v2-spotlight-glow-sage {
   position: absolute;
-  top: -40px;
-  right: 12%;
-  width: 380px;
-  height: 280px;
+  top: -30px;
+  right: 5%;
+  width: 440px;
+  height: 320px;
   background: radial-gradient(
-    circle at 60% 40%,
-    rgba(190, 242, 100, 0.35) 0%,
-    rgba(163, 230, 53, 0.18) 35%,
-    rgba(101, 163, 13, 0.06) 65%,
+    circle at 62% 38%,
+    rgba(190, 242, 100, 0.42) 0%,
+    rgba(163, 230, 53, 0.22) 36%,
+    rgba(101, 163, 13, 0.08) 64%,
     transparent 80%
   );
   pointer-events: none;
-  filter: blur(48px);
+  filter: blur(52px);
   z-index: 1;
 }
 
 .course-v2-spotlight-glow-olive {
   position: absolute;
-  bottom: -40px;
-  right: -30px;
-  width: 300px;
-  height: 260px;
+  bottom: -35px;
+  right: -25px;
+  width: 360px;
+  height: 290px;
   background: radial-gradient(
-    circle at 70% 70%,
-    rgba(217, 119, 6, 0.2) 0%,
-    rgba(180, 83, 9, 0.09) 40%,
-    rgba(146, 64, 14, 0.02) 70%,
+    circle at 75% 75%,
+    rgba(245, 158, 11, 0.26) 0%,
+    rgba(217, 119, 6, 0.16) 38%,
+    rgba(180, 83, 9, 0.06) 66%,
     transparent 80%
   );
   pointer-events: none;
-  filter: blur(52px);
+  filter: blur(54px);
   z-index: 1;
 }
 
@@ -20299,9 +20299,9 @@ body:has(.workspace-proposal-page),
 
 .course-v2-progress-track {
   width: 100%;
-  height: 5px;
+  height: 6px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.2) !important;
   overflow: hidden;
 }
 
@@ -20309,6 +20309,7 @@ body:has(.workspace-proposal-page),
   height: 100%;
   border-radius: 9999px;
   background: linear-gradient(90deg, #bef264 0%, #a3e635 100%);
+  box-shadow: 0 0 12px rgba(163, 230, 53, 0.5);
   transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -20317,8 +20318,8 @@ body:has(.workspace-proposal-page),
   align-items: center;
   justify-content: space-between;
   font-family: var(--font-body, 'Manrope', sans-serif);
-  font-size: 12.5px;
-  color: #94a3b8;
+  font-size: 13px;
+  color: #cbd5e1;
   font-weight: 500;
 }
 
