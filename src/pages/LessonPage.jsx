@@ -178,21 +178,32 @@ export function LessonPage(p) {
         <div className="lesson-top-left">
           <button
             type="button"
-            className="lesson-back-crumb"
+            className="lesson-circle-back-btn"
             onClick={() => p.go("course", { params: { courseId: p.activeCourse?.id } })}
             title="Back to Course roadmap"
+            aria-label="Back to Course roadmap"
           >
-            <Icon name="arrowLeft" size={13} />
-            <span className="lesson-course-name">{p.activeCourse?.title || "Course Roadmap"}</span>
+            <Icon name="arrowLeft" size={16} />
           </button>
-          <span className="lesson-crumb-slash">/</span>
-          <span className="lesson-module-name">{lesson.moduleTitle || "Module"}</span>
+          <div className="lesson-breadcrumb-trail">
+            <span
+              className="lesson-course-name"
+              onClick={() => p.go("course", { params: { courseId: p.activeCourse?.id } })}
+              role="button"
+              tabIndex={0}
+              title="View course roadmap"
+            >
+              {p.activeCourse?.title || "Course Roadmap"}
+            </span>
+            <span className="lesson-crumb-slash">/</span>
+            <span className="lesson-module-name">{lesson.moduleTitle || "Module"}</span>
+          </div>
         </div>
 
         <div className="lesson-top-actions">
           <button
             type="button"
-            className="lesson-tool-pill"
+            className="lesson-tool-pill tool-notes"
             onClick={() => p.draftNote(lesson.id)}
             title="Draft lesson notes"
           >
@@ -201,7 +212,7 @@ export function LessonPage(p) {
           </button>
           <button
             type="button"
-            className="lesson-tool-pill"
+            className="lesson-tool-pill tool-flashcard"
             onClick={() =>
               p.addFlashcard({
                 front: `What is the key idea in "${lesson.title}"?`,
@@ -217,7 +228,7 @@ export function LessonPage(p) {
           </button>
           <button
             type="button"
-            className="lesson-tool-pill"
+            className="lesson-tool-pill tool-practice"
             onClick={() => p.go("practice", { params: { lessonId: lesson.id } })}
             title="Practice Studio"
           >
@@ -226,7 +237,7 @@ export function LessonPage(p) {
           </button>
           <button
             type="button"
-            className="lesson-tool-pill tutor-highlight"
+            className="lesson-tool-pill tool-tutor"
             onClick={() => p.go("tutor")}
             title="Ask AI Tutor"
           >
@@ -240,19 +251,19 @@ export function LessonPage(p) {
       <div className="lesson-main-grid">
         {/* Left Column: Reading Canvas */}
         <main className="lesson-reading-column">
-          {/* Title & Metadata Strip */}
+          {/* Title & Metadata Strip with Designed Bottom Borders */}
           <div className="lesson-header-section">
-            <div className="lesson-meta-chips">
-              <span className="lesson-chip module-chip">{lesson.moduleTitle}</span>
-              <span className="lesson-chip">
+            <div className="lesson-meta-strip">
+              <span className="lesson-meta-item module-item">{lesson.moduleTitle}</span>
+              <span className="lesson-meta-item duration-item">
                 <Icon name="clock" size={12} />
                 <span>{minuteLabel(lesson.estimated_minutes || 25)}</span>
               </span>
-              <span className="lesson-chip">
+              <span className="lesson-meta-item count-item">
                 Lesson {at + 1} of {all.length}
               </span>
               {feedback?.correct && (
-                <span className="lesson-chip passed-chip">
+                <span className="lesson-meta-item passed-item">
                   <Icon name="check" size={12} /> Checkpoint passed
                 </span>
               )}

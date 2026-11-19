@@ -4062,42 +4062,63 @@
     .lesson-top-left {
       display: flex;
       align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+    .lesson-circle-back-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50% !important;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.04) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      color: #E5E7EB !important;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+    .lesson-circle-back-btn:hover {
+      background: rgba(245, 158, 11, 0.14) !important;
+      border-color: rgba(245, 158, 11, 0.45) !important;
+      color: #FFFFFF !important;
+      transform: translateX(-2px);
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.25);
+    }
+    .lesson-breadcrumb-trail {
+      display: inline-flex;
+      align-items: center;
       gap: 8px;
       min-width: 0;
       flex-wrap: wrap;
     }
-    .lesson-back-crumb {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      background: transparent;
-      border: none;
+    .lesson-course-name {
       color: #9CA3AF;
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 600;
       cursor: pointer;
-      padding: 4px 8px 4px 0;
-      border-radius: 6px;
       transition: color 0.16s ease;
-    }
-    .lesson-back-crumb:hover {
-      color: #FFFFFF;
-    }
-    .lesson-course-name {
       max-width: 280px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+    .lesson-course-name:hover {
+      color: #FFFFFF;
     }
     .lesson-crumb-slash {
       color: #4B5563;
       font-size: 13px;
     }
     .lesson-module-name {
-      color: #D1D5DB;
-      font-size: 13px;
-      font-weight: 500;
-      max-width: 240px;
+      color: #E5E7EB;
+      font-size: 13.5px;
+      font-weight: 600;
+      max-width: 260px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -4106,38 +4127,92 @@
     .lesson-top-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 9px;
       flex-wrap: wrap;
     }
     .lesson-tool-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
+      gap: 7px;
+      padding: 7px 15px;
       border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
       font-size: 12.5px;
       font-weight: 600;
-      color: #D1D5DB;
       cursor: pointer;
-      transition: all 0.16s ease;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
       white-space: nowrap;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
-    .lesson-tool-pill:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.16);
-      color: #FFFFFF;
-    }
-    .lesson-tool-pill.tutor-highlight {
+    
+    /* Notes Tool Pill (Warm Amber theme) */
+    .lesson-tool-pill.tool-notes {
       background: rgba(245, 158, 11, 0.08);
-      border-color: rgba(245, 158, 11, 0.25);
-      color: #FBBF24;
-    }
-    .lesson-tool-pill.tutor-highlight:hover {
-      background: rgba(245, 158, 11, 0.16);
-      border-color: rgba(245, 158, 11, 0.45);
+      border: 1px solid rgba(245, 158, 11, 0.25);
       color: #FDE68A;
+    }
+    .lesson-tool-pill.tool-notes:hover {
+      background: rgba(245, 158, 11, 0.18);
+      border-color: rgba(245, 158, 11, 0.5);
+      color: #FFFFFF;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.28);
+      transform: translateY(-1px);
+    }
+    .lesson-tool-pill.tool-notes svg {
+      color: #F59E0B;
+    }
+
+    /* Flashcard Tool Pill (Vibrant Violet / Purple theme) */
+    .lesson-tool-pill.tool-flashcard {
+      background: rgba(168, 85, 247, 0.08);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      color: #E9D5FF;
+    }
+    .lesson-tool-pill.tool-flashcard:hover {
+      background: rgba(168, 85, 247, 0.18);
+      border-color: rgba(168, 85, 247, 0.5);
+      color: #FFFFFF;
+      box-shadow: 0 0 16px rgba(168, 85, 247, 0.28);
+      transform: translateY(-1px);
+    }
+    .lesson-tool-pill.tool-flashcard svg {
+      color: #C084FC;
+    }
+
+    /* Practice Tool Pill (Emerald / Mint theme) */
+    .lesson-tool-pill.tool-practice {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #A7F3D0;
+    }
+    .lesson-tool-pill.tool-practice:hover {
+      background: rgba(16, 185, 129, 0.18);
+      border-color: rgba(16, 185, 129, 0.5);
+      color: #FFFFFF;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.28);
+      transform: translateY(-1px);
+    }
+    .lesson-tool-pill.tool-practice svg {
+      color: #34D399;
+    }
+
+    /* Ask Tutor Tool Pill (Luminous Sunset Amber Gradient theme) */
+    .lesson-tool-pill.tool-tutor {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(217, 119, 6, 0.24) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.42);
+      color: #FDE68A;
+      font-weight: 700;
+      box-shadow: 0 2px 10px rgba(245, 158, 11, 0.15);
+    }
+    .lesson-tool-pill.tool-tutor:hover {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.28) 0%, rgba(217, 119, 6, 0.38) 100%);
+      border-color: rgba(245, 158, 11, 0.7);
+      color: #FFFFFF;
+      box-shadow: 0 0 18px rgba(245, 158, 11, 0.38);
+      transform: translateY(-1px);
+    }
+    .lesson-tool-pill.tool-tutor svg {
+      color: #FBBF24;
     }
 
     /* Main Grid: Reading Canvas + Curriculum Rail */
@@ -4158,7 +4233,7 @@
       width: 100%;
     }
 
-    /* Header Section (Title, Chips, Objective, Depth) */
+    /* Header Section (Title, Designed Bottom Border Metadata Strip, Objective, Depth) */
     .lesson-header-section {
       display: flex;
       flex-direction: column;
@@ -4168,32 +4243,52 @@
       box-sizing: border-box;
     }
 
-    .lesson-meta-chips {
+    /* Simple, Non-Card Metadata Strip with Highlighted Bottom Borders */
+    .lesson-meta-strip {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 18px;
       flex-wrap: wrap;
+      margin-bottom: 2px;
     }
-    .lesson-chip {
+    .lesson-meta-item {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 4px 11px;
-      border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      color: #9CA3AF;
-      font-size: 11.5px;
+      gap: 6px;
+      padding: 0 0 6px 0;
+      background: transparent;
+      border: none;
+      font-size: 13px;
       font-weight: 600;
-      letter-spacing: 0.01em;
+      letter-spacing: -0.01em;
+      color: #9CA3AF;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+      transition: all 0.18s ease;
     }
-    .lesson-chip.module-chip {
-      color: #E5E7EB;
-      background: rgba(255, 255, 255, 0.06);
+    .lesson-meta-item.module-item {
+      color: #FFFFFF;
+      font-weight: 700;
+      border-bottom: 2.5px solid #F59E0B;
+      box-shadow: 0 2px 8px -2px rgba(245, 158, 11, 0.4);
     }
-    .lesson-chip.passed-chip {
-      background: rgba(16, 185, 129, 0.1);
-      border-color: rgba(16, 185, 129, 0.25);
+    .lesson-meta-item.duration-item {
+      color: #D1D5DB;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.22);
+    }
+    .lesson-meta-item.duration-item svg {
+      color: #9CA3AF;
+    }
+    .lesson-meta-item.count-item {
+      color: #D1D5DB;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.22);
+    }
+    .lesson-meta-item.passed-item {
+      color: #34D399;
+      font-weight: 700;
+      border-bottom: 2.5px solid #10B981;
+      box-shadow: 0 2px 8px -2px rgba(16, 185, 129, 0.4);
+    }
+    .lesson-meta-item.passed-item svg {
       color: #34D399;
     }
 
