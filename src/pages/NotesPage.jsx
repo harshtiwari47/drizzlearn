@@ -1,111 +1,6 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from "react";
 import { Icon, parseMarkdownToHtml, prettyDate } from "../components/common.jsx";
 
-function NotesBackgroundRibbons() {
-  return (
-    <>
-      {/* Top-Right Golden Ribbon */}
-      <div className="notes-ambient-ribbon-tr" aria-hidden="true">
-        <svg
-          viewBox="0 0 900 450"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="xMaxYMin meet"
-        >
-          <defs>
-            <linearGradient id="goldRibbonTR" x1="0" y1="20" x2="880" y2="80" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#F59E0B" stopOpacity="0" />
-              <stop offset="20%" stopColor="#FBBF24" stopOpacity="0.5" />
-              <stop offset="50%" stopColor="#FFFBEB" stopOpacity="0.95" />
-              <stop offset="80%" stopColor="#F59E0B" stopOpacity="0.65" />
-              <stop offset="100%" stopColor="#D97706" stopOpacity="0" />
-            </linearGradient>
-            <filter id="ribbonCrispTR" x="-200%" y="-200%" width="500%" height="500%">
-              <feGaussianBlur stdDeviation="3" result="b1" />
-              <feGaussianBlur stdDeviation="7" result="b2" />
-              <feMerge>
-                <feMergeNode in="b2" />
-                <feMergeNode in="b1" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <filter id="ribbonAtmosphereTR" x="-250%" y="-250%" width="600%" height="600%">
-              <feGaussianBlur stdDeviation="16" />
-            </filter>
-          </defs>
-          <path
-            d="M 20 -10 C 220 170 480 155 700 55 C 780 15 840 30 900 5"
-            stroke="rgba(245, 158, 11, 0.08)"
-            strokeWidth="16"
-            filter="url(#ribbonAtmosphereTR)"
-          />
-          <path
-            d="M 20 -10 C 220 170 480 155 700 55 C 780 15 840 30 900 5"
-            stroke="rgba(251, 191, 36, 0.25)"
-            strokeWidth="6"
-            filter="url(#ribbonCrispTR)"
-          />
-          <path
-            d="M 20 -10 C 220 170 480 155 700 55 C 780 15 840 30 900 5"
-            stroke="url(#goldRibbonTR)"
-            strokeWidth="2.5"
-            filter="url(#ribbonCrispTR)"
-          />
-        </svg>
-      </div>
-
-      {/* Bottom-Left Golden Ribbon (Sweeps into footer) */}
-      <div className="notes-ambient-ribbon-bl" aria-hidden="true">
-        <svg
-          viewBox="0 0 900 450"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="xMinYMax meet"
-        >
-          <defs>
-            <linearGradient id="goldRibbonBL" x1="0" y1="440" x2="850" y2="380" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#F59E0B" stopOpacity="0" />
-              <stop offset="25%" stopColor="#FFFBEB" stopOpacity="0.9" />
-              <stop offset="65%" stopColor="#FBBF24" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
-            </linearGradient>
-            <filter id="ribbonCrispBL" x="-200%" y="-200%" width="500%" height="500%">
-              <feGaussianBlur stdDeviation="3" result="b1" />
-              <feGaussianBlur stdDeviation="7" result="b2" />
-              <feMerge>
-                <feMergeNode in="b2" />
-                <feMergeNode in="b1" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <filter id="ribbonAtmosphereBL" x="-250%" y="-250%" width="600%" height="600%">
-              <feGaussianBlur stdDeviation="16" />
-            </filter>
-          </defs>
-          <path
-            d="M -30 280 C 140 220 300 330 460 380 C 580 415 690 425 820 435"
-            stroke="rgba(245, 158, 11, 0.07)"
-            strokeWidth="16"
-            filter="url(#ribbonAtmosphereBL)"
-          />
-          <path
-            d="M -30 280 C 140 220 300 330 460 380 C 580 415 690 425 820 435"
-            stroke="rgba(251, 191, 36, 0.22)"
-            strokeWidth="5"
-            filter="url(#ribbonCrispBL)"
-          />
-          <path
-            d="M -30 280 C 140 220 300 330 460 380 C 580 415 690 425 820 435"
-            stroke="url(#goldRibbonBL)"
-            strokeWidth="2.2"
-            filter="url(#ribbonCrispBL)"
-          />
-        </svg>
-      </div>
-    </>
-  );
-}
-
 function NotesPage(p) {
   const notesList = p.data?.notes || [];
   const [selected, setSelected] = useState(notesList[0]?.id || "");
@@ -296,9 +191,6 @@ function NotesPage(p) {
 
   return (
     <div className="notes-reading-page">
-      {/* Background Golden Ribbon Waves */}
-      <NotesBackgroundRibbons />
-
       {/* 1. Header Bar: Minimal Study Notes title with amber "Notes" + top-right telemetry badges */}
       <header className="notes-reading-header">
         <h1 className="notes-reading-title">
