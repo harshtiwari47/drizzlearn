@@ -5717,7 +5717,7 @@
       max-width: 280px;
     }
 
-    /* Curriculum Rail (Course Outline Sidebar) */
+    /* Curriculum Rail (Course Outline Sidebar) - Glassmorphic Dark Forest Theme */
     .lesson-curriculum-rail {
       position: -webkit-sticky !important;
       position: sticky !important;
@@ -5737,23 +5737,42 @@
       top: 96px !important;
       padding: 20px;
       border-radius: 18px;
-      background: rgba(17, 18, 29, 0.88);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      background:
+        radial-gradient(130% 90% at 15% 0%, rgba(17, 95, 56, 0.45) 0%, transparent 65%),
+        radial-gradient(100% 70% at 85% 100%, rgba(11, 71, 43, 0.38) 0%, transparent 70%),
+        linear-gradient(165deg, rgba(8, 26, 17, 0.88) 0%, rgba(5, 18, 12, 0.94) 55%, rgba(4, 14, 9, 0.97) 100%) !important;
+      backdrop-filter: blur(24px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+      border: 1px solid rgba(52, 211, 153, 0.22) !important;
+      box-shadow:
+        0 20px 48px -12px rgba(2, 10, 6, 0.75),
+        0 0 0 1px rgba(16, 185, 129, 0.12),
+        inset 0 1px 1px rgba(255, 255, 255, 0.16),
+        inset 0 0 28px rgba(17, 95, 56, 0.18) !important;
       display: flex;
       flex-direction: column;
       gap: 16px;
       max-height: calc(100vh - 120px);
+      overflow: hidden;
+    }
+    .curriculum-rail-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: radial-gradient(circle at 45% 0%, rgba(214, 230, 154, 0.08) 0%, transparent 55%);
+      z-index: 1;
     }
     .curriculum-rail-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(52, 211, 153, 0.16);
+      position: relative;
+      z-index: 2;
     }
     .rail-header-title {
       display: flex;
@@ -5762,15 +5781,23 @@
       font-family: var(--font-display, 'Space Grotesk', sans-serif);
       font-size: 14px;
       font-weight: 700;
-      color: #FFFFFF;
+      color: #F3F7F1;
+      letter-spacing: -0.01em;
+    }
+    .rail-header-title svg {
+      color: #34D399;
+      filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.5));
     }
     .rail-header-badge {
       font-size: 11px;
       font-weight: 700;
-      color: #9CA3AF;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 2px 7px;
+      color: #34D399;
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(52, 211, 153, 0.26);
+      padding: 3px 9px;
       border-radius: 9999px;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+      letter-spacing: 0.02em;
     }
     .curriculum-rail-scroll {
       display: flex;
@@ -5781,21 +5808,24 @@
       overflow-y: auto;
       overscroll-behavior: contain;
       scrollbar-width: thin;
-      scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+      scrollbar-color: rgba(52, 211, 153, 0.25) transparent;
       padding-right: 4px;
+      position: relative;
+      z-index: 2;
     }
     .curriculum-rail-scroll::-webkit-scrollbar {
       width: 4px;
     }
     .curriculum-rail-scroll::-webkit-scrollbar-track {
-      background: transparent;
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 4px;
     }
     .curriculum-rail-scroll::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(52, 211, 153, 0.24);
       border-radius: 4px;
     }
     .curriculum-rail-scroll::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.22);
+      background: rgba(52, 211, 153, 0.42);
     }
     .curriculum-module-section {
       display: flex;
@@ -5808,30 +5838,32 @@
       gap: 7px;
     }
     .module-number {
-      width: 18px;
-      height: 18px;
+      width: 19px;
+      height: 19px;
       border-radius: 5px;
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(52, 211, 153, 0.28);
       display: grid;
       place-items: center;
       font-size: 10px;
-      font-weight: 700;
-      color: #9CA3AF;
+      font-weight: 800;
+      color: #A7F3D0;
     }
     .module-title-text {
       font-size: 12.5px;
       font-weight: 700;
-      color: #E5E7EB;
+      color: #E5EFE6;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      letter-spacing: -0.01em;
     }
     .module-lessons-group {
       display: flex;
       flex-direction: column;
       gap: 3px;
-      padding-left: 6px;
-      border-left: 1px solid rgba(255, 255, 255, 0.06);
+      padding-left: 8px;
+      border-left: 1px solid rgba(52, 211, 153, 0.16);
       margin-left: 9px;
     }
     .rail-lesson-row {
@@ -5842,30 +5874,34 @@
       border-radius: 8px;
       background: transparent;
       border: 1px solid transparent;
-      color: #9CA3AF;
+      color: #A8C5A8;
       text-align: left;
       font-size: 12.5px;
       cursor: pointer;
-      transition: all 0.16s ease;
+      transition: all 0.18s ease;
       width: 100%;
     }
     .rail-lesson-row:hover {
-      background: rgba(255, 255, 255, 0.04);
-      color: #E5E7EB;
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(52, 211, 153, 0.24);
+      color: #F3F7F1;
+      transform: translateX(2px);
     }
     .rail-lesson-row.active-lesson {
-      background: rgba(245, 158, 11, 0.08);
-      border-color: rgba(245, 158, 11, 0.3);
-      color: #FFFFFF;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.24) 0%, rgba(5, 150, 105, 0.16) 100%) !important;
+      border-color: rgba(52, 211, 153, 0.48) !important;
+      color: #FFFFFF !important;
       font-weight: 700;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
     }
     .lesson-indicator-dot {
       font-size: 8px;
-      color: #6B7280;
+      color: #4E735B;
       flex-shrink: 0;
     }
     .rail-lesson-row.active-lesson .lesson-indicator-dot {
-      color: #F59E0B;
+      color: #34D399;
+      text-shadow: 0 0 8px rgba(52, 211, 153, 0.8);
     }
     .rail-lesson-title {
       flex: 1;
@@ -5875,8 +5911,12 @@
     }
     .rail-lesson-duration {
       font-size: 10.5px;
-      color: #6B7280;
+      color: #63766A;
+      font-weight: 600;
       flex-shrink: 0;
+    }
+    .rail-lesson-row.active-lesson .rail-lesson-duration {
+      color: #A7F3D0;
     }
 
     /* Responsive Breakpoints for Lesson Page */
@@ -14390,15 +14430,18 @@ select option { color: var(--color-text) !important; background: var(--color-sur
   opacity: 1 !important;
   margin-left: 8px !important;
 }
-.header-nav-link:hover {
-  color: var(--color-text) !important;
-  background: rgba(108, 207, 246, 0.08) !important;
-  border-color: rgba(108, 207, 246, 0.18) !important;
+.header-nav-link:hover:not(.active),
+.header-nav-link:focus-visible:not(.active) {
+  color: #FFFFFF !important;
+  background: rgba(0, 0, 0, 0.38) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 4px 12px rgba(0, 0, 0, 0.25) !important;
   transform: translateY(-1px) !important;
 }
-.header-nav-link:hover .nav-icon {
-  color: var(--color-primary) !important;
-  transform: scale(1.08) !important;
+.header-nav-link:hover:not(.active) .nav-icon,
+.header-nav-link:focus-visible:not(.active) .nav-icon {
+  color: #FFFFFF !important;
+  transform: scale(1.06) !important;
 }
 
 /* Active Nav: Soft Luminous Liquid Drop Style with Smooth Fluid Movement */
@@ -27530,7 +27573,7 @@ body:has(.app-shell-today-page) {
 .app-shell[data-page="today"] .main {
   max-width: 100% !important;
   width: 100% !important;
-  padding: 16px 28px 48px !important;
+  padding: 0 32px 48px !important;
   margin: 0 !important;
   background: radial-gradient(circle at 18% 12%, rgba(52, 67, 43, 0.28) 0%, transparent 48%),
               radial-gradient(circle at 82% 80%, rgba(197, 232, 121, 0.06) 0%, transparent 55%),
@@ -29525,7 +29568,7 @@ body:has(.app-shell-today-page) {
   .app-shell-today-page .main,
   .app-shell[data-page="today"] .main {
     max-width: 100% !important;
-    padding: 24px 44px 56px !important;
+    padding: 0 44px 56px !important;
   }
   .today-grid-event-title {
     font-size: 13.5px;
@@ -29540,7 +29583,7 @@ body:has(.app-shell-today-page) {
   .app-shell-today-page .main,
   .app-shell[data-page="today"] .main {
     max-width: 100% !important;
-    padding: 20px 36px 48px !important;
+    padding: 0 36px 48px !important;
   }
 }
 
@@ -29549,7 +29592,7 @@ body:has(.app-shell-today-page) {
   .app-shell-today-page .main,
   .app-shell[data-page="today"] .main {
     max-width: 100% !important;
-    padding: 16px 24px 44px !important;
+    padding: 0 32px 44px !important;
   }
 }
 
@@ -29582,7 +29625,7 @@ body:has(.app-shell-today-page) {
 @media (max-width: 768px) {
   .app-shell-today-page .main,
   .app-shell[data-page="today"] .main {
-    padding: 14px 16px 44px !important;
+    padding: 0 16px 44px !important;
   }
   .today-grid-topbar {
     padding: 12px 16px;
@@ -29602,7 +29645,7 @@ body:has(.app-shell-today-page) {
 @media (max-width: 480px) {
   .app-shell-today-page .main,
   .app-shell[data-page="today"] .main {
-    padding: 12px 10px calc(var(--mobile-nav-height, 64px) + 24px) !important;
+    padding: 0 10px calc(var(--mobile-nav-height, 64px) + 24px) !important;
   }
   .today-v2-greeting-title {
     font-size: 20px;
@@ -29807,6 +29850,8 @@ body:has(.app-shell[data-page="notes"]),
 .app-shell[data-page="progress"] .topbar,
 .app-shell[data-page="notes"] .topbar,
 .app-shell[data-page="flashcards"] .topbar,
+.app-shell[data-page="today"] .topbar,
+.app-shell-today-page .topbar,
 .app-shell[data-page="lesson"] .topbar,
 .app-shell-settings-page .topbar {
   background: transparent !important;
