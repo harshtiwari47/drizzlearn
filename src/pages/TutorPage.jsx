@@ -698,6 +698,7 @@ export function AiEngineRagPanel({remote,request,openAccount,flashToast}){
   const [engineError,setEngineError]=useState("");
   const [reindexing,setReindexing]=useState(false);
   const [showAllModels,setShowAllModels]=useState(false);
+  const [isNetworkExpanded,setIsNetworkExpanded]=useState(false);
   const [reloadTick,setReloadTick]=useState(0);
 
   useEffect(()=>{
@@ -852,71 +853,90 @@ export function AiEngineRagPanel({remote,request,openAccount,flashToast}){
 
           <div className="engine-section">
             <div className="engine-section-head">
-              <strong>Model Network</strong>
+              <button
+                type="button"
+                className="engine-collapse-trigger flex items-center gap-2"
+                onClick={()=>setIsNetworkExpanded(open=>!open)}
+                aria-expanded={isNetworkExpanded}
+              >
+                <strong>Model Network</strong>
+                <span className="engine-collapse-pill">
+                  {aiStatus?.summary?.healthyModels ?? models.length} Active
+                </span>
+                <span className={`engine-chevron ${isNetworkExpanded ? "open" : ""}`} aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </span>
+              </button>
               <button type="button" className="text-button" onClick={()=>setReloadTick(t=>t+1)} aria-label="Refresh models">Check status ↻</button>
             </div>
-            {aiStatus?(
-              <>
-                <div className="engine-summary-grid">
-                  <div className="engine-summary-stat">
-                    <span>Active</span>
-                    <strong>{aiStatus.summary?.healthyModels??0}<small>/{aiStatus.summary?.totalModels??models.length}</small></strong>
-                  </div>
-                  <div className="engine-summary-stat">
-                    <span>Standby</span>
-                    <strong>{aiStatus.summary?.coolingDownModels??0}</strong>
-                  </div>
-                  <div className="engine-summary-stat">
-                    <span>Failovers</span>
-                    <strong>{aiStatus.summary?.totalSwitches??0}</strong>
-                  </div>
-                </div>
-                {providers.length>0&&(
-                  <div className="engine-providers-row" aria-label="Configured providers">
-                    {providers.map(provider=><span key={provider} className="engine-provider-pill">{provider}</span>)}
-                  </div>
-                )}
-                {models.length>0?(
+            {isNetworkExpanded && (
+              <div className="engine-collapsible-content flex flex-col gap-3 pt-1">
+                {aiStatus?(
                   <>
-                    <ul className="engine-model-list" aria-label="Model status list">
-                      {visibleModels.map(m=>{
-                        const state=m.status==="open"?"open":m.status==="half_open"?"half_open":"closed";
-                        const stateText=state==="open"?"Cooling":state==="half_open"?"Checking":"Active";
-                        const latencyText=Number(m.avgLatencyMs)>0?`${Math.round(Number(m.avgLatencyMs))} ms`:"—";
-                        return (
-                          <li key={`${m.provider}:${m.model}`} className="engine-model-row">
-                            <span className={`model-health-dot ${state}`} aria-hidden="true"/>
-                            <div className="engine-model-info">
-                              <strong>{m.model}</strong>
-                              <small>{m.provider}{m.tier?` · ${m.tier}`:""}</small>
-                            </div>
-                            <div className="engine-model-meta">
-                              <span className={`engine-model-status ${state}`}>{stateText}</span>
-                              <span className="engine-model-latency">{latencyText}</span>
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                    {models.length>4&&(
-                      <button
-                        type="button"
-                        className="text-button engine-toggle-models"
-                        aria-expanded={showAllModels}
-                        onClick={()=>setShowAllModels(v=>!v)}
-                      >
-                        {showAllModels?"Show fewer models":`Show all ${models.length} models`}
-                      </button>
+                    <div className="engine-summary-grid">
+                      <div className="engine-summary-stat">
+                        <span>Active</span>
+                        <strong>{aiStatus.summary?.healthyModels??0}<small>/{aiStatus.summary?.totalModels??models.length}</small></strong>
+                      </div>
+                      <div className="engine-summary-stat">
+                        <span>Standby</span>
+                        <strong>{aiStatus.summary?.coolingDownModels??0}</strong>
+                      </div>
+                      <div className="engine-summary-stat">
+                        <span>Failovers</span>
+                        <strong>{aiStatus.summary?.totalSwitches??0}</strong>
+                      </div>
+                    </div>
+                    {providers.length>0&&(
+                      <div className="engine-providers-row" aria-label="Configured providers">
+                        {providers.map(provider=><span key={provider} className="engine-provider-pill">{provider}</span>)}
+                      </div>
+                    )}
+                    {models.length>0?(
+                      <>
+                        <ul className="engine-model-list" aria-label="Model status list">
+                          {visibleModels.map(m=>{
+                            const state=m.status==="open"?"open":m.status==="half_open"?"half_open":"closed";
+                            const stateText=state==="open"?"Cooling":state==="half_open"?"Checking":"Active";
+                            const latencyText=Number(m.avgLatencyMs)>0?`${Math.round(Number(m.avgLatencyMs))} ms`:"—";
+                            return (
+                              <li key={`${m.provider}:${m.model}`} className="engine-model-row">
+                                <span className={`model-health-dot ${state}`} aria-hidden="true"/>
+                                <div className="engine-model-info">
+                                  <strong>{m.model}</strong>
+                                  <small>{m.provider}{m.tier?` · ${m.tier}`:""}</small>
+                                </div>
+                                <div className="engine-model-meta">
+                                  <span className={`engine-model-status ${state}`}>{stateText}</span>
+                                  <span className="engine-model-latency">{latencyText}</span>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                        {models.length>4&&(
+                          <button
+                            type="button"
+                            className="text-button engine-toggle-models"
+                            aria-expanded={showAllModels}
+                            onClick={()=>setShowAllModels(v=>!v)}
+                          >
+                            {showAllModels?"Show fewer models":`Show all ${models.length} models`}
+                          </button>
+                        )}
+                      </>
+                    ):(
+                      <p className="profile-rag-muted">No active models reported yet.</p>
                     )}
                   </>
                 ):(
-                  <p className="profile-rag-muted">No active models reported yet.</p>
+                  <div className="engine-error-box compact" role="alert">
+                    <span>Model status unavailable.</span>
+                    <button type="button" className="text-button" onClick={()=>setReloadTick(t=>t+1)}>Retry ↻</button>
+                  </div>
                 )}
-              </>
-            ):(
-              <div className="engine-error-box compact" role="alert">
-                <span>Model status unavailable.</span>
-                <button type="button" className="text-button" onClick={()=>setReloadTick(t=>t+1)}>Retry ↻</button>
               </div>
             )}
           </div>
