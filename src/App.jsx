@@ -340,8 +340,9 @@ function PageContent(props){
   const isNotesPage = page === "notes";
   const isProgressPage = page === "progress";
   const isLessonPage = page === "lesson";
+  const isFlashcardsPage = page === "flashcards";
   const isDedicatedFlow = isCreatePage || isProposalPage || isCourseDetailPage || isTodayPage || isStudyTogetherPage || isProfilePage || isNotesPage || isProgressPage || isLessonPage;
-  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""} ${isCourseDetailPage ? "workspace-course-detail-page" : ""} ${isTodayPage ? "workspace-today-page" : ""} ${isStudyTogetherPage ? "workspace-study-together-page" : ""} ${isProfilePage ? "workspace-profile-page" : ""} ${isNotesPage ? "workspace-notes-page" : ""} ${isProgressPage ? "workspace-progress-page" : ""} ${isLessonPage ? "workspace-lesson-page" : ""}`}>
+  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""} ${isCourseDetailPage ? "workspace-course-detail-page" : ""} ${isTodayPage ? "workspace-today-page" : ""} ${isStudyTogetherPage ? "workspace-study-together-page" : ""} ${isProfilePage ? "workspace-profile-page" : ""} ${isNotesPage ? "workspace-notes-page" : ""} ${isProgressPage ? "workspace-progress-page" : ""} ${isLessonPage ? "workspace-lesson-page" : ""} ${isFlashcardsPage ? "workspace-flashcards-page" : ""}`}>
     {!isDedicatedFlow && <PageContextBar context={routeContext} go={go}/>}
     {!isDedicatedFlow && (
       <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""} ${page==="goal"?"page-heading-goal":""}`}>
@@ -923,8 +924,9 @@ export default function App(){
   const isTodayAppPage = page === "today";
   const isSettingsOrProfilePage = page === "settings" || page === "profile";
   const isLessonAppPage = page === "lesson";
+  const isFlashcardsAppPage = page === "flashcards";
 
-  return <div className={`app-shell flex min-h-screen relative ${isCoursePage ? "app-shell-course-page" : ""} ${isCreateCoursePage ? "app-shell-create-course-page" : ""} ${isTodayAppPage ? "app-shell-today-page" : ""} ${isSettingsOrProfilePage ? "app-shell-settings-page" : ""} ${isLessonAppPage ? "app-shell-lesson-page" : ""}`} data-page={page}>
+  return <div className={`app-shell flex min-h-screen relative ${isCoursePage ? "app-shell-course-page" : ""} ${isCreateCoursePage ? "app-shell-create-course-page" : ""} ${isTodayAppPage ? "app-shell-today-page" : ""} ${isSettingsOrProfilePage ? "app-shell-settings-page" : ""} ${isLessonAppPage ? "app-shell-lesson-page" : ""} ${isFlashcardsAppPage ? "app-shell-flashcards-page" : ""}`} data-page={page}>
     <SnowfallOverlay />
     {(syncing||activeRequests>0||busy)&&<div className="global-progress-bar" role="progressbar" aria-label="Loading workspace data"/>}
     <aside className="sidebar sticky top-0 h-screen flex flex-col overflow-hidden" aria-label="Main navigation">

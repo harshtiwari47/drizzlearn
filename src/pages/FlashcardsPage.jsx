@@ -211,24 +211,99 @@ function FlashcardsPage(p){
       </section>
 
       <aside className="flash-aside flex flex-col gap-4">
-        <Panel title="Your deck" icon="cards">
-          <div className="side-panel-copy flex flex-col gap-3 p-4">
-            <div className="rhythm-big">{savedInScope}<span> cards saved</span></div>
-            <p>Adaptive spaced repetition surfaces each question right before you forget it.</p>
-            <div className="flex flex-wrap gap-2">
-              <button type="button" className="primary-btn compact" onClick={()=>openPortal("ai",null)}>Generate with AI ✦</button>
-              <button type="button" className="secondary-btn compact" onClick={()=>openPortal("manual",null)}><Icon name="plus" size={13}/>Create a flashcard</button>
-              {(p.data.flashcards||[]).length>0&&<button type="button" className="quiet-btn compact" onClick={()=>openPortal("deck",null)}>Manage deck</button>}
+        {/* 1. "Your Deck" Card — Black & Charcoal with Dim Silver Sheen */}
+        <section className="fc-silver-card fc-deck-card">
+          <div className="fc-card-head">
+            <div className="fc-card-title-group">
+              <div className="fc-card-icon-box">
+                <Icon name="cards" size={15} />
+              </div>
+              <h3 className="fc-card-title">Your Deck</h3>
+            </div>
+            <span className="fc-card-badge-silver">Spaced Repetition</span>
+          </div>
+
+          <div className="fc-card-body">
+            {/* Metric Showcase */}
+            <div className="fc-metric-showcase">
+              <div className="fc-metric-number">{savedInScope}</div>
+              <div className="fc-metric-info">
+                <span className="fc-metric-label">Cards saved</span>
+                <span className="fc-metric-sub">{due.length} due today</span>
+              </div>
+            </div>
+
+            <p className="fc-card-description">
+              Adaptive spaced repetition surfaces each question right before you forget it, locking concepts into long-term recall.
+            </p>
+
+            {/* Action Buttons */}
+            <div className="fc-card-actions">
+              <button
+                type="button"
+                className="fc-btn-silver-ai"
+                onClick={() => openPortal("ai", null)}
+              >
+                <span>Generate with AI</span>
+                <span className="fc-btn-spark">✦</span>
+              </button>
+              <button
+                type="button"
+                className="fc-btn-charcoal"
+                onClick={() => openPortal("manual", null)}
+              >
+                <Icon name="plus" size={13} />
+                <span>Create a flashcard</span>
+              </button>
+              {(p.data.flashcards || []).length > 0 && (
+                <button
+                  type="button"
+                  className="fc-btn-silver-outline"
+                  onClick={() => openPortal("deck", null)}
+                >
+                  Manage deck ({p.data.flashcards.length})
+                </button>
+              )}
             </div>
           </div>
-        </Panel>
-        <Panel title="Due later" icon="clock">
-          <div className="side-panel-copy card-list-compact flex flex-col gap-2 p-4">
-            {dueLater.length>0?dueLater.slice(0,5).map(c=><div key={c.id} className="fc-due-later-item"><span title={c.front}>{c.front}</span><small>{prettyDate(c.due_at)}</small></div>):(
-              <p className="fc-empty-schedule">No upcoming cards scheduled yet. Cards you rate as Hard, Good, or Easy will appear here with their next review date.</p>
+        </section>
+
+        {/* 2. "Due Later" Card — Black & Charcoal with Dim Silver Sheen */}
+        <section className="fc-silver-card fc-due-card">
+          <div className="fc-card-head">
+            <div className="fc-card-title-group">
+              <div className="fc-card-icon-box">
+                <Icon name="clock" size={15} />
+              </div>
+              <h3 className="fc-card-title">Due Later</h3>
+            </div>
+            <span className="fc-card-badge-dim">{dueLater.length} scheduled</span>
+          </div>
+
+          <div className="fc-card-body">
+            {dueLater.length > 0 ? (
+              <div className="fc-due-list">
+                {dueLater.slice(0, 5).map(c => (
+                  <div key={c.id} className="fc-due-item">
+                    <span className="fc-due-dot" />
+                    <span className="fc-due-front" title={c.front}>{c.front}</span>
+                    <span className="fc-due-date">{prettyDate(c.due_at)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="fc-empty-schedule-box">
+                <div className="fc-empty-icon-ring">
+                  <Icon name="clock" size={16} />
+                </div>
+                <strong className="fc-empty-title">No upcoming cards scheduled</strong>
+                <p className="fc-empty-desc">
+                  Cards you rate as Hard, Good, or Easy will appear here with their next review date.
+                </p>
+              </div>
             )}
           </div>
-        </Panel>
+        </section>
       </aside>
     </div>
 
