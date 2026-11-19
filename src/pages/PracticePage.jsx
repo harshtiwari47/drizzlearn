@@ -856,13 +856,13 @@ function PracticePage(p) {
         )}
       </div>
 
-      {/* Aside: Glassmorphic with moving border colors! */}
+      {/* Aside: Glassmorphic with restrained moving border accent */}
       <aside className="practice-aside flex flex-col gap-5">
         <div className="glass-moving-border-card evidence-card-wrap">
           <div className="glass-card-inner">
             <div className="glass-card-head flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <span className="glass-icon-glow cyan">
+                <span className="glass-icon-glow">
                   <Icon name="progress" size={17} />
                 </span>
                 <h3 className="glass-card-title">Recent Evidence</h3>
