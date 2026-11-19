@@ -11,13 +11,12 @@ function NotesPage(p) {
   const [filterCourse, setFilterCourse] = useState(() => p.routeQuery?.get?.("course") || "all");
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
-  // Default to preview mode when an existing note is selected/opened
+  // Default to preview mode for reading-first experience
   const [viewMode, setViewMode] = useState(() => (notesList[0] ? "preview" : "edit"));
   const [selectedCourseId, setSelectedCourseId] = useState(() => {
     const first = notesList[0];
     return first?.course_id || "";
   });
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Group all courses and their modules/lessons for structured selection
   const allCourses = p.data?.courses || [];
@@ -51,8 +50,15 @@ function NotesPage(p) {
           setSelectedCourseId("");
         }
       }
+    } else if (notesList.length > 0 && !draft) {
+      const first = notesList[0];
+      setSelected(first.id);
+      setDraft({ ...first });
+      const meta = first.lesson_id ? allLessonsMap.get(first.lesson_id) : null;
+      setSelectedCourseId(meta?.courseId || first.course_id || "");
+      setViewMode("preview");
     }
-  }, [notesList, selected, allLessonsMap]);
+  }, [notesList, selected, draft, allLessonsMap]);
 
   const startNew = (templateTitle = "", templateBody = "") => {
     const activeLessonMeta = p.activeLesson ? allLessonsMap.get(p.activeLesson.id) : null;
@@ -77,7 +83,7 @@ function NotesPage(p) {
   };
 
   const insertMarkdown = (prefix, suffix = "", placeholder = "text") => {
-    const textarea = document.querySelector(".note-body-input");
+    const textarea = document.querySelector(".notes-minimal-body-input");
     if (!textarea || !draft) return;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
@@ -175,7 +181,6 @@ function NotesPage(p) {
 
   // Telemetry counts
   const linkedCount = useMemo(() => notesList.filter(n => n.course_id || n.lesson_id).length, [notesList]);
-  const aiDraftCount = useMemo(() => notesList.filter(n => n.origin === "ai_draft").length, [notesList]);
 
   // Editor stats
   const wordCount = useMemo(() => {
@@ -184,595 +189,442 @@ function NotesPage(p) {
   }, [draft?.body]);
   const readTimeMinutes = useMemo(() => Math.max(1, Math.ceil(wordCount / 200)), [wordCount]);
 
-  return (
-    <div className="notes-page-wrapper">
-      {/* 1. Header Bar with Eyebrow, Title & Telemetry Chips */}
-      <header className="notes-top-bar flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <span className="notes-eyebrow">PERSONAL KNOWLEDGE BASE</span>
-          <h1 className="notes-top-heading">Study Notes</h1>
-          <p className="notes-top-subtext">
-            Capture insights, organize lesson summaries, and synthesize concepts with markdown.
-          </p>
-        </div>
+  // Selected course and lesson display names for context tags
+  const currentCourse = allCourses.find(c => c.id === selectedCourseId);
+  const currentLessonMeta = draft?.lesson_id ? allLessonsMap.get(draft.lesson_id) : null;
 
-        <div className="notes-stats-row flex items-center gap-2 flex-wrap">
-          <span className="notes-stat-pill">
+  return (
+    <div className="notes-reading-page">
+      {/* 1. Header Bar: Minimal Study Notes title with amber "Notes" + top-right telemetry badges */}
+      <header className="notes-reading-header">
+        <h1 className="notes-reading-title">
+          Study <span className="notes-accent-gold">Notes</span>
+        </h1>
+
+        <div className="notes-header-badges">
+          <span className="notes-minimal-badge" title={`${notesList.length} notes saved`}>
             <Icon name="fileText" size={13} />
-            <strong>{notesList.length}</strong> saved
+            <span>{notesList.length}</span>
           </span>
-          <span className="notes-stat-pill">
-            <Icon name="book" size={13} />
-            <strong>{linkedCount}</strong> linked
+          <span className="notes-minimal-badge" title={`${linkedCount} notes linked to curriculum`}>
+            <Icon name="link" size={13} />
+            <span>{linkedCount}</span>
           </span>
-          {aiDraftCount > 0 && (
-            <span className="notes-stat-pill ai-draft">
-              <Icon name="spark" size={13} />
-              <strong>{aiDraftCount}</strong> AI drafts
-            </span>
-          )}
         </div>
       </header>
 
-      {/* 2. Workspace Grid Layout: Sidebar & Main Editor */}
-      <div className={`notes-workspace-grid ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
-        {/* Left Sidebar: Note Library */}
-        {sidebarOpen && (
-          <aside className="notes-sidebar-glass">
-            <div className="notes-sidebar-head">
-              <div className="sidebar-title-row">
-                <span className="sidebar-icon-box" aria-hidden="true">
-                  <Icon name="notes" size={15} />
-                </span>
-                <span className="sidebar-title">All Notes</span>
-                <span className="sidebar-count-badge">{notesList.length}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  className="notes-new-btn"
-                  onClick={() => startNew()}
-                  title="Create new note"
-                >
-                  <Icon name="plus" size={13} />
-                  <span>New</span>
-                </button>
-                <button
-                  type="button"
-                  className="notes-sidebar-toggle-btn"
-                  onClick={() => setSidebarOpen(false)}
-                  aria-label="Collapse notes sidebar"
-                  title="Collapse sidebar"
-                >
-                  <Icon name="chevronLeft" size={15} />
-                </button>
-              </div>
+      {/* 2. Workspace: Minimal sidebar on the left + borderless reading area on the right */}
+      <div className="notes-reading-grid">
+        {/* Left Column: Minimal Note List */}
+        <aside className="notes-reading-sidebar">
+          {/* Top row: All Notes label + count, and + New button */}
+          <div className="notes-sidebar-header-row">
+            <div className="notes-sidebar-label-cluster">
+              <span className="notes-amber-icon" aria-hidden="true">
+                <Icon name="layers" size={15} />
+              </span>
+              <span className="notes-sidebar-heading">All Notes</span>
+              <span className="notes-sidebar-count-chip">{notesList.length}</span>
             </div>
 
-            {/* Filter and Search Bar */}
-            <div className="notes-sidebar-filters">
-              <div className="notes-search-field">
-                <Icon name="search" size={13} />
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search in notes…"
-                  aria-label="Search notes"
-                  className="notes-search-input"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    className="notes-clear-search-btn"
-                    onClick={() => setSearchQuery("")}
-                    aria-label="Clear search"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
+            <button
+              type="button"
+              className="notes-new-action-btn"
+              onClick={() => startNew()}
+              title="Create new note"
+            >
+              <Icon name="plus" size={13} />
+              <span>New</span>
+            </button>
+          </div>
 
-              {allCourses.length > 0 && (
-                <div className="notes-filter-select-wrap">
-                  <select
-                    value={filterCourse}
-                    onChange={e => setFilterCourse(e.target.value)}
-                    aria-label="Filter notes by course"
-                    className="notes-filter-dropdown"
+          {/* Search Bar */}
+          <div className="notes-search-container">
+            <Icon name="search" size={14} />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search notes..."
+              aria-label="Search notes"
+              className="notes-minimal-search-input"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="notes-search-clear"
+                onClick={() => setSearchQuery("")}
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          {/* Course filter if courses exist */}
+          {allCourses.length > 0 && (
+            <div className="notes-course-filter-strip">
+              <select
+                value={filterCourse}
+                onChange={e => setFilterCourse(e.target.value)}
+                className="notes-minimal-filter-select"
+                aria-label="Filter notes by course"
+              >
+                <option value="all">All courses ({notesList.length})</option>
+                {allCourses.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
+                ))}
+                <option value="unlinked">Personal / Unlinked</option>
+              </select>
+            </div>
+          )}
+
+          {/* Minimal Note List with Separators */}
+          <div className="notes-compact-list">
+            {notesList.length === 0 ? (
+              <div className="notes-sidebar-empty">
+                <p>No notes created yet.</p>
+                <button type="button" onClick={() => startNew()} className="notes-link-action">
+                  + Create note
+                </button>
+              </div>
+            ) : filteredNotes.length === 0 ? (
+              <div className="notes-sidebar-empty">
+                <p>No matches found.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setFilterCourse("all");
+                  }}
+                  className="notes-link-action"
+                >
+                  Clear search
+                </button>
+              </div>
+            ) : (
+              filteredNotes.map(n => {
+                const isSelected = selected === n.id;
+                return (
+                  <div
+                    key={n.id}
+                    className={`notes-list-item-clean ${isSelected ? "selected-amber" : ""}`}
+                    onClick={() => open(n)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={e => e.key === "Enter" && open(n)}
+                    aria-label={`Open note: ${n.title || "Untitled"}`}
                   >
-                    <option value="all">All courses ({notesList.length})</option>
+                    <div className="notes-item-icon-box">
+                      <Icon name="fileText" size={16} />
+                    </div>
+                    <div className="notes-item-text-box">
+                      <span className="notes-item-title">{n.title || "Untitled note"}</span>
+                      <span className="notes-item-date">
+                        {prettyDate(n.updated_at || n.created_at, { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="notes-item-trash-btn"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleDelete(n.id, n.title);
+                      }}
+                      title="Delete note"
+                      aria-label={`Delete note ${n.title || "Untitled"}`}
+                    >
+                      <Icon name="trash" size={12} />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </aside>
+
+        {/* Right Column: Borderless Main Reading & Editing Area */}
+        <main className="notes-reading-main">
+          {draft ? (
+            <div className="notes-reading-content-flow">
+              {/* Contextual Course and Lesson Tag Selectors */}
+              <div className="notes-context-tags-row">
+                <div className="notes-context-tag">
+                  <Icon name="layers" size={13} />
+                  <select
+                    value={selectedCourseId}
+                    onChange={e => {
+                      const nextCourseId = e.target.value;
+                      setSelectedCourseId(nextCourseId);
+                      if (!nextCourseId) {
+                        setDraft({ ...draft, lesson_id: "", lesson_title: "", course_id: null });
+                      } else {
+                        setDraft({ ...draft, course_id: nextCourseId, lesson_id: "", lesson_title: "" });
+                      }
+                    }}
+                    className="notes-tag-select"
+                    aria-label="Course link"
+                  >
+                    <option value="">Personal note (no course)</option>
                     {allCourses.map(c => (
                       <option key={c.id} value={c.id}>
                         {c.title}
                       </option>
                     ))}
-                    <option value="unlinked">Personal / Unlinked</option>
                   </select>
                 </div>
-              )}
-            </div>
 
-            {/* Scrollable Note Items */}
-            <div className="notes-list-scroll">
-              {notesList.length === 0 ? (
-                <div className="notes-empty-sidebar-box">
-                  <div className="empty-sidebar-orb">
-                    <Icon name="fileText" size={18} />
-                  </div>
-                  <p>No notes saved yet.</p>
-                  <button
-                    type="button"
-                    className="notes-quick-create-btn"
-                    onClick={() => startNew()}
-                  >
-                    Create your first note ↗
-                  </button>
-                </div>
-              ) : filteredNotes.length === 0 ? (
-                <div className="notes-no-match-box">
-                  <p>No notes match your filter.</p>
-                  <button
-                    type="button"
-                    className="notes-reset-filter-btn"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setFilterCourse("all");
-                    }}
-                  >
-                    Clear filter ↺
-                  </button>
-                </div>
-              ) : (
-                filteredNotes.map(n => {
-                  const isSelected = selected === n.id;
-                  const snippet = (n.body || "").replace(/#+\s|`+|\*+|_+/g, "").slice(0, 75);
-                  return (
-                    <button
-                      key={n.id}
-                      type="button"
-                      className={`note-list-card ${isSelected ? "active" : ""}`}
-                      onClick={() => open(n)}
-                      aria-label={`Open note: ${n.title || "Untitled"}`}
-                    >
-                      <div className="note-card-title-row">
-                        <strong className="note-card-title">{n.title || "Untitled note"}</strong>
-                        <div className="flex items-center gap-1">
-                          {n.origin === "ai_draft" && (
-                            <span className="note-card-badge ai" title="Drafted by AI">
-                              <Icon name="spark" size={9} /> AI DRAFT
-                            </span>
-                          )}
-                          {n.origin === "roadmap" && (
-                            <span className="note-card-badge roadmap" title="From roadmap">
-                              <Icon name="spark" size={9} /> ROADMAP
-                            </span>
-                          )}
-                          <button
-                            type="button"
-                            className="note-card-trash-btn"
-                            onClick={e => {
-                              e.stopPropagation();
-                              handleDelete(n.id, n.title);
-                            }}
-                            title="Delete this note"
-                            aria-label={`Delete note ${n.title || "Untitled"}`}
-                          >
-                            <Icon name="trash" size={11} />
-                          </button>
-                        </div>
-                      </div>
-
-                      {snippet && <p className="note-card-snippet">{snippet}…</p>}
-
-                      <div className="note-card-meta-row">
-                        <span className="note-card-source">
-                          {n.lesson_title || n.source_ref || "Personal note"}
-                        </span>
-                        <span className="note-card-date">
-                          {prettyDate(n.updated_at, { month: "short", day: "numeric" })}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </aside>
-        )}
-
-        {/* Right Area: Note Editor / Preview */}
-        <section className="notes-editor-glass">
-          {!sidebarOpen && (
-            <div className="notes-collapsed-banner">
-              <button
-                type="button"
-                className="notes-expand-trigger-btn"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Icon name="chevronRight" size={14} />
-                <span>Show all notes ({notesList.length})</span>
-              </button>
-              <button
-                type="button"
-                className="notes-new-btn compact"
-                onClick={() => startNew()}
-              >
-                <Icon name="plus" size={13} />
-                <span>New note</span>
-              </button>
-            </div>
-          )}
-
-          {draft ? (
-            <div className="notes-active-editor-flow flex flex-col gap-4">
-              {/* Top Controls: Tagging & Actions */}
-              <div className="note-editor-topbar">
-                {/* Left: Course & Lesson Tagging Selectors */}
-                <div className="note-tagging-group">
-                  <div className="note-tag-selector">
-                    <span className="tag-icon" aria-hidden="true">
-                      <Icon name="book" size={13} />
-                    </span>
+                {Boolean(selectedCourseId) && (
+                  <div className="notes-context-tag">
+                    <Icon name="tag" size={13} />
                     <select
-                      value={selectedCourseId}
+                      value={draft.lesson_id || ""}
                       onChange={e => {
-                        const nextCourseId = e.target.value;
-                        setSelectedCourseId(nextCourseId);
-                        if (!nextCourseId) {
-                          setDraft({ ...draft, lesson_id: "", lesson_title: "", course_id: null });
-                        } else {
-                          setDraft({ ...draft, course_id: nextCourseId, lesson_id: "", lesson_title: "" });
-                        }
+                        const lId = e.target.value;
+                        const meta = allLessonsMap.get(lId);
+                        setDraft({
+                          ...draft,
+                          lesson_id: lId || "",
+                          lesson_title: meta?.title || "",
+                          source_ref: meta?.title || draft.source_ref || "",
+                        });
                       }}
-                      className="note-header-select"
-                      aria-label="Course link"
+                      className="notes-tag-select"
+                      aria-label="Lesson link"
                     >
-                      <option value="">Personal note (no course)</option>
-                      {allCourses.map(c => (
-                        <option key={c.id} value={c.id}>
-                          {c.title}
+                      <option value="">General course note</option>
+                      {availableLessons.map(l => (
+                        <option key={l.id} value={l.id}>
+                          {l.label}
                         </option>
                       ))}
                     </select>
                   </div>
+                )}
+              </div>
 
-                  {Boolean(selectedCourseId) && (
-                    <div className="note-tag-selector animate-fadeIn">
-                      <span className="tag-icon" aria-hidden="true">
-                        <Icon name="tag" size={13} />
-                      </span>
-                      <select
-                        value={draft.lesson_id || ""}
-                        onChange={e => {
-                          const lId = e.target.value;
-                          const meta = allLessonsMap.get(lId);
-                          setDraft({
-                            ...draft,
-                            lesson_id: lId || "",
-                            lesson_title: meta?.title || "",
-                            source_ref: meta?.title || draft.source_ref || "",
-                          });
-                        }}
-                        className="note-header-select"
-                        aria-label="Lesson link"
-                      >
-                        <option value="">General course note</option>
-                        {availableLessons.map(l => (
-                          <option key={l.id} value={l.id}>
-                            {l.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+              {/* Minimal Action Toolbar Row */}
+              <div className="notes-reading-actions-row">
+                <button
+                  type="button"
+                  className={`notes-action-pill ${viewMode === "preview" ? "active-amber" : "ghost"}`}
+                  onClick={() => setViewMode("preview")}
+                >
+                  <Icon name="eye" size={13} />
+                  <span>Preview</span>
+                </button>
+                <button
+                  type="button"
+                  className={`notes-action-pill ${viewMode === "edit" ? "active-amber" : "ghost"}`}
+                  onClick={() => setViewMode("edit")}
+                >
+                  <Icon name="edit" size={13} />
+                  <span>Write</span>
+                </button>
 
-                  {(draft.origin === "ai_draft" || draft.origin === "roadmap") && (
-                    <span className="note-header-badge">
-                      <Icon name="spark" size={11} />
-                      {draft.origin === "ai_draft" ? "AI DRAFT" : "ROADMAP"}
-                    </span>
-                  )}
-                </div>
-
-                {/* Right: View Toggle, Delete & Save */}
-                <div className="note-actions-group">
-                  <div className="note-view-toggle-pill" role="tablist">
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={viewMode === "preview"}
-                      className={`view-pill-btn ${viewMode === "preview" ? "active" : ""}`}
-                      onClick={() => setViewMode("preview")}
-                    >
-                      <Icon name="eye" size={13} />
-                      <span>Preview</span>
-                    </button>
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={viewMode === "edit"}
-                      className={`view-pill-btn ${viewMode === "edit" ? "active" : ""}`}
-                      onClick={() => setViewMode("edit")}
-                    >
-                      <Icon name="edit" size={13} />
-                      <span>Write</span>
-                    </button>
-                  </div>
-
-                  {draft.id ? (
-                    <button
-                      type="button"
-                      className="note-danger-btn"
-                      disabled={deletingNote || savingNote}
-                      onClick={() => handleDelete()}
-                      title="Delete note"
-                    >
-                      {deletingNote ? <span className="btn-spinner" /> : <Icon name="trash" size={14} />}
-                      <span>Delete</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="note-danger-btn"
-                      onClick={() => {
-                        const firstNote = notesList[0] || null;
-                        if (firstNote) {
-                          open(firstNote);
-                        } else {
-                          setSelected("");
-                          setDraft(null);
-                        }
-                      }}
-                      title="Discard new draft"
-                    >
-                      <Icon name="trash" size={14} />
-                      <span>Discard</span>
-                    </button>
-                  )}
-
+                {draft.id ? (
                   <button
                     type="button"
-                    className="note-primary-save-btn"
-                    disabled={savingNote || deletingNote}
-                    onClick={handleSave}
+                    className="notes-action-pill ghost delete"
+                    disabled={deletingNote || savingNote}
+                    onClick={() => handleDelete()}
+                    title="Delete note"
                   >
-                    {savingNote ? (
-                      <>
-                        <span className="btn-spinner" /> Saving…
-                      </>
-                    ) : (
-                      <>
-                        <Icon name="check" size={14} /> Save note
-                      </>
-                    )}
+                    {deletingNote ? <span className="btn-spinner" /> : <Icon name="trash" size={13} />}
+                    <span>Delete</span>
                   </button>
-                </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="notes-action-pill ghost delete"
+                    onClick={() => {
+                      const firstNote = notesList[0] || null;
+                      if (firstNote) open(firstNote);
+                      else {
+                        setSelected("");
+                        setDraft(null);
+                      }
+                    }}
+                    title="Discard new draft"
+                  >
+                    <Icon name="trash" size={13} />
+                    <span>Discard</span>
+                  </button>
+                )}
+
+                <span className="notes-action-sep" aria-hidden="true" />
+
+                <button
+                  type="button"
+                  className="notes-action-pill solid-amber"
+                  disabled={savingNote || deletingNote}
+                  onClick={handleSave}
+                >
+                  {savingNote ? (
+                    <>
+                      <span className="btn-spinner" /> Saving…
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="check" size={14} /> Save
+                    </>
+                  )}
+                </button>
               </div>
 
-              {/* Note Title Input */}
-              <div className="note-title-wrap">
-                <input
-                  className="note-headline-input"
-                  value={draft.title}
-                  onChange={e => setDraft({ ...draft, title: e.target.value })}
-                  placeholder="Untitled study note…"
-                  aria-label="Note title"
-                />
+              {/* Prominent Document Title */}
+              <div className="notes-reading-title-wrap">
+                {viewMode === "preview" ? (
+                  <h1 className="notes-reading-doc-title">
+                    {draft.title || "Untitled note"}
+                  </h1>
+                ) : (
+                  <input
+                    className="notes-reading-doc-title-input"
+                    value={draft.title}
+                    onChange={e => setDraft({ ...draft, title: e.target.value })}
+                    placeholder="Note title..."
+                    aria-label="Note title"
+                  />
+                )}
               </div>
 
-              {/* Metadata strip: Word Count & Read Time */}
-              <div className="note-meta-strip">
-                <span className="meta-item">
-                  <Icon name="fileText" size={12} />
-                  <span>{wordCount} words</span>
+              {/* Compact Metadata Row */}
+              <div className="notes-reading-metadata-row">
+                <span className="meta-point">
+                  <Icon name="calendar" size={13} />
+                  <span>
+                    {prettyDate(draft.updated_at || draft.created_at || new Date().toISOString(), {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
                 </span>
-                <span className="meta-sep">·</span>
-                <span className="meta-item">
-                  <Icon name="clock" size={12} />
-                  <span>~{readTimeMinutes} min read</span>
+                <span className="meta-bullet">·</span>
+                <span className="meta-point">
+                  <Icon name="clock" size={13} />
+                  <span>~ {readTimeMinutes} minutes</span>
                 </span>
                 {draft.updated_at && (
                   <>
-                    <span className="meta-sep">·</span>
-                    <span className="meta-item text-slate-500">
-                      Last edited {prettyDate(draft.updated_at, { month: "short", day: "numeric" })}
+                    <span className="meta-vertical-bar">|</span>
+                    <span className="meta-point meta-faint">
+                      Last edited {prettyDate(draft.updated_at, { month: "short", day: "numeric", year: "numeric" })}
                     </span>
                   </>
                 )}
               </div>
 
-              {/* Markdown Toolbar in Edit Mode */}
+              {/* Minimal Markdown Toolbar in Edit Mode only */}
               {viewMode === "edit" && (
-                <div className="notes-markdown-toolbar">
+                <div className="notes-minimal-markdown-toolbar">
                   <button
                     type="button"
-                    className="toolbar-btn"
+                    className="minimal-tool-btn"
                     title="Bold (**text**)"
                     onClick={() => insertMarkdown("**", "**", "bold")}
                   >
-                    <Icon name="bold" size={13} />
+                    <Icon name="bold" size={12} />
                   </button>
                   <button
                     type="button"
-                    className="toolbar-btn"
+                    className="minimal-tool-btn"
                     title="Italic (*text*)"
                     onClick={() => insertMarkdown("*", "*", "italic")}
                   >
-                    <Icon name="italic" size={13} />
+                    <Icon name="italic" size={12} />
                   </button>
-                  <span className="toolbar-sep" />
+                  <span className="minimal-tool-sep" />
                   <button
                     type="button"
-                    className="toolbar-btn text-xs font-bold"
-                    title="Heading 1 (# Heading)"
-                    onClick={() => insertMarkdown("# ", "", "Heading 1")}
-                  >
-                    H1
-                  </button>
-                  <button
-                    type="button"
-                    className="toolbar-btn text-xs font-bold"
+                    className="minimal-tool-btn text-xs font-bold"
                     title="Heading 2 (## Heading)"
-                    onClick={() => insertMarkdown("## ", "", "Heading 2")}
+                    onClick={() => insertMarkdown("## ", "", "Heading")}
                   >
                     H2
                   </button>
                   <button
                     type="button"
-                    className="toolbar-btn text-xs font-bold"
+                    className="minimal-tool-btn text-xs font-bold"
                     title="Heading 3 (### Heading)"
-                    onClick={() => insertMarkdown("### ", "", "Heading 3")}
+                    onClick={() => insertMarkdown("### ", "", "Subheading")}
                   >
                     H3
                   </button>
-                  <span className="toolbar-sep" />
+                  <span className="minimal-tool-sep" />
                   <button
                     type="button"
-                    className="toolbar-btn"
+                    className="minimal-tool-btn"
                     title="Bullet List (- item)"
-                    onClick={() => insertMarkdown("- ", "", "List item")}
+                    onClick={() => insertMarkdown("- ", "", "Item")}
                   >
-                    <Icon name="list" size={13} />
+                    <Icon name="list" size={12} />
                   </button>
                   <button
                     type="button"
-                    className="toolbar-btn"
-                    title="Numbered List (1. item)"
-                    onClick={() => insertMarkdown("1. ", "", "Numbered item")}
-                  >
-                    <span className="text-[11px] font-bold">1.</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="toolbar-btn"
+                    className="minimal-tool-btn"
                     title="Blockquote (> quote)"
                     onClick={() => insertMarkdown("> ", "", "Quote")}
                   >
-                    <Icon name="quote" size={13} />
+                    <Icon name="quote" size={12} />
                   </button>
                   <button
                     type="button"
-                    className="toolbar-btn"
+                    className="minimal-tool-btn"
                     title="Inline Code (`code`)"
                     onClick={() => insertMarkdown("`", "`", "code")}
                   >
-                    <Icon name="code" size={13} />
-                  </button>
-                  <button
-                    type="button"
-                    className="toolbar-btn text-xs"
-                    title="Code Block (```)"
-                    onClick={() => insertMarkdown("```\n", "\n```", "code here")}
-                  >
-                    <span className="text-[10px] font-mono px-1 py-0.5 rounded bg-white/5">```</span>
+                    <Icon name="code" size={12} />
                   </button>
                 </div>
               )}
 
-              {/* Editor Writing Area vs Markdown Preview */}
+              {/* Reading Content or Writing Textarea */}
               {viewMode === "edit" ? (
-                <div className="note-textarea-wrap">
+                <div className="notes-minimal-textarea-wrap">
                   <textarea
-                    className="note-body-input"
+                    className="notes-minimal-body-input"
                     value={draft.body}
                     onChange={e => setDraft({ ...draft, body: e.target.value })}
-                    placeholder="Write down the concept in your own words using Markdown (headings, lists, code blocks)…"
+                    placeholder="Write your study notes here using Markdown..."
                     aria-label="Note body"
                   />
                 </div>
               ) : (
-                <div
-                  className="note-markdown-preview reading-copy"
+                <article
+                  className="notes-reading-prose"
                   dangerouslySetInnerHTML={{
                     __html:
                       parseMarkdownToHtml(draft.body) ||
-                      "<p class='text-slate-500 italic'>No content written yet. Switch to Write mode to begin capturing notes.</p>",
+                      "<p class='notes-reading-empty-copy'>No content written yet. Switch to Write to begin capturing notes.</p>",
                   }}
                 />
               )}
             </div>
           ) : (
-            /* Welcoming Empty State */
-            <div className="notes-welcome-empty-state">
-              <div className="welcome-empty-orb">
-                <Icon name="notes" size={28} />
+            /* Minimal Empty State when no note selected */
+            <div className="notes-reading-welcome">
+              <div className="notes-reading-welcome-orb">
+                <Icon name="fileText" size={24} />
               </div>
-              <h2 className="welcome-empty-title">Choose a note or write a fresh idea</h2>
-              <p className="welcome-empty-copy">
-                Select an existing note from the library, or start with one of the structured study templates below.
+              <h2 className="notes-reading-welcome-heading">Select a note or begin writing</h2>
+              <p className="notes-reading-welcome-copy">
+                Choose an existing study note from the left sidebar, or create a new document.
               </p>
-
-              <div className="notes-templates-grid">
-                <button
-                  type="button"
-                  className="template-card"
-                  onClick={() =>
-                    startNew(
-                      "Lesson Summary & Insights",
-                      "## Key Takeaways\n- Main concept:\n- Why it matters:\n\n## Core Principles\n1. \n2. \n\n## Follow-up Questions\n- [ ] "
-                    )
-                  }
-                >
-                  <span className="template-icon">
-                    <Icon name="fileText" size={16} />
-                  </span>
-                  <div className="template-info">
-                    <strong>Lesson Summary</strong>
-                    <span>Key takeaways and follow-up items</span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  className="template-card"
-                  onClick={() =>
-                    startNew(
-                      "Concept Deep Dive & Formulas",
-                      "## Definition & Formulation\n`Formula / Theorem`\n\n## Practical Application\n> Example:\n\n## Common Pitfalls\n- Avoid: "
-                    )
-                  }
-                >
-                  <span className="template-icon">
-                    <Icon name="code" size={16} />
-                  </span>
-                  <div className="template-info">
-                    <strong>Concept & Formulas</strong>
-                    <span>Equations, applications & pitfalls</span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  className="template-card"
-                  onClick={() =>
-                    startNew(
-                      "Spaced Repetition Questions",
-                      "## Self-Test Questions\nQ1: \nA1: \n\nQ2: \nA2: \n\n## Memory Hooks & Mnemonics\n- "
-                    )
-                  }
-                >
-                  <span className="template-icon">
-                    <Icon name="cards" size={16} />
-                  </span>
-                  <div className="template-info">
-                    <strong>SRS Self-Testing</strong>
-                    <span>Q&A pairs and memory hooks</span>
-                  </div>
-                </button>
-              </div>
-
               <button
                 type="button"
-                className="notes-create-cta-btn"
+                className="notes-new-action-btn large"
                 onClick={() => startNew()}
               >
-                <Icon name="plus" size={15} />
-                <span>Create Blank Note ↗</span>
+                <Icon name="plus" size={14} />
+                <span>Create new note</span>
               </button>
             </div>
           )}
-        </section>
+        </main>
       </div>
     </div>
   );
