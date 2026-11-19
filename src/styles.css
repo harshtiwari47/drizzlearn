@@ -2056,10 +2056,10 @@
     /* Row 1 Alignment: Left (All Notes count + New) <-> Right (Contextual tags) */
     .notes-sidebar-header-row,
     .notes-context-tags-row {
-      height: 38px;
+      min-height: 38px;
       display: flex;
       align-items: center;
-      margin-bottom: 14px;
+      margin-bottom: 20px;
       box-sizing: border-box;
     }
 
@@ -2123,10 +2123,10 @@
     /* Row 2 Alignment: Left (Search box) <-> Right (Action toolbar pills) */
     .notes-search-container,
     .notes-reading-actions-row {
-      height: 38px;
+      height: 40px;
       display: flex;
       align-items: center;
-      margin-bottom: 22px;
+      margin-bottom: 28px;
       box-sizing: border-box;
     }
 
@@ -2331,37 +2331,76 @@
 
     /* Row 1: Contextual Tags */
     .notes-context-tags-row {
+      display: flex;
+      align-items: center;
       gap: 10px;
       flex-wrap: wrap;
     }
 
     .notes-context-tag {
+      position: relative;
       display: inline-flex;
       align-items: center;
       gap: 7px;
       padding: 6px 14px;
       border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
       color: #9CA3AF;
       font-size: 12.5px;
-      transition: border-color 0.16s ease;
+      line-height: 1.2;
+      transition: all 0.16s ease;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+      box-sizing: border-box;
+    }
+    .notes-context-tag:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.16);
+      color: #D1D5DB;
     }
     .notes-context-tag:focus-within {
-      border-color: rgba(245, 158, 11, 0.4);
+      border-color: rgba(245, 158, 11, 0.45);
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.12);
     }
-    .notes-tag-select {
-      background: transparent;
-      border: none;
-      outline: none;
+    .notes-tag-label {
       color: #E5E7EB;
-      font-size: 12.5px;
       font-weight: 500;
+      font-size: 12.5px;
+      letter-spacing: -0.01em;
+      max-width: 340px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .notes-tag-chevron {
+      color: #6B7280;
+      margin-left: 2px;
+      flex-shrink: 0;
+      transition: color 0.16s ease;
+    }
+    .notes-context-tag:hover .notes-tag-chevron {
+      color: #9CA3AF;
+    }
+    .notes-tag-overlay-select {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
       cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      border: none;
+      background: transparent;
+      font-size: 14px;
     }
 
     /* Row 2: Minimal Action Toolbar Row */
     .notes-reading-actions-row {
+      display: flex;
+      align-items: center;
       gap: 8px;
       flex-wrap: wrap;
     }
@@ -2377,6 +2416,8 @@
       cursor: pointer;
       border: 1px solid transparent;
       transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+      line-height: 1.2;
+      box-sizing: border-box;
     }
     .notes-action-pill.active-amber {
       background: linear-gradient(135deg, #FDE68A 0%, #F5D061 100%) !important;
@@ -2385,14 +2426,14 @@
       box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
     }
     .notes-action-pill.ghost {
-      background: rgba(255, 255, 255, 0.03);
-      border-color: rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.08);
       color: #D1D5DB;
     }
     .notes-action-pill.ghost:hover {
-      background: rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.08);
       color: #FFFFFF;
-      border-color: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.16);
     }
     .notes-action-pill.ghost.delete:hover {
       background: rgba(239, 68, 68, 0.12);
@@ -2402,7 +2443,7 @@
 
     .notes-action-sep {
       width: 1px;
-      height: 18px;
+      height: 16px;
       background: rgba(255, 255, 255, 0.12);
       margin: 0 4px;
     }
@@ -2421,12 +2462,12 @@
     /* Row 3: Document Title */
     .notes-reading-title-wrap {
       width: 100%;
-      margin: 0 0 8px 0;
+      margin: 0 0 10px 0;
     }
     .notes-reading-doc-title {
       margin: 0 !important;
       font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-      font-size: 34px !important;
+      font-size: 32px !important;
       font-weight: 800 !important;
       letter-spacing: -0.035em !important;
       color: #FFFFFF !important;

@@ -179,6 +179,20 @@ function NotesPage(p) {
     return list;
   }, [allCourses, selectedCourseId]);
 
+  // Labels for the contextual tag pills (tight, readable, matching reference UI)
+  const activeCourseTitle = useMemo(() => {
+    if (!selectedCourseId) return "Personal note (no course)";
+    const crs = allCourses.find(c => c.id === selectedCourseId);
+    return crs?.title || "Linked course";
+  }, [allCourses, selectedCourseId]);
+
+  const activeLessonTitle = useMemo(() => {
+    if (!draft?.lesson_id) return "General course note";
+    if (draft?.lesson_title) return draft.lesson_title;
+    const meta = allLessonsMap.get(draft.lesson_id);
+    return meta?.title || "Linked lesson";
+  }, [draft?.lesson_id, draft?.lesson_title, allLessonsMap]);
+
   // Telemetry counts
   const linkedCount = useMemo(() => notesList.filter(n => n.course_id || n.lesson_id).length, [notesList]);
 
@@ -347,8 +361,10 @@ function NotesPage(p) {
             <div className="notes-reading-content-flow">
               {/* Row 1: Contextual Course and Lesson Tag Selectors */}
               <div className="notes-context-tags-row">
-                <div className="notes-context-tag">
+                <div className="notes-context-tag" title="Click to change course">
                   <Icon name="layers" size={13} />
+                  <span className="notes-tag-label">{activeCourseTitle}</span>
+                  <Icon name="chevron" size={11} className="notes-tag-chevron" />
                   <select
                     value={selectedCourseId}
                     onChange={e => {
@@ -360,7 +376,7 @@ function NotesPage(p) {
                         setDraft({ ...draft, course_id: nextCourseId, lesson_id: "", lesson_title: "" });
                       }
                     }}
-                    className="notes-tag-select"
+                    className="notes-tag-overlay-select"
                     aria-label="Course link"
                   >
                     <option value="">Personal note (no course)</option>
@@ -373,8 +389,10 @@ function NotesPage(p) {
                 </div>
 
                 {Boolean(selectedCourseId) && (
-                  <div className="notes-context-tag">
+                  <div className="notes-context-tag" title="Click to change lesson">
                     <Icon name="tag" size={13} />
+                    <span className="notes-tag-label">{activeLessonTitle}</span>
+                    <Icon name="chevron" size={11} className="notes-tag-chevron" />
                     <select
                       value={draft.lesson_id || ""}
                       onChange={e => {
@@ -387,7 +405,7 @@ function NotesPage(p) {
                           source_ref: meta?.title || draft.source_ref || "",
                         });
                       }}
-                      className="notes-tag-select"
+                      className="notes-tag-overlay-select"
                       aria-label="Lesson link"
                     >
                       <option value="">General course note</option>
