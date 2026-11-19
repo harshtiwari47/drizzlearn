@@ -339,8 +339,9 @@ function PageContent(props){
   const isProfilePage = page === "profile" || page === "settings";
   const isNotesPage = page === "notes";
   const isProgressPage = page === "progress";
-  const isDedicatedFlow = isCreatePage || isProposalPage || isCourseDetailPage || isTodayPage || isStudyTogetherPage || isProfilePage || isNotesPage || isProgressPage;
-  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""} ${isCourseDetailPage ? "workspace-course-detail-page" : ""} ${isTodayPage ? "workspace-today-page" : ""} ${isStudyTogetherPage ? "workspace-study-together-page" : ""} ${isProfilePage ? "workspace-profile-page" : ""} ${isNotesPage ? "workspace-notes-page" : ""} ${isProgressPage ? "workspace-progress-page" : ""}`}>
+  const isLessonPage = page === "lesson";
+  const isDedicatedFlow = isCreatePage || isProposalPage || isCourseDetailPage || isTodayPage || isStudyTogetherPage || isProfilePage || isNotesPage || isProgressPage || isLessonPage;
+  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""} ${isCourseDetailPage ? "workspace-course-detail-page" : ""} ${isTodayPage ? "workspace-today-page" : ""} ${isStudyTogetherPage ? "workspace-study-together-page" : ""} ${isProfilePage ? "workspace-profile-page" : ""} ${isNotesPage ? "workspace-notes-page" : ""} ${isProgressPage ? "workspace-progress-page" : ""} ${isLessonPage ? "workspace-lesson-page" : ""}`}>
     {!isDedicatedFlow && <PageContextBar context={routeContext} go={go}/>}
     {!isDedicatedFlow && (
       <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""} ${page==="goal"?"page-heading-goal":""}`}>
@@ -921,8 +922,9 @@ export default function App(){
   const isCreateCoursePage = page === "create-course" || page === "create/course" || page === "goal";
   const isTodayAppPage = page === "today";
   const isSettingsOrProfilePage = page === "settings" || page === "profile";
+  const isLessonAppPage = page === "lesson";
 
-  return <div className={`app-shell flex min-h-screen relative ${isCoursePage ? "app-shell-course-page" : ""} ${isCreateCoursePage ? "app-shell-create-course-page" : ""} ${isTodayAppPage ? "app-shell-today-page" : ""} ${isSettingsOrProfilePage ? "app-shell-settings-page" : ""}`} data-page={page}>
+  return <div className={`app-shell flex min-h-screen relative ${isCoursePage ? "app-shell-course-page" : ""} ${isCreateCoursePage ? "app-shell-create-course-page" : ""} ${isTodayAppPage ? "app-shell-today-page" : ""} ${isSettingsOrProfilePage ? "app-shell-settings-page" : ""} ${isLessonAppPage ? "app-shell-lesson-page" : ""}`} data-page={page}>
     <SnowfallOverlay />
     {(syncing||activeRequests>0||busy)&&<div className="global-progress-bar" role="progressbar" aria-label="Loading workspace data"/>}
     <aside className="sidebar sticky top-0 h-screen flex flex-col overflow-hidden" aria-label="Main navigation">
