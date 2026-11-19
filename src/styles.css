@@ -5604,6 +5604,20 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
     }
+    .lesson-tool-pill:disabled,
+    .lesson-tool-pill.is-disabled,
+    .lesson-tool-pill[aria-disabled="true"] {
+      opacity: 0.45 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+    .lesson-tool-pill.is-loading {
+      opacity: 0.85 !important;
+      pointer-events: none !important;
+      cursor: wait !important;
+    }
     
     /* Notes Tool Pill (Warm Amber theme) */
     .lesson-tool-pill.tool-notes {

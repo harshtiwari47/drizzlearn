@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Icon, minuteLabel } from "../components/common.jsx";
 import { TutorMarkdown } from "../tutor-markdown.jsx";
 
-const LESSON_DEPTH_STORAGE_KEY = "learnos.lesson_depth.v1";
+export const LESSON_DEPTH_STORAGE_KEY = "learnos.lesson_depth.v1";
 
 /**
  * Sanitize internal UUID citations (e.g., (lesson:uuid), [lesson:uuid], (note:uuid))
@@ -60,6 +60,7 @@ export function LessonPage(p) {
   const [depth, setDepth] = useState("standard");
   const [tailored, setTailored] = useState(() => readStoredDepths(lesson?.id));
   const [loadingDepth, setLoadingDepth] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null);
 
   useEffect(() => {
     setSelected(null);
@@ -67,6 +68,7 @@ export function LessonPage(p) {
     setDepth("standard");
     setTailored(readStoredDepths(lesson?.id));
     setLoadingDepth(false);
+    setActionLoading(null);
   }, [lesson?.id]);
 
   if (!lesson) {
@@ -171,6 +173,49 @@ export function LessonPage(p) {
       : (lesson.content_markdown || lesson.content || paragraphs.join("\n\n"))
   );
 
+  const isBusy = Boolean(actionLoading || loadingDepth || p.busy || saving);
+
+  const handleDraftNotes = async () => {
+    if (isBusy) return;
+    setActionLoading("notes");
+    try {
+      if (p.draftNote) {
+        await p.draftNote(lesson.id);
+      }
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleAddFlashcard = async () => {
+    if (isBusy) return;
+    setActionLoading("flashcard");
+    try {
+      if (p.addFlashcard) {
+        await p.addFlashcard({
+          front: `What is the key idea in "${lesson.title}"?`,
+          back: lesson.objective,
+          lessonId: lesson.id,
+          courseId: p.activeCourse?.id,
+        });
+      }
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handlePractice = () => {
+    if (isBusy) return;
+    setActionLoading("practice");
+    p.go?.("practice", { params: { lessonId: lesson.id } });
+  };
+
+  const handleTutor = () => {
+    if (isBusy) return;
+    setActionLoading("tutor");
+    p.go?.("tutor");
+  };
+
   return (
     <div className="lesson-workspace-page">
       {/* 1. Header & Navigation Breadcrumb Bar (Full Page Width) */}
@@ -203,46 +248,63 @@ export function LessonPage(p) {
         <div className="lesson-top-actions">
           <button
             type="button"
-            className="lesson-tool-pill tool-notes"
-            onClick={() => p.draftNote(lesson.id)}
-            title="Draft lesson notes"
+            className={`lesson-tool-pill tool-notes ${isBusy ? "is-disabled" : ""} ${actionLoading === "notes" ? "is-loading" : ""}`}
+            onClick={handleDraftNotes}
+            disabled={isBusy}
+            aria-disabled={isBusy}
+            title={isBusy ? (actionLoading === "notes" ? "Drafting notes…" : "Please wait…") : "Draft lesson notes"}
           >
-            <Icon name="fileText" size={13} />
-            <span>Notes</span>
+            {actionLoading === "notes" ? (
+              <span className="btn-spinner" style={{ width: 12, height: 12, borderWidth: 2 }} />
+            ) : (
+              <Icon name="fileText" size={13} />
+            )}
+            <span>{actionLoading === "notes" ? "Drafting…" : "Notes"}</span>
           </button>
           <button
             type="button"
-            className="lesson-tool-pill tool-flashcard"
-            onClick={() =>
-              p.addFlashcard({
-                front: `What is the key idea in "${lesson.title}"?`,
-                back: lesson.objective,
-                lessonId: lesson.id,
-                courseId: p.activeCourse?.id,
-              })
-            }
-            title="Make flashcard"
+            className={`lesson-tool-pill tool-flashcard ${isBusy ? "is-disabled" : ""} ${actionLoading === "flashcard" ? "is-loading" : ""}`}
+            onClick={handleAddFlashcard}
+            disabled={isBusy}
+            aria-disabled={isBusy}
+            title={isBusy ? (actionLoading === "flashcard" ? "Adding flashcard…" : "Please wait…") : "Make flashcard"}
           >
-            <Icon name="cards" size={13} />
-            <span>Flashcard</span>
+            {actionLoading === "flashcard" ? (
+              <span className="btn-spinner" style={{ width: 12, height: 12, borderWidth: 2 }} />
+            ) : (
+              <Icon name="cards" size={13} />
+            )}
+            <span>{actionLoading === "flashcard" ? "Adding…" : "Flashcard"}</span>
           </button>
           <button
             type="button"
-            className="lesson-tool-pill tool-practice"
-            onClick={() => p.go("practice", { params: { lessonId: lesson.id } })}
-            title="Practice Studio"
+            className={`lesson-tool-pill tool-practice ${isBusy ? "is-disabled" : ""} ${actionLoading === "practice" ? "is-loading" : ""}`}
+            onClick={handlePractice}
+            disabled={isBusy}
+            aria-disabled={isBusy}
+            title={isBusy ? (actionLoading === "practice" ? "Opening practice…" : "Please wait…") : "Practice Studio"}
           >
-            <Icon name="practice" size={13} />
-            <span>Practice</span>
+            {actionLoading === "practice" ? (
+              <span className="btn-spinner" style={{ width: 12, height: 12, borderWidth: 2 }} />
+            ) : (
+              <Icon name="practice" size={13} />
+            )}
+            <span>{actionLoading === "practice" ? "Opening…" : "Practice"}</span>
           </button>
           <button
             type="button"
-            className="lesson-tool-pill tool-tutor"
-            onClick={() => p.go("tutor")}
-            title="Ask AI Tutor"
+            className={`lesson-tool-pill tool-tutor ${isBusy ? "is-disabled" : ""} ${actionLoading === "tutor" ? "is-loading" : ""}`}
+            onClick={handleTutor}
+            disabled={isBusy}
+            aria-disabled={isBusy}
+            title={isBusy ? (actionLoading === "tutor" ? "Opening tutor…" : "Please wait…") : "Ask AI Tutor"}
           >
-            <Icon name="spark" size={13} />
-            <span>Ask Tutor</span>
+            {actionLoading === "tutor" ? (
+              <span className="btn-spinner" style={{ width: 12, height: 12, borderWidth: 2 }} />
+            ) : (
+              <Icon name="spark" size={13} />
+            )}
+            <span>{actionLoading === "tutor" ? "Opening…" : "Ask Tutor"}</span>
           </button>
         </div>
       </header>
@@ -279,7 +341,7 @@ export function LessonPage(p) {
             )}
 
             {/* Explanation Depth Selector */}
-            <div className="lesson-depth-control-row">
+            <div className="lesson-depth-control-row explanation-depth-bar">
               <span className="lesson-depth-caption">Explanation depth:</span>
               <div className="lesson-depth-pill-group" role="group" aria-label="Explanation depth">
                 <button

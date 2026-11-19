@@ -63,7 +63,8 @@ const CreateCoursePage = lazy(() => import("./pages/CreateCoursePage.jsx").then(
 const GoalPage = CreateCoursePage;
 const ProposalPage = lazy(() => import("./pages/ProposalPage.jsx").then(m => ({ default: m.ProposalPage })));
 const CoursePage = lazy(() => import("./pages/CoursePage.jsx").then(m => ({ default: m.CoursePage })));
-const LessonPage = lazy(() => import("./pages/LessonPage.jsx").then(m => ({ default: m.LessonPage })));
+import { LessonPage, readStoredDepths, writeStoredDepth, clearStoredDepth, LESSON_DEPTH_STORAGE_KEY } from "./pages/LessonPage.jsx";
+export { readStoredDepths, writeStoredDepth, clearStoredDepth, LESSON_DEPTH_STORAGE_KEY };
 const SearchPage = lazy(() => import("./pages/SearchPage.jsx").then(m => ({ default: m.SearchPage })));
 const LoginPage = lazy(() => import("./pages/LoginPage.jsx").then(m => ({ default: m.LoginPage })));
 const VerifyPage = lazy(() => import("./pages/VerifyPage.jsx").then(m => ({ default: m.VerifyPage })));
