@@ -129,37 +129,66 @@ function FlashcardsPage(p){
         </div>
 
         {due.length?<>
-          <div
-            className={`flashcard-face flex flex-col items-center justify-center p-8 text-center cursor-pointer ${revealed?"revealed":""}`}
-            role="button"
-            tabIndex={0}
-            aria-label={revealed?"Show question":"Reveal answer"}
-            onClick={()=>setRevealed(!revealed)}
-            onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setRevealed(!revealed);}}}
-          >
-            <div className="flashcard-face-top">
-              <span className="flashcard-label">{revealed?"ANSWER":"QUESTION"}</span>
-              <div className="flashcard-badges">
-                {card.origin==="ai_generated"&&<span className="fc-badge-ai">AI✦</span>}
-                {card.card_type&&card.card_type!=="qa"&&<span className="fc-badge-type">{card.card_type}</span>}
-                {isLeech&&<span className="fc-badge-leech" title="Frequently missed — consider editing or simplifying this card">Needs rewrite</span>}
+          {/* 3D Flipping Flashcard Scene */}
+          <div className={`flashcard-scene ${revealed ? "is-flipped" : ""}`}>
+            <div
+              className="flashcard-flipper"
+              role="button"
+              tabIndex={0}
+              aria-label={revealed ? "Show question" : "Reveal answer"}
+              onClick={() => setRevealed(!revealed)}
+              onKeyDown={e => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setRevealed(!revealed);
+                }
+              }}
+            >
+              {/* Question Face (Front) */}
+              <div className="flashcard-face flashcard-face-front">
+                <div className="flashcard-face-top">
+                  <span className="flashcard-label">QUESTION</span>
+                  <div className="flashcard-badges">
+                    {card.origin === "ai_generated" && <span className="fc-badge-ai">AI✦</span>}
+                    {card.card_type && card.card_type !== "qa" && <span className="fc-badge-type">{card.card_type}</span>}
+                    {isLeech && <span className="fc-badge-leech" title="Frequently missed — consider editing or simplifying this card">Needs rewrite</span>}
+                  </div>
+                </div>
+
+                <div className="flashcard-rich-body">
+                  <TutorMarkdown content={card.front || ""} className="fc-card-markdown fc-question-markdown" />
+                </div>
+
+                {card.hint && (
+                  <div className="flashcard-hint-block" onClick={e => e.stopPropagation()}>
+                    <button type="button" className="text-button text-xs" onClick={() => setShowHint(s => !s)}>
+                      {showHint ? "Hide hint" : "Show hint"}
+                    </button>
+                    {showHint && <div className="flashcard-hint-box"><TutorMarkdown content={card.hint} /></div>}
+                  </div>
+                )}
+
+                <span className="flashcard-hint">Tap card or press Enter to reveal answer</span>
+              </div>
+
+              {/* Answer Face (Back) */}
+              <div className="flashcard-face flashcard-face-back revealed">
+                <div className="flashcard-face-top">
+                  <span className="flashcard-label">ANSWER</span>
+                  <div className="flashcard-badges">
+                    {card.origin === "ai_generated" && <span className="fc-badge-ai">AI✦</span>}
+                    {card.card_type && card.card_type !== "qa" && <span className="fc-badge-type">{card.card_type}</span>}
+                    {isLeech && <span className="fc-badge-leech" title="Frequently missed — consider editing or simplifying this card">Needs rewrite</span>}
+                  </div>
+                </div>
+
+                <div className="flashcard-rich-body">
+                  <TutorMarkdown content={card.back || ""} className="fc-card-markdown fc-answer-markdown" />
+                </div>
+
+                <span className="flashcard-hint">Rate how accurately you recalled the answer</span>
               </div>
             </div>
-
-            <div className="flashcard-rich-body">
-              <TutorMarkdown content={revealed?card.back:card.front} className="fc-card-markdown"/>
-            </div>
-
-            {!revealed&&card.hint&&(
-              <div className="flashcard-hint-block" onClick={e=>e.stopPropagation()}>
-                <button type="button" className="text-button text-xs" onClick={()=>setShowHint(s=>!s)}>
-                  {showHint?"Hide hint":"Show hint"}
-                </button>
-                {showHint&&<div className="flashcard-hint-box"><TutorMarkdown content={card.hint}/></div>}
-              </div>
-            )}
-
-            <span className="flashcard-hint">{revealed?"Rate how accurately you recalled the answer":"Tap card or press Enter to reveal answer"}</span>
           </div>
 
           <div className="flashcard-meta-bar flex items-center justify-between gap-3 flex-wrap">

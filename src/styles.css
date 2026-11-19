@@ -2726,17 +2726,30 @@
     }
     .flashcards-layout {
       display: grid !important;
-      grid-template-columns: minmax(0, 1.45fr) 340px !important;
+      grid-template-columns: minmax(0, 1fr) 390px !important;
       align-items: start !important;
-      gap: 28px !important;
+      gap: 32px !important;
       width: 100% !important;
+    }
+    @media (min-width: 1280px) {
+      .flashcards-layout {
+        grid-template-columns: minmax(0, 1fr) 400px !important;
+        gap: 36px !important;
+      }
+    }
+    @media (max-width: 1024px) {
+      .flashcards-layout {
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+      }
     }
     .flash-main {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
       min-width: 0;
       width: 100%;
+      max-width: 760px;
     }
 
     /* Review Progress Header */
@@ -2750,7 +2763,7 @@
     }
     .review-progress-row .eyebrow {
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       color: #94A3B8 !important;
       font-size: 11px !important;
       font-weight: 800 !important;
@@ -2760,7 +2773,7 @@
     .review-progress-row h2 {
       margin: 0 !important;
       font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-      font-size: 26px !important;
+      font-size: 24px !important;
       font-weight: 800 !important;
       letter-spacing: -0.03em !important;
       color: #FFFFFF !important;
@@ -2770,66 +2783,132 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 5px 14px;
+      padding: 4px 13px;
       border-radius: 9999px;
       background: rgba(226, 232, 240, 0.06);
       border: 1px solid rgba(226, 232, 240, 0.16);
       color: #CBD5E1 !important;
       font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-      font-size: 13.5px !important;
+      font-size: 13px !important;
       font-weight: 700 !important;
       letter-spacing: -0.01em;
       backdrop-filter: blur(8px);
     }
 
-    /* Main Flashcard — Black & Charcoal with Dim Silver Top Sheen */
+    /* ==========================================================================
+       3D Flipping Flashcard Scene & Faces (Compact & Smooth Flip)
+       ========================================================================== */
+    .flashcard-scene {
+      position: relative;
+      width: 100%;
+      max-width: 760px;
+      perspective: 1200px;
+      -webkit-perspective: 1200px;
+    }
+
+    .flashcard-flipper {
+      position: relative;
+      width: 100%;
+      display: grid;
+      grid-template-areas: "card";
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(0.23, 1, 0.32, 1);
+      cursor: pointer;
+      border-radius: 20px;
+      outline: none;
+      user-select: none;
+    }
+    .flashcard-flipper:focus-visible {
+      box-shadow: 0 0 0 2px rgba(226, 232, 240, 0.4);
+    }
+
+    .flashcard-scene.is-flipped .flashcard-flipper {
+      transform: rotateY(180deg);
+    }
+
     .flashcard-face {
+      grid-area: card;
       position: relative;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      min-height: 340px;
-      padding: 50px 44px;
-      border-radius: 22px !important;
+      min-height: 270px;
+      padding: 34px 38px 46px;
+      border-radius: 20px !important;
+      border: 1px solid rgba(226, 232, 240, 0.13) !important;
+      text-align: center;
+      box-sizing: border-box;
+      width: 100%;
+      backface-visibility: hidden !important;
+      -webkit-backface-visibility: hidden !important;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      animation: none !important;
+    }
+
+    /* Front Face (Question) */
+    .flashcard-face-front {
+      transform: rotateY(0deg);
       background-color: #0A0D13 !important;
       background-image:
         radial-gradient(ellipse 90% 50% at 50% -10%, rgba(226, 232, 240, 0.08) 0%, transparent 65%),
         linear-gradient(165deg, #10141C 0%, #080B10 100%) !important;
-      border: 1px solid rgba(226, 232, 240, 0.14) !important;
       box-shadow:
-        0 20px 50px rgba(0, 0, 0, 0.65),
-        inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        0 18px 42px -10px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.13) !important;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
-    .flashcard-face:hover {
-      border-color: rgba(226, 232, 240, 0.35) !important;
-      transform: translateY(-2px);
+    .flashcard-face-front:hover {
+      border-color: rgba(226, 232, 240, 0.32) !important;
       box-shadow:
-        0 26px 64px rgba(0, 0, 0, 0.75),
-        0 0 24px rgba(226, 232, 240, 0.07),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+        0 22px 50px -8px rgba(0, 0, 0, 0.75),
+        0 0 20px rgba(226, 232, 240, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
     }
-    .flashcard-face.revealed {
+    .flashcard-scene.is-flipped .flashcard-face-front {
+      pointer-events: none;
+      visibility: hidden;
+      transition: visibility 0s 0.28s;
+    }
+    .flashcard-scene:not(.is-flipped) .flashcard-face-front {
+      visibility: visible;
+      transition: visibility 0s 0s;
+    }
+
+    /* Back Face (Answer) */
+    .flashcard-face-back {
+      transform: rotateY(180deg);
+      background-color: #0C1017 !important;
       background-image:
-        radial-gradient(ellipse 90% 50% at 50% -10%, rgba(245, 158, 11, 0.07) 0%, transparent 65%),
-        linear-gradient(165deg, #11151F 0%, #080B10 100%) !important;
-      border-color: rgba(245, 158, 11, 0.28) !important;
+        radial-gradient(ellipse 90% 50% at 50% -10%, rgba(226, 232, 240, 0.09) 0%, transparent 65%),
+        linear-gradient(165deg, #121722 0%, #090C12 100%) !important;
       box-shadow:
-        0 26px 64px rgba(0, 0, 0, 0.75),
-        0 0 24px rgba(245, 158, 11, 0.06),
-        inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+        0 18px 42px -10px rgba(0, 0, 0, 0.7),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .flashcard-face-back:hover {
+      border-color: rgba(226, 232, 240, 0.32) !important;
+    }
+    .flashcard-scene:not(.is-flipped) .flashcard-face-back {
+      pointer-events: none;
+      visibility: hidden;
+      transition: visibility 0s 0.28s;
+    }
+    .flashcard-scene.is-flipped .flashcard-face-back {
+      visibility: visible;
+      transition: visibility 0s 0s;
     }
 
     .flashcard-face-top {
       position: absolute;
-      top: 22px;
-      left: 28px;
-      right: 28px;
+      top: 18px;
+      left: 24px;
+      right: 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -2876,28 +2955,33 @@
     }
 
     .flashcard-rich-body {
-      max-width: 680px;
+      max-width: 600px;
       width: 100%;
-      margin: 18px 0;
+      margin: 12px 0 16px;
     }
-    .flashcard-face .fc-card-markdown {
+
+    /* Question Typography */
+    .flashcard-face-front .fc-card-markdown,
+    .fc-question-markdown {
       color: #FFFFFF !important;
       font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-      font-size: clamp(20px, 2.3vw, 26px) !important;
+      font-size: clamp(17px, 1.7vw, 21px) !important;
       font-weight: 700 !important;
       line-height: 1.45 !important;
-      letter-spacing: -0.025em !important;
+      letter-spacing: -0.02em !important;
       text-align: center;
     }
-    .flashcard-face .fc-card-markdown p {
+    .flashcard-face-front .fc-card-markdown p,
+    .fc-question-markdown p {
       color: #FFFFFF !important;
       font-size: inherit !important;
       line-height: inherit !important;
       margin: 0 !important;
       letter-spacing: inherit !important;
     }
-    .flashcard-face .fc-card-markdown code {
-      font-size: 0.82em !important;
+    .flashcard-face-front .fc-card-markdown code,
+    .fc-question-markdown code {
+      font-size: 0.84em !important;
       background: rgba(226, 232, 240, 0.12) !important;
       color: #F1F5F9 !important;
       border: 1px solid rgba(226, 232, 240, 0.25) !important;
@@ -2905,11 +2989,66 @@
       padding: 2px 7px !important;
     }
 
+    /* Answer Typography — Reduced Font Size & High-Legibility Manrope Styling */
+    .flashcard-face-back .fc-card-markdown,
+    .fc-answer-markdown {
+      color: #E2E8F0 !important;
+      font-family: var(--font-body, 'Manrope', -apple-system, sans-serif) !important;
+      font-size: clamp(14px, 1.25vw, 16px) !important;
+      font-weight: 450 !important;
+      line-height: 1.62 !important;
+      letter-spacing: -0.01em !important;
+      text-align: center;
+    }
+    .flashcard-face-back .fc-card-markdown p,
+    .fc-answer-markdown p {
+      color: #E2E8F0 !important;
+      font-size: inherit !important;
+      line-height: inherit !important;
+      margin: 0 0 10px 0 !important;
+    }
+    .flashcard-face-back .fc-card-markdown p:last-child,
+    .fc-answer-markdown p:last-child {
+      margin-bottom: 0 !important;
+    }
+    .flashcard-face-back .fc-card-markdown strong,
+    .flashcard-face-back .fc-card-markdown b,
+    .fc-answer-markdown strong,
+    .fc-answer-markdown b {
+      color: #FFFFFF !important;
+      font-weight: 700 !important;
+    }
+    .flashcard-face-back .fc-card-markdown code,
+    .fc-answer-markdown code {
+      font-size: 0.88em !important;
+      background: rgba(226, 232, 240, 0.1) !important;
+      color: #F8FAFC !important;
+      border: 1px solid rgba(226, 232, 240, 0.2) !important;
+      border-radius: 5px !important;
+      padding: 2px 6px !important;
+    }
+    .flashcard-face-back .fc-card-markdown ul,
+    .flashcard-face-back .fc-card-markdown ol,
+    .fc-answer-markdown ul,
+    .fc-answer-markdown ol {
+      text-align: left !important;
+      display: inline-block !important;
+      margin: 6px auto !important;
+      padding-left: 20px !important;
+    }
+    .flashcard-face-back .fc-card-markdown li,
+    .fc-answer-markdown li {
+      margin-bottom: 4px !important;
+      color: #CBD5E1 !important;
+      font-size: inherit !important;
+      line-height: 1.55 !important;
+    }
+
     .flashcard-hint {
       position: absolute;
-      bottom: 20px;
+      bottom: 16px;
       color: #64748B !important;
-      font-size: 12.5px !important;
+      font-size: 12px !important;
       font-weight: 500;
       letter-spacing: -0.01em;
     }
