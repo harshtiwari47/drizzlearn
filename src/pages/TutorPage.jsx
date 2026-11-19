@@ -19,7 +19,7 @@ function getTutorSourceMeta(source){
   return {typeLabel:rawType||"source",icon:"spark",destLabel:"Workspace"};
 }
 
-function createDefaultTutorInteraction(structured){
+export function createDefaultTutorInteraction(structured){
   if(!structured||typeof structured!=="object")return null;
   if(structured.kind==="quiz")return {selectedAnswers:{},revealedQuestions:{},revealedHints:{}};
   if(structured.kind==="hint")return {revealedHints:1,showSolution:false};
@@ -27,7 +27,7 @@ function createDefaultTutorInteraction(structured){
   return null;
 }
 
-function QuizMessageCard({structured,interaction,onUpdateInteraction}){
+export function QuizMessageCard({structured,interaction,onUpdateInteraction}){
   const questions=Array.isArray(structured?.questions)?structured.questions:[];
   const state=interaction&&typeof interaction==="object"?interaction:{};
   const selectedAnswers=state.selectedAnswers&&typeof state.selectedAnswers==="object"?state.selectedAnswers:{};
@@ -168,7 +168,7 @@ function QuizMessageCard({structured,interaction,onUpdateInteraction}){
   );
 }
 
-function HintMessageCard({structured,interaction,onUpdateInteraction}){
+export function HintMessageCard({structured,interaction,onUpdateInteraction}){
   const hints=Array.isArray(structured?.hints)?structured.hints:[];
   const state=interaction&&typeof interaction==="object"?interaction:{};
   const totalHints=hints.length;
@@ -220,7 +220,7 @@ function HintMessageCard({structured,interaction,onUpdateInteraction}){
   );
 }
 
-function ReviewMessageCard({structured,interaction,onUpdateInteraction}){
+export function ReviewMessageCard({structured,interaction,onUpdateInteraction}){
   const verdict=structured?.verdict||"partial";
   const verdictLabels={
     strong:"Strong",
@@ -304,6 +304,11 @@ export function TutorPage(p){
   });
   const [mode,setMode]=useState("Explain"),[prompt,setPrompt]=useState(""),[attempt,setAttempt]=useState(""),[messages,setMessages]=useState([]),[sending,setSending]=useState(false),[expandedSources,setExpandedSources]=useState({}),[savedThreads,setSavedThreads]=useState([]);
   const loadedThreadRef=useRef(null);
+  const chatBottomRef=useRef(null);
+
+  useEffect(()=>{
+    chatBottomRef.current?.scrollIntoView({behavior:"smooth"});
+  },[messages,sending]);
 
   const visibleLessons=useMemo(()=>selectedCourseId==="all"?allLessons:allLessons.filter(l=>l.courseId===selectedCourseId),[allLessons,selectedCourseId]);
   const currentLesson=useMemo(()=>{
@@ -450,31 +455,42 @@ export function TutorPage(p){
 
   return <div className="tutor-layout grid gap-4 items-start">
     <section className="panel tutor-workspace flex flex-col p-4 gap-4">
+      {/* 1. Header Bar: Topic context, active status, clear chat */}
       <div className="tutor-topline flex items-center justify-between gap-3">
         <div className="tutor-heading-block min-w-0 flex-1">
-          <span className="eyebrow tutor-eyebrow">{currentLesson?.courseTitle?`${currentLesson.courseTitle} · ${currentLesson.title}`:(currentLesson?.title||currentCourse?.title||"LEARNING COMPANION")}</span>
-          <h2>Work through the idea together.</h2>
+          <span className="eyebrow tutor-eyebrow">
+            {currentLesson?.courseTitle ? `${currentLesson.courseTitle} · ${currentLesson.title}` : (currentLesson?.title || currentCourse?.title || "AI Tutor")}
+          </span>
+          <h2 className="tutor-heading-title">{currentLesson?.title || currentCourse?.title || "AI Tutor"}</h2>
         </div>
         <div className="tutor-toolbar-actions flex items-center gap-2.5 flex-shrink-0">
-          {p.remote&&messages.length>0&&(
-            <>
-              <span className="tutor-saved-status">Saved locally</span>
-              <button type="button" className="tutor-clear-btn" onClick={handleClearChat}>Clear chat</button>
-            </>
+          {p.remote && messages.length > 0 && (
+            <button
+              type="button"
+              className="tutor-clear-btn"
+              onClick={handleClearChat}
+              title="Clear current conversation"
+            >
+              <Icon name="spark" size={13} />
+              <span>Clear chat</span>
+            </button>
           )}
-          <span className={`status-pill ${p.remote?"connected":"unavailable"}`}>{p.remote?"Tutor connected":"Sign in required"}</span>
+          <span className={`status-pill ${p.remote ? "connected" : "unavailable"}`}>
+            {p.remote ? "Tutor connected" : "Sign in required"}
+          </span>
         </div>
       </div>
-      {p.remote&&otherSavedThreads.length>0&&(
+
+      {/* 2. Saved Thread Switcher (if any previous threads exist) */}
+      {p.remote && otherSavedThreads.length > 0 && (
         <div className="tutor-thread-pills flex flex-wrap items-center gap-1.5" aria-label="Saved lesson conversations">
-          <span className="tutor-thread-pills-label">Saved chats:</span>
-          {otherSavedThreads.slice(0,4).map(t=>(
+          {otherSavedThreads.slice(0, 4).map(t => (
             <button
               key={t.threadId}
               type="button"
               className="tutor-thread-pill"
-              onClick={()=>handleTutorLessonChange(t.lessonId||"")}
-              title={`Switch to ${t.lessonTitle} (${t.messageCount} messages)`}
+              onClick={() => handleTutorLessonChange(t.lessonId || "")}
+              title={`Switch to ${t.lessonTitle}`}
             >
               <span>{t.lessonTitle}</span>
               <small>{t.messageCount}</small>
@@ -482,207 +498,308 @@ export function TutorPage(p){
           ))}
         </div>
       )}
+
+      {/* 3. Mode Switcher (Tactile pill tabs) */}
       <div className="tutor-mode-row flex flex-wrap items-center gap-2" role="group" aria-label="Tutor mode">
-        {["Explain","Hint","Quiz me","Review my work"].map(option=>(
-          <button type="button" className={`cursor-pointer ${mode===option?"selected":""}`} key={option} onClick={()=>setMode(option)}>{option}</button>
+        {[
+          { id: "Explain", label: "Explain", icon: "spark" },
+          { id: "Hint", label: "Hint", icon: "help" },
+          { id: "Quiz me", label: "Quiz me", icon: "check" },
+          { id: "Review my work", label: "Review my work", icon: "fileText" },
+        ].map(item => (
+          <button
+            type="button"
+            className={`tutor-mode-pill ${mode === item.id ? "selected" : ""}`}
+            key={item.id}
+            onClick={() => setMode(item.id)}
+          >
+            <Icon name={item.icon} size={13} />
+            <span>{item.label}</span>
+          </button>
         ))}
       </div>
-      {p.remote?(
-        <div className="chat-history flex flex-col gap-3 overflow-y-auto max-h-[500px]" aria-live="polite">
-          {messages.map((m,i)=>{
-            const activePreviews=(m.sources||[]).filter((source,sIdx)=>Boolean(expandedSources[`${i}:${sIdx}:${source.id||""}`]));
+
+      {/* 4. Chat Conversation Canvas */}
+      {p.remote ? (
+        <div className="chat-history flex flex-col gap-3 overflow-y-auto max-h-[560px]" aria-live="polite">
+          {/* Welcome State when conversation is empty */}
+          {messages.length === 0 && (
+            <div className="tutor-empty-welcome">
+              <div className="tutor-welcome-avatar">
+                <Icon name="spark" size={24} />
+              </div>
+              <h3>Your Personal Learning Tutor</h3>
+              <p>
+                {currentLesson?.title
+                  ? `Ask questions, get step-by-step hints, or test your recall on "${currentLesson.title}".`
+                  : "Ask questions, explore concepts with examples, or test your understanding across your courses."}
+              </p>
+              <div className="tutor-starter-prompts-grid">
+                {[
+                  { title: "Explain simply", desc: "Break down the core concept with an analogy", m: "Explain", p: `Explain ${currentLesson?.title || "this topic"} simply with a real-world example.` },
+                  { title: "Give me a hint", desc: "Get a gentle nudge in the right direction", m: "Hint", p: `Give me one hint to get started on ${currentLesson?.title || "this topic"}.` },
+                  { title: "Quick quiz", desc: "Test your understanding with practice questions", m: "Quiz me", p: `Quiz me on ${currentLesson?.title || "this topic"} to test my understanding.` },
+                  { title: "Review my reasoning", desc: "Get feedback on your solution or thoughts", m: "Review my work", p: `Review my reasoning on ${currentLesson?.title || "this topic"}.` },
+                ].map((item, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className="tutor-starter-card"
+                    onClick={() => {
+                      setMode(item.m);
+                      setPrompt(item.p);
+                    }}
+                  >
+                    <div className="tutor-starter-card-top">
+                      <strong>{item.title}</strong>
+                      <Icon name="arrowRight" size={12} />
+                    </div>
+                    <span>{item.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Messages */}
+          {messages.map((m, i) => {
             return (
-              <div key={m.id||i} className={`chat-message flex items-start gap-3 p-3 ${m.role} ${m.isError?"chat-message-error":""}`} role={m.isError?"alert":undefined}>
+              <div key={m.id || i} className={`chat-message flex items-start gap-3 p-3 ${m.role} ${m.isError ? "chat-message-error" : ""}`} role={m.isError ? "alert" : undefined}>
                 <span className="chat-avatar grid place-items-center">
-                  {m.role==="assistant"?<img src="/images/drizzlearn-bot.svg" alt="Tutor" className="tutor-avatar-img"/>:initials}
+                  {m.role === "assistant" ? <img src="/images/drizzlearn-bot.svg" alt="Tutor" className="tutor-avatar-img" /> : initials}
                 </span>
                 <div className="chat-message-body">
                   <div className="chat-message-header">
-                    <small>{m.role==="assistant"?"Drizzlearn Tutor":m.mode||"You"}</small>
-                    {m.role==="assistant"&&!m.isError&&(m.model||m.source||m.failoverCount>0)&&(
-                      <div className="tutor-message-badges">
-                        {(m.model||m.source)&&(
-                          <span className="tutor-model-badge" title={`Model: ${m.model||m.source}${m.model&&m.source?` · ${m.source}`:""}`}>
-                            {m.model||m.source}
-                          </span>
-                        )}
-                        {Number(m.failoverCount)>0&&(
-                          <span className="tutor-failover-badge" title={`Automatically switched after ${m.failoverCount} fallback ${m.failoverCount===1?"attempt":"attempts"}`}>
-                            auto-switched{m.failoverCount>1?` ×${m.failoverCount}`:""}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    <span className="chat-author-name">{m.role === "assistant" ? "Drizzlearn Tutor" : "You"}</span>
+                    {m.mode && m.role === "user" && <span className="chat-mode-indicator">{m.mode}</span>}
                   </div>
-                  {m.role==="user"?(
+                  {m.role === "user" ? (
                     <p>{m.text}</p>
-                  ):m.isError?(
-                    <TutorMarkdown content={m.text}/>
-                  ):m.structured?.kind==="quiz"?(
+                  ) : m.isError ? (
+                    <TutorMarkdown content={m.text} />
+                  ) : m.structured?.kind === "quiz" ? (
                     <QuizMessageCard
                       structured={m.structured}
                       interaction={m.interaction}
-                      onUpdateInteraction={(updater)=>updateMessageInteraction(i,updater)}
+                      onUpdateInteraction={(updater) => updateMessageInteraction(i, updater)}
                     />
-                  ):m.structured?.kind==="hint"?(
+                  ) : m.structured?.kind === "hint" ? (
                     <HintMessageCard
                       structured={m.structured}
                       interaction={m.interaction}
-                      onUpdateInteraction={(updater)=>updateMessageInteraction(i,updater)}
+                      onUpdateInteraction={(updater) => updateMessageInteraction(i, updater)}
                     />
-                  ):m.structured?.kind==="review"?(
+                  ) : m.structured?.kind === "review" ? (
                     <ReviewMessageCard
                       structured={m.structured}
                       interaction={m.interaction}
-                      onUpdateInteraction={(updater)=>updateMessageInteraction(i,updater)}
+                      onUpdateInteraction={(updater) => updateMessageInteraction(i, updater)}
                     />
-                  ):(
-                    <TutorMarkdown content={m.text}/>
+                  ) : (
+                    <TutorMarkdown content={m.text} />
                   )}
-                  {m.isError&&m.retryPayload&&(
+                  {m.isError && m.retryPayload && (
                     <div className="tutor-error-actions">
-                      <button type="button" className="secondary-btn compact tutor-retry-btn" onClick={()=>submitQuestion({...m.retryPayload,retryIndex:i})}>
+                      <button type="button" className="secondary-btn compact tutor-retry-btn" onClick={() => submitQuestion({ ...m.retryPayload, retryIndex: i })}>
                         Try again ↻
                       </button>
                     </div>
                   )}
-                  {m.sources?.length>0&&(
+                  {m.sources?.length > 0 && (
                     <div className="tutor-sources-block">
-                      <span className="tutor-sources-label">Grounded in your workspace ({m.sources.length})</span>
                       <div className="tutor-source-list flex flex-wrap gap-1.5" aria-label="Sources from your workspace">
-                        {m.sources.map((source,sIdx)=>{
-                          const meta=getTutorSourceMeta(source);
-                          const sourceKey=`${i}:${sIdx}:${source.id||""}`;
-                          const previewId=`tutor-source-preview-${i}-${sIdx}`;
-                          const isExpanded=Boolean(expandedSources[sourceKey]);
-                          const relText=formatSourceRelevance(source.relevance);
-                          const snippet=source.excerpt?String(source.excerpt).replace(/\s+/g," ").trim().slice(0,180):"";
-                          const tooltip=[
-                            `${meta.typeLabel.toUpperCase()}: ${source.title||"Untitled"}`,
-                            source.courseTitle?`Course: ${source.courseTitle}`:"",
-                            relText?`Relevance: ${relText}`:"",
-                            source.matchType?`Match: ${source.matchType}`:"",
-                            snippet?`Snippet: ${snippet}`:"",
-                          ].filter(Boolean).join(" · ");
-                          const hasDetails=Boolean(source.excerpt||source.courseTitle||relText||source.matchType);
+                        <span className="tutor-sources-tag">Referenced</span>
+                        {m.sources.map((source, sIdx) => {
+                          const meta = getTutorSourceMeta(source);
                           return (
-                            <div key={sourceKey} className={`tutor-source-chip-group ${isExpanded?"expanded":""}`}>
-                              <button
-                                type="button"
-                                className={`tutor-source-chip type-${meta.typeLabel}`}
-                                title={tooltip}
-                                onClick={()=>navigateToSource(source)}
-                              >
-                                <Icon name={meta.icon} size={13}/>
-                                <span className="tutor-source-type">{meta.typeLabel}</span>
-                                <span className="tutor-source-title">{source.title||"Untitled"}</span>
-                              </button>
-                              {hasDetails&&(
-                                <button
-                                  type="button"
-                                  className="tutor-source-preview-toggle"
-                                  aria-expanded={isExpanded}
-                                  aria-controls={previewId}
-                                  aria-label={`${isExpanded?"Hide":"Preview"} excerpt for ${source.title||meta.typeLabel}`}
-                                  title={isExpanded?"Hide snippet":"Preview grounded snippet"}
-                                  onClick={()=>toggleSourcePreview(sourceKey)}
-                                >
-                                  <Icon name="chevron" size={13}/>
-                                </button>
-                              )}
-                            </div>
+                            <button
+                              key={sIdx}
+                              type="button"
+                              className={`tutor-source-chip type-${meta.typeLabel}`}
+                              onClick={() => navigateToSource(source)}
+                              title={`Open ${source.title || meta.destLabel}`}
+                            >
+                              <Icon name={meta.icon} size={11} />
+                              <span className="tutor-source-title">{source.title || "Untitled"}</span>
+                            </button>
                           );
                         })}
                       </div>
-                      {activePreviews.length>0&&(
-                        <div className="tutor-source-preview-list">
-                          {m.sources.map((source,sIdx)=>{
-                            const sourceKey=`${i}:${sIdx}:${source.id||""}`;
-                            if(!expandedSources[sourceKey])return null;
-                            const meta=getTutorSourceMeta(source);
-                            const previewId=`tutor-source-preview-${i}-${sIdx}`;
-                            const relText=formatSourceRelevance(source.relevance);
-                            return (
-                              <div key={sourceKey} id={previewId} className="tutor-source-preview">
-                                <div className="tutor-source-preview-head">
-                                  <div className="tutor-source-preview-meta">
-                                    <span className={`tutor-source-type badge-${meta.typeLabel}`}>{meta.typeLabel}</span>
-                                    <strong>{source.title||"Untitled"}</strong>
-                                    {source.courseTitle&&<span className="tutor-source-course">{source.courseTitle}</span>}
-                                  </div>
-                                  <div className="tutor-source-preview-stats">
-                                    {source.matchType&&<span className="tutor-source-match">{source.matchType}</span>}
-                                    {relText&&<span className="tutor-source-relevance">{relText}</span>}
-                                  </div>
-                                </div>
-                                {source.excerpt&&<p className="tutor-source-preview-excerpt">{source.excerpt}</p>}
-                                <div className="tutor-source-preview-foot">
-                                  <button type="button" className="text-button" onClick={()=>navigateToSource(source)}>
-                                    Open in {meta.destLabel} ↗
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
               </div>
             );
           })}
-          {sending&&(
+
+          {sending && (
             <div className="chat-message assistant flex items-start gap-3 p-3">
-              <span className="chat-avatar grid place-items-center"><img src="/images/drizzlearn-bot.svg" alt="Tutor" className="tutor-avatar-img"/></span>
-              <div className="chat-message-body"><small>Drizzlearn Tutor</small><p className="typing-copy">Working through your question…</p></div>
+              <span className="chat-avatar grid place-items-center">
+                <img src="/images/drizzlearn-bot.svg" alt="Tutor" className="tutor-avatar-img" />
+              </span>
+              <div className="chat-message-body">
+                <div className="chat-message-header">
+                  <span className="chat-author-name">Drizzlearn Tutor</span>
+                </div>
+                <div className="tutor-thinking-row flex items-center gap-2">
+                  <span className="btn-spinner" />
+                  <p className="typing-copy m-0">Thinking through your question…</p>
+                </div>
+              </div>
             </div>
           )}
+          <div ref={chatBottomRef} />
         </div>
-      ):(
-        <div className="chat-history"><EmptyState title="Connect an account to use AI Tutor" body="Sign in to ask questions grounded in your courses and saved notes." action="Sign in" onAction={p.openAccount}/></div>
+      ) : (
+        <div className="chat-history">
+          <EmptyState title="Connect an account to use AI Tutor" body="Sign in to ask questions grounded in your courses and saved notes." action="Sign in" onAction={p.openAccount} />
+        </div>
       )}
-      {p.remote&&mode==="Review my work"&&(
-        <label className="attempt-context flex flex-col gap-2">Your work to review<textarea value={attempt} onChange={e=>setAttempt(e.target.value)} placeholder="Paste your answer, reasoning or code snippet…"/></label>
-      )}
-      {p.remote&&(
-        <form className="tutor-compose flex items-center gap-2" onSubmit={send}>
-          <textarea value={prompt} onChange={e=>setPrompt(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder={mode==="Hint"?"Ask for a hint, not the full answer…":"Ask about your current lesson…"} aria-label="Message the tutor"/>
-          <button className="primary-btn" type="submit" disabled={sending||!prompt.trim()}>{sending?<><span className="btn-spinner"/> Sending…</>:<>Send <span>↗</span></>}</button>
-        </form>
+
+      {/* 5. Input Composer Area */}
+      {p.remote && (
+        <div className="tutor-composer-dock">
+          {mode === "Review my work" && (
+            <div className="tutor-attempt-box">
+              <div className="tutor-attempt-header">
+                <span>Your solution or work to review</span>
+                {attempt && (
+                  <button type="button" className="text-button" onClick={() => setAttempt("")}>Clear</button>
+                )}
+              </div>
+              <textarea
+                className="tutor-attempt-textarea"
+                value={attempt}
+                onChange={e => setAttempt(e.target.value)}
+                placeholder="Paste your answer, reasoning, or code snippet here..."
+                rows={3}
+              />
+            </div>
+          )}
+          <form className="tutor-compose-capsule" onSubmit={send}>
+            <textarea
+              value={prompt}
+              onChange={e => setPrompt(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+              placeholder={
+                mode === "Hint"
+                  ? "What part are you stuck on? (ask for a hint...)"
+                  : mode === "Quiz me"
+                  ? "Ask to be quizzed on a specific topic..."
+                  : mode === "Review my work"
+                  ? "Any specific questions on your work above?"
+                  : "Ask anything about this lesson... (Enter to send, Shift+Enter for new line)"
+              }
+              aria-label="Message the tutor"
+              rows={1}
+            />
+            <button
+              className="tutor-send-btn"
+              type="submit"
+              disabled={sending || !prompt.trim()}
+              aria-label="Send message"
+              title="Send"
+            >
+              {sending ? <span className="btn-spinner" /> : <Icon name="arrowRight" size={15} />}
+            </button>
+          </form>
+        </div>
       )}
     </section>
+
+    {/* Right Sidebar: Context & Quick Prompts */}
     <aside className="tutor-context flex flex-col gap-4">
       <Panel title="Current context" icon="book">
-        <div className="side-panel-copy flex flex-col gap-3 p-4">
-          {allCourses.length>0&&(
-            <div className="tutor-context-selectors flex flex-col gap-2">
-              <label className="text-xs font-semibold text-learnos-muted flex flex-col gap-1">
+        <div className="side-panel-copy tutor-context-body flex flex-col gap-3 p-4">
+          {allCourses.length > 0 && (
+            <div className="tutor-context-selectors flex flex-col gap-2.5">
+              <label className="tutor-select-field flex flex-col gap-1">
                 <span>Course</span>
-                <select value={selectedCourseId} aria-label="Choose tutor course context" onChange={e=>handleTutorCourseChange(e.target.value)}>
+                <select
+                  value={selectedCourseId}
+                  aria-label="Choose tutor course context"
+                  onChange={e => handleTutorCourseChange(e.target.value)}
+                >
                   <option value="all">All courses ({allLessons.length} topics)</option>
-                  {allCourses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}
+                  {allCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
               </label>
-              <label className="text-xs font-semibold text-learnos-muted flex flex-col gap-1">
+              <label className="tutor-select-field flex flex-col gap-1">
                 <span>Topic / Lesson</span>
-                <select value={selectedLessonId} aria-label="Choose tutor lesson context" onChange={e=>handleTutorLessonChange(e.target.value)}>
+                <select
+                  value={selectedLessonId}
+                  aria-label="Choose tutor lesson context"
+                  onChange={e => handleTutorLessonChange(e.target.value)}
+                >
                   <option value="">General workspace / course chat</option>
-                  {visibleLessons.map(l=><option key={l.id} value={l.id}>{selectedCourseId==="all"&&allCourses.length>1&&l.courseTitle?`${l.courseTitle} — ${l.title}`:l.title}</option>)}
+                  {visibleLessons.map(l => (
+                    <option key={l.id} value={l.id}>
+                      {selectedCourseId === "all" && allCourses.length > 1 && l.courseTitle ? `${l.courseTitle} — ${l.title}` : l.title}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>
           )}
-          <strong>{currentLesson?.title||currentCourse?.title||"General workspace"}</strong>
-          <p>{currentLesson?.objective||currentCourse?.summary||"Select any course or lesson above to focus the AI tutor."}</p>
-          {currentLesson?<button type="button" className="text-button" onClick={()=>p.openLesson?p.openLesson(currentLesson.id):p.go("lesson")}>Return to lesson ↗</button>:currentCourse&&<button type="button" className="text-button" onClick={()=>p.go("course",{params:{courseId:currentCourse.id}})}>View course roadmap ↗</button>}
+          {currentLesson ? (
+            <div className="tutor-active-topic-card">
+              <strong className="tutor-active-topic-title">{currentLesson.title}</strong>
+              {currentLesson.objective && (
+                <p className="tutor-active-topic-obj">{currentLesson.objective}</p>
+              )}
+              <button
+                type="button"
+                className="tutor-context-link-btn"
+                onClick={() => p.openLesson ? p.openLesson(currentLesson.id) : p.go("lesson")}
+              >
+                <span>Return to lesson</span>
+                <Icon name="arrowRight" size={12} />
+              </button>
+            </div>
+          ) : currentCourse ? (
+            <div className="tutor-active-topic-card">
+              <strong className="tutor-active-topic-title">{currentCourse.title}</strong>
+              <button
+                type="button"
+                className="tutor-context-link-btn"
+                onClick={() => p.go("course", { params: { courseId: currentCourse.id } })}
+              >
+                <span>View course roadmap</span>
+                <Icon name="arrowRight" size={12} />
+              </button>
+            </div>
+          ) : null}
         </div>
       </Panel>
-      {p.remote&&(
+
+      {p.remote && (
         <Panel title="Ways to ask" icon="spark">
-          <div className="prompt-suggestions flex flex-col gap-2">
-            {["Explain this with a small example","Give me one hint to get started","Quiz me on this idea","Review my reasoning"].map((text,i)=>(
-              <button type="button" className="cursor-pointer" key={i} onClick={()=>{setPrompt(text);if(i===1)setMode("Hint");if(i===2)setMode("Quiz me");if(i===3)setMode("Review my work");}}>{text} <span>↗</span></button>
+          <div className="prompt-suggestions flex flex-col gap-1.5 p-3">
+            {[
+              "Explain this with a small example",
+              "Give me one hint to get started",
+              "Quiz me on this idea",
+              "Review my reasoning",
+            ].map((text, i) => (
+              <button
+                type="button"
+                className="tutor-suggestion-chip"
+                key={i}
+                onClick={() => {
+                  setPrompt(text);
+                  if (i === 1) setMode("Hint");
+                  if (i === 2) setMode("Quiz me");
+                  if (i === 3) setMode("Review my work");
+                }}
+              >
+                <span>{text}</span>
+                <Icon name="arrowRight" size={12} />
+              </button>
             ))}
           </div>
         </Panel>

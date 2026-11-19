@@ -1803,37 +1803,89 @@ export async function generatePracticeExercises({
     checkpointQuestion: checkpointQuestion || null,
   };
 
-  const res = await chat(candidates, {
-    stageName: "practice_generate",
-    deadline,
-    maxTokens: mode === "mixed" ? 2400 : 1700,
-    json: true,
-    messages: [
-      {
-        role: "system",
-        content: buildPracticeSystemPrompt(mode),
-      },
-      {
-        role: "user",
-        content: JSON.stringify({
-          mode,
-          lesson: lessonPayload,
-          excludeQuestions: exclusions,
-          learnerMemory: contextForPrompt(Array.isArray(memory) ? memory : []).slice(0, 5),
-        }),
-      },
-    ],
+  const userPayloadString = JSON.stringify({
+    mode,
+    lesson: lessonPayload,
+    excludeQuestions: exclusions,
+    learnerMemory: contextForPrompt(Array.isArray(memory) ? memory : []).slice(0, 5),
   });
 
-  const exercises = normalizePracticeExercises(res.result, mode);
+  const maxAttempts = Math.min(3, Math.max(2, candidates.length));
+  let lastError = null;
+  let lastRes = null;
+  let activeCandidates = candidates;
+  let totalFailoverCount = 0;
 
-  return {
-    exercises,
-    mode,
-    source: res.provider,
-    model: res.model,
-    failoverCount: res.failoverCount,
-  };
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const isRetry = attempt > 1;
+      const stageName = isRetry ? `practice_generate_retry_${attempt}` : "practice_generate";
+
+      const messages = [
+        {
+          role: "system",
+          content: buildPracticeSystemPrompt(mode),
+        },
+        {
+          role: "user",
+          content: userPayloadString,
+        },
+      ];
+
+      if (isRetry && lastError) {
+        const lastOutputStr = typeof lastRes?.result === "string"
+          ? lastRes.result
+          : JSON.stringify(lastRes?.result || "");
+        if (lastOutputStr) {
+          messages.push({
+            role: "assistant",
+            content: shortText(lastOutputStr, 2500),
+          });
+        }
+        messages.push({
+          role: "user",
+          content: `Your previous response was invalid or failed JSON parsing with error: "${lastError.message || "Invalid exercises JSON schema"}". Output ONLY valid, parseable JSON matching {"exercises": [...]} strictly following the required fields for practice mode "${mode}". Do NOT include markdown fences, comments, or extra text.`,
+        });
+      }
+
+      const res = await chat(activeCandidates, {
+        stageName,
+        deadline,
+        maxTokens: mode === "mixed" ? 2600 : 1800,
+        json: true,
+        messages,
+      });
+
+      lastRes = res;
+      totalFailoverCount += (res.failoverCount || 0);
+
+      const exercises = normalizePracticeExercises(res.result, mode);
+      if (!exercises || !exercises.length) {
+        throw aiError("AI_INVALID_PRACTICE", `AI generated 0 valid exercises for mode "${mode}".`, { retryable: true });
+      }
+
+      return {
+        exercises,
+        mode,
+        source: res.provider,
+        model: res.model,
+        failoverCount: totalFailoverCount,
+      };
+    } catch (err) {
+      lastError = err;
+      if (attempt >= maxAttempts) {
+        break;
+      }
+      if (lastRes?.candidateKey && candidates.length > 1) {
+        activeCandidates = candidates.filter((c) => candidateKey(c) !== lastRes.candidateKey);
+        if (!activeCandidates.length) activeCandidates = candidates;
+      }
+    }
+  }
+
+  throw lastError || aiError("AI_INVALID_PRACTICE", "The AI did not return valid practice exercises after multiple attempts. Retry generation.", {
+    retryable: true,
+  });
 }
 
 const VALID_FLASHCARD_TYPES = new Set(["qa", "cloze", "formula", "application"]);
@@ -1958,23 +2010,69 @@ export async function generateFlashcards({
     learnerMemory: contextForPrompt(Array.isArray(memory) ? memory : []).slice(0, 5),
   };
 
-  const res = await chat(candidates, {
-    stageName: "flashcard_generate",
-    deadline,
-    maxTokens: Math.min(2800, 700 + targetCount * 240),
-    json: true,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: JSON.stringify(userPayload) },
-    ],
-  });
+  const maxAttempts = Math.min(3, Math.max(2, candidates.length));
+  let lastError = null;
+  let lastRes = null;
+  let activeCandidates = candidates;
+  let totalFailoverCount = 0;
 
-  const flashcards = normalizeGeneratedFlashcards(res.result, existingFronts).slice(0, targetCount);
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const isRetry = attempt > 1;
+      const stageName = isRetry ? `flashcard_generate_retry_${attempt}` : "flashcard_generate";
 
-  return {
-    flashcards,
-    source: res.provider,
-    model: res.model,
-    failoverCount: res.failoverCount,
-  };
+      const messages = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: JSON.stringify(userPayload) },
+      ];
+
+      if (isRetry && lastError) {
+        const lastOutputStr = typeof lastRes?.result === "string"
+          ? lastRes.result
+          : JSON.stringify(lastRes?.result || "");
+        if (lastOutputStr) {
+          messages.push({
+            role: "assistant",
+            content: shortText(lastOutputStr, 2500),
+          });
+        }
+        messages.push({
+          role: "user",
+          content: `Your previous response failed parsing or schema validation: "${lastError.message || "Invalid flashcards format"}". Please output ONLY valid, unescaped JSON matching {"flashcards": [{"front": string, "back": string, "hint": string, "cardType": "qa"|"cloze"|"formula"|"application"}]}. No markdown fences or commentary.`,
+        });
+      }
+
+      const res = await chat(activeCandidates, {
+        stageName,
+        deadline,
+        maxTokens: Math.min(2800, 700 + targetCount * 240),
+        json: true,
+        messages,
+      });
+
+      lastRes = res;
+      totalFailoverCount += (res.failoverCount || 0);
+
+      const flashcards = normalizeGeneratedFlashcards(res.result, existingFronts).slice(0, targetCount);
+      if (!flashcards.length) {
+        throw aiError("INVALID_AI_OUTPUT", "AI returned no usable flashcards.");
+      }
+
+      return {
+        flashcards,
+        source: res.provider,
+        model: res.model,
+        failoverCount: totalFailoverCount,
+      };
+    } catch (err) {
+      lastError = err;
+      if (attempt >= maxAttempts) break;
+      if (lastRes?.candidateKey && candidates.length > 1) {
+        activeCandidates = candidates.filter((c) => candidateKey(c) !== lastRes.candidateKey);
+        if (!activeCandidates.length) activeCandidates = candidates;
+      }
+    }
+  }
+
+  throw lastError || aiError("INVALID_AI_OUTPUT", "AI returned no usable flashcards after multiple attempts. Refine the topic or try again.", { retryable: true });
 }

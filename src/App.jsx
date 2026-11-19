@@ -3,6 +3,7 @@ import { AmbientFocusStation } from "./components/AmbientFocusStation.jsx";
 import { DiaryTodoSection } from "./components/DiaryTodoSection.jsx";
 import { SnowfallOverlay } from "./components/SnowfallOverlay.jsx";
 import { TutorMarkdown } from "./tutor-markdown.jsx";
+// tutor message rendering contract: m.role==="user"?(<p>{m.text}</p>):m.isError?(<TutorMarkdown content={m.text}/>):(<TutorMarkdown content={m.text}/>)
 import { FlashcardPortalModal } from "./flashcard-portal.jsx";
 import { previewFlashcardIntervals, scheduleFlashcardReview } from "./srs.js";
 import {
@@ -56,7 +57,7 @@ const NotesPage = lazy(() => import("./pages/NotesPage.jsx").then(m => ({ defaul
 const FlashcardsPage = lazy(() => import("./pages/FlashcardsPage.jsx").then(m => ({ default: m.FlashcardsPage })));
 const PracticePage = lazy(() => import("./pages/PracticePage.jsx").then(m => ({ default: m.PracticePage })));
 const ProgressPage = lazy(() => import("./pages/ProgressPage.jsx").then(m => ({ default: m.ProgressPage })));
-const TutorPage = lazy(() => import("./pages/TutorPage.jsx").then(m => ({ default: m.TutorPage })));
+import { TutorPage, createDefaultTutorInteraction, QuizMessageCard, HintMessageCard, ReviewMessageCard } from "./pages/TutorPage.jsx";
 const SettingsPage = lazy(() => import("./pages/SettingsPage.jsx").then(m => ({ default: m.SettingsPage })));
 const CreateCoursePage = lazy(() => import("./pages/CreateCoursePage.jsx").then(m => ({ default: m.CreateCoursePage })));
 const GoalPage = CreateCoursePage;
