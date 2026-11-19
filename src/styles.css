@@ -2726,21 +2726,27 @@
     }
     .flashcards-layout {
       display: grid !important;
-      grid-template-columns: minmax(0, 1fr) 390px !important;
+      grid-template-columns: minmax(0, 1.35fr) 440px !important;
       align-items: start !important;
-      gap: 32px !important;
+      gap: 24px !important;
       width: 100% !important;
     }
     @media (min-width: 1280px) {
       .flashcards-layout {
-        grid-template-columns: minmax(0, 1fr) 400px !important;
-        gap: 36px !important;
+        grid-template-columns: minmax(0, 1.35fr) 460px !important;
+        gap: 26px !important;
+      }
+    }
+    @media (min-width: 1536px) {
+      .flashcards-layout {
+        grid-template-columns: minmax(0, 1.4fr) 490px !important;
+        gap: 28px !important;
       }
     }
     @media (max-width: 1024px) {
       .flashcards-layout {
         grid-template-columns: 1fr !important;
-        gap: 24px !important;
+        gap: 20px !important;
       }
     }
     .flash-main {
@@ -2748,8 +2754,8 @@
       flex-direction: column;
       gap: 16px;
       min-width: 0;
-      width: 100%;
-      max-width: 760px;
+      width: 100% !important;
+      max-width: 100% !important;
     }
 
     /* Review Progress Header */
@@ -2800,8 +2806,8 @@
        ========================================================================== */
     .flashcard-scene {
       position: relative;
-      width: 100%;
-      max-width: 760px;
+      width: 100% !important;
+      max-width: 100% !important;
       perspective: 1200px;
       -webkit-perspective: 1200px;
     }
@@ -2813,7 +2819,7 @@
       grid-template-areas: "card";
       transform-style: preserve-3d;
       -webkit-transform-style: preserve-3d;
-      transition: transform 0.55s cubic-bezier(0.23, 1, 0.32, 1);
+      transition: transform 0.52s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       border-radius: 20px;
       outline: none;
@@ -2845,14 +2851,14 @@
       -webkit-backface-visibility: hidden !important;
       transform-style: preserve-3d;
       -webkit-transform-style: preserve-3d;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
       animation: none !important;
+      background-color: #0B0E14 !important;
     }
 
     /* Front Face (Question) */
     .flashcard-face-front {
-      transform: rotateY(0deg);
+      transform: rotateY(0deg) translateZ(1px);
+      -webkit-transform: rotateY(0deg) translateZ(1px);
       background-color: #0A0D13 !important;
       background-image:
         radial-gradient(ellipse 90% 50% at 50% -10%, rgba(226, 232, 240, 0.08) 0%, transparent 65%),
@@ -2860,9 +2866,9 @@
       box-shadow:
         0 18px 42px -10px rgba(0, 0, 0, 0.65),
         inset 0 1px 0 rgba(255, 255, 255, 0.13) !important;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.05s ease 0.26s;
     }
-    .flashcard-face-front:hover {
+    .flashcard-flipper:hover .flashcard-face-front {
       border-color: rgba(226, 232, 240, 0.32) !important;
       box-shadow:
         0 22px 50px -8px rgba(0, 0, 0, 0.75),
@@ -2871,17 +2877,20 @@
     }
     .flashcard-scene.is-flipped .flashcard-face-front {
       pointer-events: none;
+      opacity: 0;
       visibility: hidden;
-      transition: visibility 0s 0.28s;
+      transition: opacity 0.05s ease 0.26s, visibility 0s 0.26s;
     }
     .flashcard-scene:not(.is-flipped) .flashcard-face-front {
+      opacity: 1;
       visibility: visible;
-      transition: visibility 0s 0s;
+      transition: opacity 0.05s ease 0.26s, visibility 0s 0s;
     }
 
     /* Back Face (Answer) */
     .flashcard-face-back {
-      transform: rotateY(180deg);
+      transform: rotateY(180deg) translateZ(1px);
+      -webkit-transform: rotateY(180deg) translateZ(1px);
       background-color: #0C1017 !important;
       background-image:
         radial-gradient(ellipse 90% 50% at 50% -10%, rgba(226, 232, 240, 0.09) 0%, transparent 65%),
@@ -2889,19 +2898,21 @@
       box-shadow:
         0 18px 42px -10px rgba(0, 0, 0, 0.7),
         inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.05s ease 0.26s;
     }
-    .flashcard-face-back:hover {
+    .flashcard-flipper:hover .flashcard-face-back {
       border-color: rgba(226, 232, 240, 0.32) !important;
     }
     .flashcard-scene:not(.is-flipped) .flashcard-face-back {
       pointer-events: none;
+      opacity: 0;
       visibility: hidden;
-      transition: visibility 0s 0.28s;
+      transition: opacity 0.05s ease 0.26s, visibility 0s 0.26s;
     }
     .flashcard-scene.is-flipped .flashcard-face-back {
+      opacity: 1;
       visibility: visible;
-      transition: visibility 0s 0s;
+      transition: opacity 0.05s ease 0.26s, visibility 0s 0s;
     }
 
     .flashcard-face-top {
@@ -2955,7 +2966,7 @@
     }
 
     .flashcard-rich-body {
-      max-width: 600px;
+      max-width: 760px;
       width: 100%;
       margin: 12px 0 16px;
     }
@@ -5403,6 +5414,77 @@
       font-size: 15.5px;
       line-height: 1.75;
       letter-spacing: -0.01em;
+      width: 100%;
+    }
+    .lesson-example-card .tutor-markdown {
+      margin-top: 0;
+      color: #E2E8F0 !important;
+      font-family: var(--font-ui, 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif) !important;
+      font-size: 15.5px !important;
+      line-height: 1.75 !important;
+      letter-spacing: -0.01em !important;
+      width: 100%;
+    }
+    .lesson-example-card .tutor-markdown p {
+      margin: 0 0 14px 0 !important;
+      color: #E2E8F0 !important;
+      font-size: 15.5px !important;
+      line-height: 1.75 !important;
+    }
+    .lesson-example-card .tutor-markdown p:last-child {
+      margin-bottom: 0 !important;
+    }
+    .lesson-example-card .tutor-markdown strong {
+      color: #FFFFFF !important;
+      font-weight: 700 !important;
+    }
+    .lesson-example-card .tutor-markdown em {
+      color: #FDE68A !important;
+      font-style: italic;
+    }
+    .lesson-example-card .tutor-markdown code {
+      font-size: 0.9em !important;
+      background: rgba(226, 232, 240, 0.08) !important;
+      color: #F8FAFC !important;
+      border: 1px solid rgba(226, 232, 240, 0.16) !important;
+      border-radius: 6px !important;
+      padding: 2px 6px !important;
+    }
+    .lesson-example-card .tutor-markdown pre {
+      margin: 14px 0 !important;
+      border-radius: 12px !important;
+      background: #090B10 !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      padding: 16px 20px !important;
+      overflow-x: auto;
+    }
+    .lesson-example-card .tutor-markdown pre code {
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      font-size: 13.5px !important;
+      line-height: 1.6 !important;
+      color: #E2E8F0 !important;
+    }
+    .lesson-example-card .tutor-markdown ul,
+    .lesson-example-card .tutor-markdown ol {
+      margin: 10px 0 16px 24px !important;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .lesson-example-card .tutor-markdown li {
+      color: #E2E8F0 !important;
+      font-size: 15.5px !important;
+      line-height: 1.65 !important;
+    }
+    .lesson-example-card .tutor-markdown blockquote {
+      margin: 14px 0 !important;
+      padding: 12px 18px !important;
+      border-left: 3px solid #F59E0B !important;
+      background: rgba(245, 158, 11, 0.06) !important;
+      border-radius: 0 10px 10px 0 !important;
+      color: #CBD5E1 !important;
     }
 
     /* Clean Understanding Checkpoint */
@@ -5637,20 +5719,33 @@
 
     /* Curriculum Rail (Course Outline Sidebar) */
     .lesson-curriculum-rail {
-      position: sticky;
-      top: 80px;
+      position: -webkit-sticky !important;
+      position: sticky !important;
+      top: 96px !important;
+      align-self: start !important;
+      height: -webkit-fit-content !important;
+      height: -moz-fit-content !important;
+      height: fit-content !important;
       display: flex;
       flex-direction: column;
       width: 100%;
+      z-index: 25;
     }
     .curriculum-rail-card {
+      position: -webkit-sticky !important;
+      position: sticky !important;
+      top: 96px !important;
       padding: 20px;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.025);
+      background: rgba(17, 18, 29, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
       display: flex;
       flex-direction: column;
       gap: 16px;
+      max-height: calc(100vh - 120px);
     }
     .curriculum-rail-header {
       display: flex;
@@ -5681,9 +5776,26 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
-      max-height: calc(100vh - 240px);
+      flex: 1 1 auto;
+      max-height: calc(100vh - 200px);
       overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
       padding-right: 4px;
+    }
+    .curriculum-rail-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .curriculum-rail-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .curriculum-rail-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+    }
+    .curriculum-rail-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.22);
     }
     .curriculum-module-section {
       display: flex;
@@ -5774,11 +5886,17 @@
         gap: 28px;
       }
       .lesson-curriculum-rail {
-        position: static;
-        max-height: none;
+        position: static !important;
+        max-height: none !important;
+        top: auto !important;
+      }
+      .curriculum-rail-card {
+        position: static !important;
+        top: auto !important;
+        max-height: none !important;
       }
       .curriculum-rail-scroll {
-        max-height: 360px;
+        max-height: 360px !important;
       }
     }
 
@@ -8356,10 +8474,8 @@
         border-color: var(--accent-soft);
         box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2), 0 0 14px var(--color-accent-soft);
       }
-      .flashcard-face:hover {
-        transform: translateY(-2px);
-        border-color: var(--line-accent);
-        box-shadow: 0 24px 56px rgba(0, 0, 0, 0.24), 0 0 28px var(--color-accent-soft);
+      .flashcard-flipper:hover {
+        border-color: rgba(226, 232, 240, 0.25);
       }
     }
 
@@ -8368,16 +8484,12 @@
     .library-course:active,
     .saved-room-card:active,
     .task-row:active,
-    .detail-module:active,
-    .flashcard-face:active {
+    .detail-module:active {
       transform: translateY(0) scale(0.996);
       transition-duration: 0.1s;
     }
 
-    /* Flashcard answer reveal micro-animation */
-    .flashcard-face.revealed {
-      animation: dzFlashcardReveal 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
+    /* Flashcard answer reveal micro-animation retired in favor of 3D flip */
 
     /* Cute & Friendly UI Illustrations & Transparent Assets */
     .empty-illustration-wrap {
@@ -29732,6 +29844,47 @@ body:has(.app-shell[data-page="notes"]),
   width: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
+}
+
+/* Lesson Page Sticky Architecture & Desktop Fixed Course Outline */
+html:has(.app-shell-lesson-page),
+body:has(.app-shell-lesson-page),
+html:has(.app-shell[data-page="lesson"]),
+body:has(.app-shell[data-page="lesson"]) {
+  overflow-x: clip !important;
+}
+
+.app-shell.app-shell-lesson-page,
+.app-shell[data-page="lesson"] {
+  overflow: visible !important;
+}
+
+.app-shell.app-shell-lesson-page .main,
+.app-shell[data-page="lesson"] .main {
+  overflow: visible !important;
+  contain: none !important;
+  transform: none !important;
+}
+
+.workspace-lesson-page,
+.workspace-page.workspace-lesson-page,
+.app-shell[data-page="lesson"] .workspace-page,
+.workspace-page:has(.lesson-workspace-page) {
+  animation: none !important;
+  transform: none !important;
+  contain: none !important;
+  overflow: visible !important;
+}
+
+.lesson-workspace-page {
+  contain: none !important;
+  overflow: visible !important;
+}
+
+.lesson-main-grid {
+  align-items: start !important;
+  position: relative !important;
+  overflow: visible !important;
 }
 
 .profile-page-wrapper {

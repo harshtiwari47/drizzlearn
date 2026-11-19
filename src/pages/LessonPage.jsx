@@ -360,7 +360,9 @@ export function LessonPage(p) {
                 <Icon name="spark" size={14} />
                 <span>Worked example</span>
               </div>
-              <p className="example-text">{sanitizeLessonReading(lesson.worked_example || lesson.workedExample)}</p>
+              <div className="example-text lesson-example-content">
+                <TutorMarkdown content={sanitizeLessonReading(lesson.worked_example || lesson.workedExample)} />
+              </div>
             </section>
           )}
 
