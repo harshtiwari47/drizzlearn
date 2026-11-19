@@ -342,8 +342,9 @@ function PageContent(props){
   const isProgressPage = page === "progress";
   const isLessonPage = page === "lesson";
   const isFlashcardsPage = page === "flashcards";
-  const isDedicatedFlow = isCreatePage || isProposalPage || isCourseDetailPage || isTodayPage || isStudyTogetherPage || isProfilePage || isNotesPage || isProgressPage || isLessonPage;
-  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""} ${isCourseDetailPage ? "workspace-course-detail-page" : ""} ${isTodayPage ? "workspace-today-page" : ""} ${isStudyTogetherPage ? "workspace-study-together-page" : ""} ${isProfilePage ? "workspace-profile-page" : ""} ${isNotesPage ? "workspace-notes-page" : ""} ${isProgressPage ? "workspace-progress-page" : ""} ${isLessonPage ? "workspace-lesson-page" : ""} ${isFlashcardsPage ? "workspace-flashcards-page" : ""}`}>
+  const isPracticePage = page === "practice";
+  const isDedicatedFlow = isCreatePage || isProposalPage || isCourseDetailPage || isTodayPage || isStudyTogetherPage || isProfilePage || isNotesPage || isProgressPage || isLessonPage || isPracticePage;
+  return <div className={`workspace-page ${isCreatePage ? "workspace-create-course-page" : ""} ${isProposalPage ? "workspace-proposal-page" : ""} ${isCourseDetailPage ? "workspace-course-detail-page" : ""} ${isTodayPage ? "workspace-today-page" : ""} ${isStudyTogetherPage ? "workspace-study-together-page" : ""} ${isProfilePage ? "workspace-profile-page" : ""} ${isNotesPage ? "workspace-notes-page" : ""} ${isProgressPage ? "workspace-progress-page" : ""} ${isLessonPage ? "workspace-lesson-page" : ""} ${isFlashcardsPage ? "workspace-flashcards-page" : ""} ${isPracticePage ? "workspace-practice-page" : ""}`}>
     {!isDedicatedFlow && <PageContextBar context={routeContext} go={go}/>}
     {!isDedicatedFlow && (
       <div className={`page-heading ${page==="lesson"?"page-heading-lesson":""} ${page==="goal"?"page-heading-goal":""}`}>

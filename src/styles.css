@@ -12409,22 +12409,102 @@
       flex-shrink: 0;
     }
 
-    /* Practice Studio Aesthetic Header & Selectors */
+    /* Whole Page Atmospheric Dark Gradient for Practice Page */
+    .workspace-practice-page {
+      min-height: calc(100vh - 80px);
+      background: 
+        radial-gradient(1200px 750px at 15% -5%, rgba(67, 56, 202, 0.22), transparent 60%),
+        radial-gradient(1000px 650px at 85% 15%, rgba(14, 165, 233, 0.16), transparent 65%),
+        radial-gradient(900px 700px at 50% 85%, rgba(16, 185, 129, 0.10), transparent 70%),
+        radial-gradient(1100px 850px at 90% 90%, rgba(244, 63, 94, 0.10), transparent 65%),
+        linear-gradient(180deg, #07090e 0%, #0b0e17 40%, #06080d 100%);
+      background-attachment: fixed;
+      padding: 24px 32px 56px;
+    }
+    @media (max-width: 768px) {
+      .workspace-practice-page {
+        padding: 16px 16px 40px;
+      }
+    }
+
+    /* Practice Layout without outer card wrapper */
+    .practice-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.78fr);
+      align-items: start;
+      gap: 24px;
+      width: 100%;
+    }
+    @media (max-width: 990px) {
+      .practice-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .practice-main-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+    }
+
+    /* Practice Studio Header */
+    .practice-hero-header {
+      padding: 4px 2px 2px;
+    }
+    .practice-hero-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: rgba(14, 165, 233, 0.14);
+      border: 1px solid rgba(14, 165, 233, 0.32);
+      color: #38bdf8;
+      box-shadow: 0 0 18px rgba(14, 165, 233, 0.2);
+    }
+    .practice-hero-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+    }
+    .practice-hero-subtitle {
+      margin: 3px 0 0;
+      font-size: 13.5px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
     .practice-header-badge {
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      padding: 4px 11px;
+      padding: 5px 12px;
       border-radius: var(--radius-pill, 9999px);
-      background: rgba(139, 92, 246, 0.12);
-      border: 1px solid rgba(139, 92, 246, 0.28);
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.35);
       color: #c4b5fd;
       font-size: 11.5px;
       font-weight: 700;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.03em;
       text-transform: uppercase;
+      box-shadow: 0 0 12px rgba(139, 92, 246, 0.15);
     }
 
+    /* Topic Selectors Bar */
+    .practice-selectors-bar {
+      background: rgba(16, 20, 34, 0.65);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 16px;
+      padding: 16px 18px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    }
     .practice-field-label {
       display: flex;
       flex-direction: column;
@@ -12433,78 +12513,81 @@
     .practice-field-title {
       font-size: 12.5px;
       font-weight: 600;
-      color: var(--desert-sand);
+      color: #e2e8f0;
       letter-spacing: 0.01em;
     }
     .practice-select {
       width: 100%;
       min-height: 44px;
       padding: 9px 14px;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
-      background: rgba(15, 17, 26, 0.75);
-      color: var(--soft-blush);
+      background: rgba(10, 13, 22, 0.85);
+      color: #f8fafc;
       font-family: var(--font-body);
-      font-size: 13.5px;
+      font-size: 14px;
       font-weight: 500;
       outline: none;
       transition: border-color 0.16s ease, box-shadow 0.16s ease;
     }
     .practice-select:focus {
-      border-color: var(--line-accent);
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.16);
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
     }
 
     /* Practice Navigation Bar (Tabs) */
     .practice-mode-nav {
       display: flex;
       align-items: center;
-      gap: 7px;
-      padding: 5px;
+      gap: 6px;
+      padding: 6px;
       border-radius: 14px;
-      background: rgba(14, 16, 24, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      margin-bottom: 4px;
+      background: rgba(14, 18, 30, 0.7);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     }
     .practice-nav-tab {
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      min-height: 36px;
-      padding: 6px 14px;
+      min-height: 38px;
+      padding: 6px 15px;
       border: 1px solid transparent;
       border-radius: 10px;
       background: transparent;
-      color: var(--muted);
+      color: #cbd5e1;
       font-family: var(--font-ui);
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
       white-space: nowrap;
     }
     .practice-nav-tab:hover {
-      color: var(--soft-blush);
-      background: rgba(255, 255, 255, 0.04);
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.07);
     }
     .practice-nav-tab.selected {
       color: #ffffff;
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.12);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
     }
     .practice-tab-icon {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      opacity: 0.85;
+      opacity: 0.9;
     }
     .practice-tab-badge {
       display: inline-flex;
       align-items: center;
       padding: 2px 6px;
       border-radius: 9999px;
-      background: rgba(16, 185, 129, 0.18);
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.35);
       color: #34d399;
       font-size: 10px;
       font-weight: 700;
@@ -12515,22 +12598,22 @@
     .practice-hub-view {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
     }
     .practice-hub-intro {
-      padding: 4px 2px;
+      padding: 2px 2px;
     }
     .practice-hub-title {
       font-family: var(--font-display);
-      font-size: 21px;
+      font-size: 22px;
       font-weight: 700;
-      color: var(--soft-blush);
+      color: #f8fafc;
       letter-spacing: -0.02em;
       margin: 0 0 4px;
     }
     .practice-hub-subtitle {
-      font-size: 13.5px;
-      color: var(--muted);
+      font-size: 14px;
+      color: #94a3b8;
       line-height: 1.5;
       margin: 0;
     }
@@ -12552,10 +12635,12 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
-      padding: 20px 22px;
+      padding: 22px 24px;
       border-radius: 18px;
-      background: linear-gradient(150deg, rgba(20, 23, 34, 0.95), rgba(12, 14, 22, 0.98));
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(16, 20, 34, 0.72);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1.5px solid rgba(255, 255, 255, 0.09);
       cursor: pointer;
       transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
                   border-color 0.22s ease,
@@ -12574,77 +12659,77 @@
     }
     .practice-bento-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 16px 38px rgba(0, 0, 0, 0.5);
     }
     .practice-bento-card:hover::before {
       opacity: 1;
     }
 
-    /* Distinct Aesthetic Card Colorways */
+    /* Distinct Aesthetic Card Colorways with Clear Glow */
     .bento-accent-emerald {
-      border-color: rgba(16, 185, 129, 0.18);
+      border-color: rgba(16, 185, 129, 0.25);
     }
     .bento-accent-emerald::before {
-      background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 70%);
+      background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.16), transparent 70%);
     }
     .bento-accent-emerald:hover {
-      border-color: rgba(16, 185, 129, 0.42);
-      box-shadow: 0 12px 32px rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.55);
+      box-shadow: 0 16px 38px rgba(16, 185, 129, 0.16);
     }
 
     .bento-accent-violet {
-      border-color: rgba(139, 92, 246, 0.18);
+      border-color: rgba(139, 92, 246, 0.25);
     }
     .bento-accent-violet::before {
-      background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.12), transparent 70%);
+      background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.16), transparent 70%);
     }
     .bento-accent-violet:hover {
-      border-color: rgba(139, 92, 246, 0.42);
-      box-shadow: 0 12px 32px rgba(139, 92, 246, 0.12);
+      border-color: rgba(139, 92, 246, 0.55);
+      box-shadow: 0 16px 38px rgba(139, 92, 246, 0.16);
     }
 
     .bento-accent-cyan {
-      border-color: rgba(6, 182, 212, 0.18);
+      border-color: rgba(6, 182, 212, 0.25);
     }
     .bento-accent-cyan::before {
-      background: radial-gradient(circle at top right, rgba(6, 182, 212, 0.12), transparent 70%);
+      background: radial-gradient(circle at top right, rgba(6, 182, 212, 0.16), transparent 70%);
     }
     .bento-accent-cyan:hover {
-      border-color: rgba(6, 182, 212, 0.42);
-      box-shadow: 0 12px 32px rgba(6, 182, 212, 0.12);
+      border-color: rgba(6, 182, 212, 0.55);
+      box-shadow: 0 16px 38px rgba(6, 182, 212, 0.16);
     }
 
     .bento-accent-amber {
-      border-color: rgba(245, 158, 11, 0.18);
+      border-color: rgba(245, 158, 11, 0.25);
     }
     .bento-accent-amber::before {
-      background: radial-gradient(circle at top right, rgba(245, 158, 11, 0.12), transparent 70%);
+      background: radial-gradient(circle at top right, rgba(245, 158, 11, 0.16), transparent 70%);
     }
     .bento-accent-amber:hover {
-      border-color: rgba(245, 158, 11, 0.42);
-      box-shadow: 0 12px 32px rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.55);
+      box-shadow: 0 16px 38px rgba(245, 158, 11, 0.16);
     }
 
     .bento-accent-rose {
-      border-color: rgba(244, 63, 94, 0.18);
+      border-color: rgba(244, 63, 94, 0.25);
     }
     .bento-accent-rose::before {
-      background: radial-gradient(circle at top right, rgba(244, 63, 94, 0.12), transparent 70%);
+      background: radial-gradient(circle at top right, rgba(244, 63, 94, 0.16), transparent 70%);
     }
     .bento-accent-rose:hover {
-      border-color: rgba(244, 63, 94, 0.42);
-      box-shadow: 0 12px 32px rgba(244, 63, 94, 0.12);
+      border-color: rgba(244, 63, 94, 0.55);
+      box-shadow: 0 16px 38px rgba(244, 63, 94, 0.16);
     }
 
     .bento-accent-lime {
-      border-color: rgba(132, 204, 22, 0.18);
+      border-color: rgba(132, 204, 22, 0.25);
     }
     .bento-accent-lime::before {
-      background: radial-gradient(circle at top right, rgba(132, 204, 22, 0.12), transparent 70%);
+      background: radial-gradient(circle at top right, rgba(132, 204, 22, 0.16), transparent 70%);
     }
     .bento-accent-lime:hover {
-      border-color: rgba(132, 204, 22, 0.42);
-      box-shadow: 0 12px 32px rgba(132, 204, 22, 0.12);
+      border-color: rgba(132, 204, 22, 0.55);
+      box-shadow: 0 16px 38px rgba(132, 204, 22, 0.16);
     }
 
     /* Bento Card Header & Icon */
@@ -12655,41 +12740,41 @@
       width: 44px;
       height: 44px;
       border-radius: 13px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       transition: transform 0.2s ease;
     }
     .practice-bento-card:hover .bento-icon-box {
-      transform: scale(1.05);
+      transform: scale(1.06);
     }
     .bento-icon-box.accent-emerald {
-      background: rgba(16, 185, 129, 0.12);
-      border-color: rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.16);
+      border-color: rgba(16, 185, 129, 0.4);
       color: #34d399;
     }
     .bento-icon-box.accent-violet {
-      background: rgba(139, 92, 246, 0.12);
-      border-color: rgba(139, 92, 246, 0.3);
-      color: #a78bfa;
+      background: rgba(139, 92, 246, 0.16);
+      border-color: rgba(139, 92, 246, 0.4);
+      color: #c4b5fd;
     }
     .bento-icon-box.accent-cyan {
-      background: rgba(6, 182, 212, 0.12);
-      border-color: rgba(6, 182, 212, 0.3);
+      background: rgba(6, 182, 212, 0.16);
+      border-color: rgba(6, 182, 212, 0.4);
       color: #38bdf8;
     }
     .bento-icon-box.accent-amber {
-      background: rgba(245, 158, 11, 0.12);
-      border-color: rgba(245, 158, 11, 0.3);
+      background: rgba(245, 158, 11, 0.16);
+      border-color: rgba(245, 158, 11, 0.4);
       color: #fbbf24;
     }
     .bento-icon-box.accent-rose {
-      background: rgba(244, 63, 94, 0.12);
-      border-color: rgba(244, 63, 94, 0.3);
+      background: rgba(244, 63, 94, 0.16);
+      border-color: rgba(244, 63, 94, 0.4);
       color: #fb7185;
     }
     .bento-icon-box.accent-lime {
-      background: rgba(132, 204, 22, 0.12);
-      border-color: rgba(132, 204, 22, 0.3);
+      background: rgba(132, 204, 22, 0.16);
+      border-color: rgba(132, 204, 22, 0.4);
       color: #a3e635;
     }
 
@@ -12697,10 +12782,10 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 3px 8px;
+      padding: 3px 9px;
       border-radius: 9999px;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid rgba(16, 185, 129, 0.38);
       color: #34d399;
       font-size: 11px;
       font-weight: 700;
@@ -12708,44 +12793,44 @@
     .bento-badge-category {
       display: inline-flex;
       align-items: center;
-      padding: 3px 9px;
+      padding: 3px 10px;
       border-radius: 9999px;
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.02em;
     }
     .bento-badge-category.accent-emerald {
-      background: rgba(16, 185, 129, 0.1);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.25);
+      background: rgba(16, 185, 129, 0.14);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.35);
     }
     .bento-badge-category.accent-violet {
-      background: rgba(139, 92, 246, 0.1);
-      color: #c4b5fd;
-      border: 1px solid rgba(139, 92, 246, 0.25);
+      background: rgba(139, 92, 246, 0.14);
+      color: #ddd6fe;
+      border: 1px solid rgba(139, 92, 246, 0.35);
     }
     .bento-badge-category.accent-cyan {
-      background: rgba(6, 182, 212, 0.1);
-      color: #7dd3fc;
-      border: 1px solid rgba(6, 182, 212, 0.25);
+      background: rgba(6, 182, 212, 0.14);
+      color: #bae6fd;
+      border: 1px solid rgba(6, 182, 212, 0.35);
     }
     .bento-badge-category.accent-amber {
-      background: rgba(245, 158, 11, 0.1);
-      color: #fde68a;
-      border: 1px solid rgba(245, 158, 11, 0.25);
+      background: rgba(245, 158, 11, 0.14);
+      color: #fef3c7;
+      border: 1px solid rgba(245, 158, 11, 0.35);
     }
     .bento-badge-category.accent-rose {
-      background: rgba(244, 63, 94, 0.1);
-      color: #fecdd3;
-      border: 1px solid rgba(244, 63, 94, 0.25);
+      background: rgba(244, 63, 94, 0.14);
+      color: #ffe4e6;
+      border: 1px solid rgba(244, 63, 94, 0.35);
     }
     .bento-badge-category.accent-lime {
-      background: rgba(132, 204, 22, 0.1);
-      color: #d9f99d;
-      border: 1px solid rgba(132, 204, 22, 0.25);
+      background: rgba(132, 204, 22, 0.14);
+      color: #ecfccb;
+      border: 1px solid rgba(132, 204, 22, 0.35);
     }
 
-    /* Bento Titles & Descriptions */
+    /* Bento Titles & Descriptions (High Readability!) */
     .bento-title-row {
       display: flex;
       flex-direction: column;
@@ -12754,145 +12839,164 @@
     .bento-card-title {
       margin: 0;
       font-family: var(--font-display);
-      font-size: 18px;
+      font-size: 19px;
       font-weight: 700;
-      color: var(--soft-blush);
+      color: #ffffff;
       letter-spacing: -0.02em;
     }
     .bento-card-tagline {
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 600;
-      color: var(--desert-sand);
-      opacity: 0.9;
+      letter-spacing: 0.01em;
     }
+    .bento-card-tagline.accent-emerald { color: #6ee7b7; }
+    .bento-card-tagline.accent-violet { color: #c4b5fd; }
+    .bento-card-tagline.accent-cyan { color: #7dd3fc; }
+    .bento-card-tagline.accent-amber { color: #fde68a; }
+    .bento-card-tagline.accent-rose { color: #fecdd3; }
+    .bento-card-tagline.accent-lime { color: #d9f99d; }
+
     .bento-card-desc {
       margin: 0;
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
+      font-size: 13.5px;
+      color: #cbd5e1;
+      line-height: 1.55;
     }
 
     /* Aesthetic Preview Micro-UIs */
     .bento-preview-widget {
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      min-height: 44px;
+      padding: 11px 13px;
+      border-radius: 13px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      min-height: 46px;
       display: flex;
       align-items: center;
     }
     .preview-chip {
       font-size: 11.5px;
       font-weight: 600;
-      padding: 3px 8px;
+      padding: 3px 9px;
       border-radius: 6px;
     }
     .preview-chip.is-check {
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
+      background: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.35);
     }
     .preview-chip.is-pill {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--desert-sand);
+      background: rgba(255, 255, 255, 0.08);
+      color: #f1f5f9;
+      border: 1px solid rgba(255, 255, 255, 0.12);
     }
     .preview-option-pill {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 26px;
-      height: 26px;
+      width: 27px;
+      height: 27px;
       border-radius: 7px;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 700;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: var(--muted);
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
     }
     .preview-option-pill.active {
-      background: rgba(139, 92, 246, 0.2);
-      border-color: rgba(139, 92, 246, 0.45);
-      color: #c4b5fd;
+      background: rgba(139, 92, 246, 0.28);
+      border-color: rgba(139, 92, 246, 0.5);
+      color: #ffffff;
     }
     .preview-hint-pill {
-      font-size: 11px;
-      color: var(--muted-2);
+      font-size: 11.5px;
+      color: #cbd5e1;
       margin-left: auto;
+      font-weight: 500;
     }
     .preview-cloze-token {
       font-family: var(--font-mono, monospace);
-      font-size: 12px;
-      color: var(--soft-blush);
-      padding: 2px 7px;
+      font-size: 12.5px;
+      color: #ffffff;
+      padding: 3px 8px;
       border-radius: 6px;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
     }
     .preview-cloze-chip {
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 600;
-      padding: 2px 7px;
+      padding: 3px 8px;
       border-radius: 6px;
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--desert-sand);
+      background: rgba(255, 255, 255, 0.08);
+      color: #f1f5f9;
     }
     .preview-cloze-chip.accent-cyan {
-      background: rgba(6, 182, 212, 0.15);
-      color: #38bdf8;
-      border: 1px solid rgba(6, 182, 212, 0.3);
+      background: rgba(6, 182, 212, 0.2);
+      color: #7dd3fc;
+      border: 1px solid rgba(6, 182, 212, 0.38);
     }
     .preview-step-chip {
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 600;
-      padding: 3px 7px;
+      padding: 3px 8px;
       border-radius: 6px;
-      background: rgba(245, 158, 11, 0.12);
+      background: rgba(245, 158, 11, 0.18);
       color: #fde68a;
+      border: 1px solid rgba(245, 158, 11, 0.3);
     }
     .preview-arrow {
-      color: var(--muted-2);
+      color: #94a3b8;
       font-size: 12px;
+      font-weight: 700;
     }
     .preview-letter-tile {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
-      background: rgba(244, 63, 94, 0.15);
-      border: 1px solid rgba(244, 63, 94, 0.3);
+      width: 27px;
+      height: 27px;
+      border-radius: 7px;
+      background: rgba(244, 63, 94, 0.2);
+      border: 1px solid rgba(244, 63, 94, 0.4);
       color: #fda4af;
       font-weight: 800;
-      font-size: 12px;
+      font-size: 12.5px;
       font-family: var(--font-display);
     }
     .preview-mix-tag {
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 600;
-      padding: 2px 7px;
+      padding: 3px 8px;
       border-radius: 6px;
-      background: rgba(132, 204, 22, 0.12);
+      background: rgba(132, 204, 22, 0.18);
       color: #d9f99d;
+      border: 1px solid rgba(132, 204, 22, 0.3);
     }
 
-    /* Bento Card Footer */
+    /* Bento Card Footer (FIXED READABILITY ISSUES!) */
     .bento-card-footer {
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
     }
     .bento-feature-item {
-      font-size: 11px;
-      color: var(--muted-2);
-      background: rgba(255, 255, 255, 0.03);
-      padding: 2px 6px;
-      border-radius: 5px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #f1f5f9;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 3px 8px;
+      border-radius: 6px;
     }
     .bento-action-btn {
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 700;
-      color: var(--soft-blush);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 4px;
       transition: color 0.16s ease, transform 0.16s ease;
     }
     .bento-arrow {
+      font-size: 14px;
       transition: transform 0.18s ease;
     }
     .practice-bento-card:hover .bento-arrow {
@@ -12900,52 +13004,59 @@
     }
 
     /* Dedicated Mode View */
-    .practice-dedicated-view {
+    .practice-dedicated-card {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 18px;
+      padding: 22px 24px;
+      border-radius: 20px;
+      background: rgba(16, 20, 34, 0.72);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1.5px solid rgba(255, 255, 255, 0.09);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
     }
     .practice-mode-header {
-      padding: 4px 2px 10px;
-      border-bottom: 1px solid var(--line);
+      padding: 2px 2px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
     .practice-back-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.035);
-      border: 1px solid var(--line);
-      color: var(--desert-sand);
-      font-size: 12.5px;
+      gap: 7px;
+      padding: 7px 14px;
+      border-radius: 11px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f1f5f9;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.16s ease;
     }
     .practice-back-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--soft-blush);
-      border-color: var(--line-strong);
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.22);
     }
     .practice-header-divider {
       width: 1px;
-      height: 28px;
-      background: var(--line);
+      height: 30px;
+      background: rgba(255, 255, 255, 0.12);
     }
     .practice-active-badge {
       font-size: 11.5px;
       font-weight: 700;
-      color: var(--desert-sand);
+      color: #38bdf8;
       text-transform: uppercase;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.04em;
     }
     .practice-active-title {
       margin: 2px 0 0;
       font-family: var(--font-display);
-      font-size: 19px;
+      font-size: 20px;
       font-weight: 700;
-      color: var(--soft-blush);
+      color: #ffffff;
       letter-spacing: -0.02em;
     }
 
@@ -12964,14 +13075,14 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      color: var(--muted);
+      color: #94a3b8;
     }
     .checkpoint-question {
       margin: 0;
       font-family: var(--font-display);
-      font-size: 18px;
+      font-size: 19px;
       font-weight: 700;
-      color: var(--soft-blush);
+      color: #ffffff;
       line-height: 1.4;
     }
     .checkpoint-freeform {
@@ -12981,77 +13092,208 @@
       width: 100%;
       min-height: 110px;
       padding: 12px 14px;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
-      background: rgba(15, 17, 26, 0.75);
-      color: var(--soft-blush);
+      background: rgba(10, 13, 22, 0.85);
+      color: #ffffff;
       font-family: var(--font-body);
-      font-size: 13.5px;
+      font-size: 14px;
       font-weight: 500;
       line-height: 1.6;
       resize: vertical;
       outline: none;
     }
     .practice-textarea:focus {
-      border-color: var(--line-accent);
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.16);
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
     }
 
     .practice-mode-empty-card {
-      border: 1px dashed rgba(255, 255, 255, 0.12);
+      border: 1.5px dashed rgba(255, 255, 255, 0.16);
       border-radius: 18px;
-      background: rgba(18, 20, 30, 0.5);
+      background: rgba(18, 22, 34, 0.5);
     }
     .empty-mode-icon {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 60px;
-      height: 60px;
+      width: 64px;
+      height: 64px;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.05);
       margin-bottom: 4px;
     }
-    .empty-mode-icon.accent-emerald { color: #34d399; background: rgba(16, 185, 129, 0.12); }
-    .empty-mode-icon.accent-violet { color: #a78bfa; background: rgba(139, 92, 246, 0.12); }
-    .empty-mode-icon.accent-cyan { color: #38bdf8; background: rgba(6, 182, 212, 0.12); }
-    .empty-mode-icon.accent-amber { color: #fbbf24; background: rgba(245, 158, 11, 0.12); }
-    .empty-mode-icon.accent-rose { color: #fb7185; background: rgba(244, 63, 94, 0.12); }
-    .empty-mode-icon.accent-lime { color: #a3e635; background: rgba(132, 204, 22, 0.12); }
+    .empty-mode-icon.accent-emerald { color: #34d399; background: rgba(16, 185, 129, 0.16); }
+    .empty-mode-icon.accent-violet { color: #c4b5fd; background: rgba(139, 92, 246, 0.16); }
+    .empty-mode-icon.accent-cyan { color: #38bdf8; background: rgba(6, 182, 212, 0.16); }
+    .empty-mode-icon.accent-amber { color: #fbbf24; background: rgba(245, 158, 11, 0.16); }
+    .empty-mode-icon.accent-rose { color: #fb7185; background: rgba(244, 63, 94, 0.16); }
+    .empty-mode-icon.accent-lime { color: #a3e635; background: rgba(132, 204, 22, 0.16); }
     .empty-mode-title {
       margin: 0;
       font-family: var(--font-display);
-      font-size: 19px;
+      font-size: 20px;
       font-weight: 700;
-      color: var(--soft-blush);
+      color: #ffffff;
     }
     .empty-mode-desc {
       margin: 0;
-      font-size: 13.5px;
-      color: var(--muted);
-      line-height: 1.5;
+      font-size: 14px;
+      color: #cbd5e1;
+      line-height: 1.55;
     }
 
-    /* RECENT EVIDENCE OVERHAUL (No ambiguous dots!) */
+    /* GLASSMORPHIC ASIDE CARDS WITH MOVING BORDER COLORS! */
+    @property --border-angle {
+      syntax: '<angle>';
+      inherits: false;
+      initial-value: 0deg;
+    }
+
+    @keyframes rotate-glass-border {
+      0% {
+        --border-angle: 0deg;
+      }
+      100% {
+        --border-angle: 360deg;
+      }
+    }
+
+    @keyframes glass-border-pulse {
+      0% {
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(139, 92, 246, 0.18);
+      }
+      50% {
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(6, 182, 212, 0.22);
+      }
+      100% {
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.18);
+      }
+    }
+
+    .glass-moving-border-card {
+      position: relative;
+      border-radius: 20px;
+      padding: 2px;
+      background: conic-gradient(
+        from var(--border-angle, 0deg),
+        #8b5cf6 0%,
+        #06b6d4 25%,
+        #10b981 50%,
+        #f43f5e 75%,
+        #8b5cf6 100%
+      );
+      animation: rotate-glass-border 5s linear infinite, glass-border-pulse 4s ease-in-out infinite alternate;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .glass-moving-border-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6), 0 0 32px rgba(6, 182, 212, 0.3);
+    }
+
+    .glass-card-inner {
+      border-radius: 18px;
+      background: rgba(13, 16, 27, 0.82);
+      backdrop-filter: blur(24px) saturate(200%);
+      -webkit-backdrop-filter: blur(24px) saturate(200%);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .glass-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: -0.01em;
+    }
+    .glass-icon-glow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+    }
+    .glass-icon-glow.cyan {
+      background: rgba(6, 182, 212, 0.16);
+      color: #38bdf8;
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.25);
+    }
+    .glass-icon-glow.violet {
+      background: rgba(139, 92, 246, 0.16);
+      color: #a78bfa;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      box-shadow: 0 0 12px rgba(139, 92, 246, 0.25);
+    }
+    .glass-pill-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+    }
+    .glass-tutor-desc {
+      margin: 0;
+      font-size: 13.5px;
+      color: #cbd5e1;
+      line-height: 1.55;
+    }
+    .glass-tutor-btn {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 16px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(6, 182, 212, 0.25));
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      color: #ffffff;
+      font-family: var(--font-ui);
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .glass-tutor-btn:hover {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(6, 182, 212, 0.4));
+      border-color: rgba(6, 182, 212, 0.6);
+      box-shadow: 0 4px 18px rgba(6, 182, 212, 0.25);
+    }
+
+    /* RECENT EVIDENCE CARDS (High Readability & Contrast!) */
     .evidence-aside-list {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      padding: 10px 14px 14px;
+      padding: 12px 14px 16px;
     }
     .evidence-item-card {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      padding: 12px 14px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.022);
-      border: 1px solid rgba(255, 255, 255, 0.055);
+      gap: 7px;
+      padding: 13px 15px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.09);
       transition: background-color 0.16s ease, border-color 0.16s ease;
     }
     .evidence-item-card:hover {
-      background: rgba(255, 255, 255, 0.045);
-      border-color: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.075);
+      border-color: rgba(255, 255, 255, 0.18);
     }
     .evidence-item-header {
       display: flex;
@@ -13061,16 +13303,16 @@
     }
     .evidence-concept {
       font-family: var(--font-display);
-      font-size: 13.5px;
+      font-size: 14px;
       font-weight: 700;
-      color: var(--soft-blush);
+      color: #ffffff;
       min-width: 0;
     }
     .evidence-badge {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 3px 8px;
+      padding: 3px 9px;
       border-radius: 9999px;
       font-size: 11px;
       font-weight: 700;
@@ -13078,21 +13320,21 @@
       letter-spacing: 0.02em;
     }
     .evidence-badge.is-passed {
-      background: rgba(16, 185, 129, 0.14);
+      background: rgba(16, 185, 129, 0.2);
       color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.32);
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
     }
     .evidence-badge.is-review {
-      background: rgba(245, 158, 11, 0.14);
+      background: rgba(245, 158, 11, 0.2);
       color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.32);
-      box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
     }
     .evidence-badge.is-saved {
-      background: rgba(139, 92, 246, 0.14);
+      background: rgba(139, 92, 246, 0.2);
       color: #c4b5fd;
-      border: 1px solid rgba(139, 92, 246, 0.32);
+      border: 1px solid rgba(139, 92, 246, 0.45);
     }
     .evidence-badge-icon {
       font-size: 10px;
@@ -13100,20 +13342,26 @@
     .evidence-item-footer {
       display: flex;
       align-items: center;
-      gap: 7px;
-      font-size: 11.5px;
-      color: var(--muted-2);
+      gap: 8px;
+      font-size: 12px;
     }
     .evidence-mode-chip {
-      color: var(--desert-sand);
-      font-weight: 600;
-      font-size: 11px;
-      background: rgba(255, 255, 255, 0.04);
-      padding: 2px 7px;
+      color: #7dd3fc;
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.32);
+      padding: 2px 8px;
       border-radius: 5px;
+      font-weight: 600;
+      font-size: 11.5px;
     }
     .evidence-dot-sep {
-      opacity: 0.4;
+      color: #64748b;
+      font-size: 12px;
+    }
+    .evidence-date {
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 500;
     }
 
     .practice-status-banner {

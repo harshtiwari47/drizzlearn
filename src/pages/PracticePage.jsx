@@ -72,7 +72,7 @@ function ModeIcon({ type, size = 20 }) {
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
-        <circle cx="12" cy="12" r="6" />
+        <circle cx="12" cy="6" r="2" />
         <circle cx="12" cy="12" r="2" />
       </svg>
     );
@@ -455,416 +455,448 @@ function PracticePage(p) {
   };
 
   return (
-    <div className="practice-layout grid gap-4 items-start">
-      <section className="panel practice-work flex flex-col p-4 gap-4">
-        {/* Panel Header */}
-        <div className="panel-head flex items-center justify-between">
-          <div className="panel-title flex items-center gap-2.5">
-            <Icon name="practice" />
-            <span>Practice Studio</span>
+    <div className="practice-layout">
+      {/* Main Practice Work Area (No outer panel! Sits directly on page!) */}
+      <div className="practice-main-column flex flex-col gap-5">
+        {/* Practice Studio Header */}
+        <div className="practice-hero-header flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="practice-hero-icon">
+              <Icon name="practice" size={24} />
+            </div>
+            <div>
+              <h1 className="practice-hero-title">Practice Studio</h1>
+              <p className="practice-hero-subtitle">Interactive drills, active recall, and conceptual understanding</p>
+            </div>
           </div>
           <span className="practice-header-badge">Interactive Drills & Mastery</span>
         </div>
 
-        <div className="practice-body flex flex-col gap-4">
-          {/* Topic Selectors */}
-          <div className={`practice-selectors grid gap-3 ${allCourses.length > 0 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
-            {allCourses.length > 0 && (
-              <label className="practice-field-label">
-                <span className="practice-field-title">Course</span>
-                <select
-                  value={courseFilter}
-                  aria-label="Filter practice topics by course"
-                  className="practice-select"
-                  onChange={(e) => handleCourseFilterChange(e.target.value)}
-                >
-                  <option value="all">All courses ({allLessons.length} topics)</option>
-                  {allCourses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
+        {/* Topic Selectors */}
+        <div className={`practice-selectors-bar grid gap-3.5 ${allCourses.length > 0 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+          {allCourses.length > 0 && (
             <label className="practice-field-label">
-              <span className="practice-field-title">Topic / Lesson</span>
+              <span className="practice-field-title">Course</span>
               <select
-                value={lessonId}
-                aria-label="Choose a lesson"
+                value={courseFilter}
+                aria-label="Filter practice topics by course"
                 className="practice-select"
-                onChange={(e) => {
-                  setLessonId(e.target.value);
-                  setResult(null);
-                }}
+                onChange={(e) => handleCourseFilterChange(e.target.value)}
               >
-                {lessonGroups.every(([label]) => !label)
-                  ? visibleLessons.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.title}
-                      </option>
-                    ))
-                  : lessonGroups.map(([label, items]) =>
-                      label ? (
-                        <optgroup key={label} label={label}>
-                          {items.map((l) => (
-                            <option key={l.id} value={l.id}>
-                              {l.title}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ) : (
-                        items.map((l) => (
+                <option value="all">All courses ({allLessons.length} topics)</option>
+                {allCourses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <label className="practice-field-label">
+            <span className="practice-field-title">Topic / Lesson</span>
+            <select
+              value={lessonId}
+              aria-label="Choose a lesson"
+              className="practice-select"
+              onChange={(e) => {
+                setLessonId(e.target.value);
+                setResult(null);
+              }}
+            >
+              {lessonGroups.every(([label]) => !label)
+                ? visibleLessons.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.title}
+                    </option>
+                  ))
+                : lessonGroups.map(([label, items]) =>
+                    label ? (
+                      <optgroup key={label} label={label}>
+                        {items.map((l) => (
                           <option key={l.id} value={l.id}>
                             {l.title}
                           </option>
-                        ))
-                      )
-                    )}
-              </select>
-            </label>
-          </div>
+                        ))}
+                      </optgroup>
+                    ) : (
+                      items.map((l) => (
+                        <option key={l.id} value={l.id}>
+                          {l.title}
+                        </option>
+                      ))
+                    )
+                  )}
+            </select>
+          </label>
+        </div>
 
-          {lesson ? (
-            <>
-              {/* Top Navigation Tabs */}
-              <div className="practice-mode-nav flex items-center gap-1.5 flex-wrap" role="tablist" aria-label="Practice Modes">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === "overview"}
-                  className={`practice-nav-tab ${activeTab === "overview" ? "selected" : ""}`}
-                  onClick={() => setActiveTab("overview")}
-                >
-                  <span className="practice-tab-icon">⊞</span>
-                  <span>Modes Hub</span>
-                </button>
-                {PRACTICE_MODES.map((item) => {
-                  const isActive = activeTab === item.id;
-                  const hasCache = item.id !== "checkpoint" && cachedModeSet.has(item.id);
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={isActive}
-                      className={`practice-nav-tab ${isActive ? "selected" : ""}`}
-                      onClick={() => selectMode(item.id)}
-                    >
-                      <span className="practice-tab-icon">
-                        <ModeIcon type={item.id} size={15} />
-                      </span>
-                      <span>{item.label}</span>
-                      {hasCache && <span className="practice-tab-badge" title="Drills cached locally">Cached</span>}
-                    </button>
-                  );
-                })}
-              </div>
+        {lesson ? (
+          <>
+            {/* Top Navigation Tabs */}
+            <div className="practice-mode-nav flex items-center gap-1.5 flex-wrap" role="tablist" aria-label="Practice Modes">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "overview"}
+                className={`practice-nav-tab ${activeTab === "overview" ? "selected" : ""}`}
+                onClick={() => setActiveTab("overview")}
+              >
+                <span className="practice-tab-icon">⊞</span>
+                <span>Modes Hub</span>
+              </button>
+              {PRACTICE_MODES.map((item) => {
+                const isActive = activeTab === item.id;
+                const hasCache = item.id !== "checkpoint" && cachedModeSet.has(item.id);
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    className={`practice-nav-tab ${isActive ? "selected" : ""}`}
+                    onClick={() => selectMode(item.id)}
+                  >
+                    <span className="practice-tab-icon">
+                      <ModeIcon type={item.id} size={15} />
+                    </span>
+                    <span>{item.label}</span>
+                    {hasCache && <span className="practice-tab-badge" title="Drills cached locally">Cached</span>}
+                  </button>
+                );
+              })}
+            </div>
 
-              {/* OVERVIEW / BENTO HUB VIEW */}
-              {activeTab === "overview" ? (
-                <div className="practice-hub-view flex flex-col gap-4">
-                  <div className="practice-hub-intro flex items-center justify-between gap-3">
-                    <div>
-                      <h2 className="practice-hub-title">{lesson.title}</h2>
-                      <p className="practice-hub-subtitle">
-                        Select an interactive practice mode below to reinforce recall, syntax intuition, and logical understanding.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 6 Aesthetic Bento Cards */}
-                  <div className="practice-bento-grid">
-                    {PRACTICE_MODES.map((m) => {
-                      const hasCache = m.id !== "checkpoint" && cachedModeSet.has(m.id);
-                      return (
-                        <div
-                          key={m.id}
-                          className={`practice-bento-card bento-accent-${m.accent}`}
-                          onClick={() => selectMode(m.id)}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              selectMode(m.id);
-                            }
-                          }}
-                        >
-                          <div className="bento-card-header flex items-center justify-between">
-                            <div className={`bento-icon-box accent-${m.accent}`}>
-                              <ModeIcon type={m.id} size={22} />
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              {hasCache && <span className="bento-badge-cached">✓ Ready</span>}
-                              <span className={`bento-badge-category accent-${m.accent}`}>{m.badgeText}</span>
-                            </div>
-                          </div>
-
-                          <div className="bento-card-body flex flex-col gap-1.5">
-                            <div className="bento-title-row">
-                              <h3 className="bento-card-title">{m.label}</h3>
-                              <span className="bento-card-tagline">{m.tagline}</span>
-                            </div>
-                            <p className="bento-card-desc">{m.hint}</p>
-                          </div>
-
-                          {/* Aesthetic Micro-UI Graphic */}
-                          <div className={`bento-preview-widget preview-${m.previewType}`}>
-                            {m.previewType === "checkpoint" && (
-                              <div className="preview-checkpoint-row flex items-center gap-2">
-                                <span className="preview-chip is-check">✓ Rubric evaluation</span>
-                                <span className="preview-chip is-pill">100% Mastery</span>
-                              </div>
-                            )}
-                            {m.previewType === "quiz" && (
-                              <div className="preview-quiz-row flex items-center gap-2">
-                                <span className="preview-option-pill active">A</span>
-                                <span className="preview-option-pill">B</span>
-                                <span className="preview-option-pill">C</span>
-                                <span className="preview-hint-pill">Instant Feedback</span>
-                              </div>
-                            )}
-                            {m.previewType === "cloze" && (
-                              <div className="preview-cloze-row flex items-center gap-2 flex-wrap">
-                                <span className="preview-cloze-token">let [___] = state</span>
-                                <span className="preview-cloze-chip accent-cyan">data</span>
-                                <span className="preview-cloze-chip">value</span>
-                              </div>
-                            )}
-                            {m.previewType === "order" && (
-                              <div className="preview-order-row flex items-center gap-1.5">
-                                <span className="preview-step-chip">① Setup</span>
-                                <span className="preview-arrow">→</span>
-                                <span className="preview-step-chip">② Execute</span>
-                                <span className="preview-arrow">→</span>
-                                <span className="preview-step-chip">③ Verify</span>
-                              </div>
-                            )}
-                            {m.previewType === "word" && (
-                              <div className="preview-word-row flex items-center gap-1.5">
-                                <span className="preview-letter-tile">T</span>
-                                <span className="preview-letter-tile">Y</span>
-                                <span className="preview-letter-tile">P</span>
-                                <span className="preview-letter-tile">E</span>
-                                <span className="preview-letter-tile">S</span>
-                              </div>
-                            )}
-                            {m.previewType === "mix" && (
-                              <div className="preview-mix-row flex items-center gap-1.5 flex-wrap">
-                                <span className="preview-mix-tag">✍ Cloze</span>
-                                <span className="preview-mix-tag">❓ Quiz</span>
-                                <span className="preview-mix-tag">⇄ Order</span>
-                                <span className="preview-mix-tag">🔤 Word</span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="bento-card-footer flex items-center justify-between pt-2">
-                            <div className="bento-features flex items-center gap-1.5 flex-wrap">
-                              {m.features.map((f, idx) => (
-                                <span key={idx} className="bento-feature-item">
-                                  {f}
-                                </span>
-                              ))}
-                            </div>
-                            <span className="bento-action-btn flex items-center gap-1">
-                              <span>Open</span>
-                              <span className="bento-arrow">→</span>
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
+            {/* OVERVIEW / BENTO HUB VIEW (No outer panel! Sits directly on page!) */}
+            {activeTab === "overview" ? (
+              <div className="practice-hub-view flex flex-col gap-4">
+                <div className="practice-hub-intro flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="practice-hub-title">{lesson.title}</h2>
+                    <p className="practice-hub-subtitle">
+                      Select an interactive practice mode below to reinforce recall, syntax intuition, and logical understanding.
+                    </p>
                   </div>
                 </div>
-              ) : (
-                /* DEDICATED TAB VIEW */
-                <div className="practice-dedicated-view flex flex-col gap-4">
-                  {/* Mode Bar */}
-                  <div className="practice-mode-header flex items-center justify-between gap-3 flex-wrap">
-                    <div className="flex items-center gap-2.5">
-                      <button
-                        type="button"
-                        className="practice-back-btn flex items-center gap-1.5"
-                        onClick={() => setActiveTab("overview")}
-                        title="Back to all practice modes"
-                      >
-                        <span className="back-arrow">←</span>
-                        <span>Modes Hub</span>
-                      </button>
-                      <div className="practice-header-divider" />
-                      <div>
-                        <div className="practice-active-badge flex items-center gap-1.5">
-                          <ModeIcon type={activeModeMeta.id} size={15} />
-                          <span>{activeModeMeta.label}</span>
-                        </div>
-                        <h2 className="practice-active-title">{lesson.title}</h2>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      {mode !== "checkpoint" && (
-                        <>
-                          {studioSet?.exercises?.length > 0 && <span className="status-pill">Cached locally</span>}
-                          <button
-                            type="button"
-                            className="primary-btn"
-                            disabled={Boolean(generatingKey)}
-                            onClick={() => generateExercises(Boolean(studioSet?.exercises?.length))}
-                          >
-                            {isGeneratingCurrent ? (
-                              <>
-                                <span className="btn-spinner" /> Generating…
-                              </>
-                            ) : studioSet?.exercises?.length ? (
-                              `Regenerate ${activeModeMeta.label}`
-                            ) : (
-                              `Generate ${activeModeMeta.label}`
-                            )}
-                          </button>
-                        </>
-                      )}
+                {/* 6 Aesthetic Bento Cards */}
+                <div className="practice-bento-grid">
+                  {PRACTICE_MODES.map((m) => {
+                    const hasCache = m.id !== "checkpoint" && cachedModeSet.has(m.id);
+                    return (
+                      <div
+                        key={m.id}
+                        className={`practice-bento-card bento-accent-${m.accent}`}
+                        onClick={() => selectMode(m.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            selectMode(m.id);
+                          }
+                        }}
+                      >
+                        <div className="bento-card-header flex items-center justify-between">
+                          <div className={`bento-icon-box accent-${m.accent}`}>
+                            <ModeIcon type={m.id} size={22} />
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            {hasCache && <span className="bento-badge-cached">✓ Ready</span>}
+                            <span className={`bento-badge-category accent-${m.accent}`}>{m.badgeText}</span>
+                          </div>
+                        </div>
+
+                        <div className="bento-card-body flex flex-col gap-1.5">
+                          <div className="bento-title-row">
+                            <h3 className="bento-card-title">{m.label}</h3>
+                            <span className={`bento-card-tagline accent-${m.accent}`}>{m.tagline}</span>
+                          </div>
+                          <p className="bento-card-desc">{m.hint}</p>
+                        </div>
+
+                        {/* Aesthetic Micro-UI Graphic */}
+                        <div className={`bento-preview-widget preview-${m.previewType}`}>
+                          {m.previewType === "checkpoint" && (
+                            <div className="preview-checkpoint-row flex items-center gap-2">
+                              <span className="preview-chip is-check">✓ Rubric evaluation</span>
+                              <span className="preview-chip is-pill">100% Mastery</span>
+                            </div>
+                          )}
+                          {m.previewType === "quiz" && (
+                            <div className="preview-quiz-row flex items-center gap-2">
+                              <span className="preview-option-pill active">A</span>
+                              <span className="preview-option-pill">B</span>
+                              <span className="preview-option-pill">C</span>
+                              <span className="preview-hint-pill">Instant Feedback</span>
+                            </div>
+                          )}
+                          {m.previewType === "cloze" && (
+                            <div className="preview-cloze-row flex items-center gap-2 flex-wrap">
+                              <span className="preview-cloze-token">let [___] = state</span>
+                              <span className="preview-cloze-chip accent-cyan">data</span>
+                              <span className="preview-cloze-chip">value</span>
+                            </div>
+                          )}
+                          {m.previewType === "order" && (
+                            <div className="preview-order-row flex items-center gap-1.5">
+                              <span className="preview-step-chip">① Setup</span>
+                              <span className="preview-arrow">→</span>
+                              <span className="preview-step-chip">② Execute</span>
+                              <span className="preview-arrow">→</span>
+                              <span className="preview-step-chip">③ Verify</span>
+                            </div>
+                          )}
+                          {m.previewType === "word" && (
+                            <div className="preview-word-row flex items-center gap-1.5">
+                              <span className="preview-letter-tile">T</span>
+                              <span className="preview-letter-tile">Y</span>
+                              <span className="preview-letter-tile">P</span>
+                              <span className="preview-letter-tile">E</span>
+                              <span className="preview-letter-tile">S</span>
+                            </div>
+                          )}
+                          {m.previewType === "mix" && (
+                            <div className="preview-mix-row flex items-center gap-1.5 flex-wrap">
+                              <span className="preview-mix-tag">✍ Cloze</span>
+                              <span className="preview-mix-tag">❓ Quiz</span>
+                              <span className="preview-mix-tag">⇄ Order</span>
+                              <span className="preview-mix-tag">🔤 Word</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="bento-card-footer flex items-center justify-between pt-2">
+                          <div className="bento-features flex items-center gap-1.5 flex-wrap">
+                            {m.features.map((f, idx) => (
+                              <span key={idx} className="bento-feature-item">
+                                {f}
+                              </span>
+                            ))}
+                          </div>
+                          <span className="bento-action-btn flex items-center gap-1">
+                            <span>Open</span>
+                            <span className="bento-arrow">→</span>
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              /* DEDICATED TAB VIEW */
+              <div className="practice-dedicated-card flex flex-col gap-4">
+                {/* Mode Bar */}
+                <div className="practice-mode-header flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      className="practice-back-btn flex items-center gap-1.5"
+                      onClick={() => setActiveTab("overview")}
+                      title="Back to all practice modes"
+                    >
+                      <span className="back-arrow">←</span>
+                      <span>Modes Hub</span>
+                    </button>
+                    <div className="practice-header-divider" />
+                    <div>
+                      <div className="practice-active-badge flex items-center gap-1.5">
+                        <ModeIcon type={activeModeMeta.id} size={15} />
+                        <span>{activeModeMeta.label}</span>
+                      </div>
+                      <h2 className="practice-active-title">{lesson.title}</h2>
                     </div>
                   </div>
 
-                  {/* Checkpoint Mode */}
-                  {mode === "checkpoint" ? (
-                    <div className="practice-checkpoint-box flex flex-col gap-4">
-                      <div className="checkpoint-banner">
-                        <span className="checkpoint-eyebrow">{lesson.moduleTitle || "MODULE CHECKPOINT"}</span>
-                        <h3 className="checkpoint-question">{checkpoint?.question || lesson.objective}</h3>
-                      </div>
+                  <div className="flex items-center gap-2">
+                    {mode !== "checkpoint" && (
+                      <>
+                        {studioSet?.exercises?.length > 0 && <span className="status-pill">Cached locally</span>}
+                        <button
+                          type="button"
+                          className="primary-btn"
+                          disabled={Boolean(generatingKey)}
+                          onClick={() => generateExercises(Boolean(studioSet?.exercises?.length))}
+                        >
+                          {isGeneratingCurrent ? (
+                            <>
+                              <span className="btn-spinner" /> Generating…
+                            </>
+                          ) : studioSet?.exercises?.length ? (
+                            `Regenerate ${activeModeMeta.label}`
+                          ) : (
+                            `Generate ${activeModeMeta.label}`
+                          )}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
 
-                      {checkpoint?.options?.length ? (
-                        <div className="answer-options flex flex-col gap-2.5">
-                          {checkpoint.options.map((choice, i) => (
+                {/* Checkpoint Mode */}
+                {mode === "checkpoint" ? (
+                  <div className="practice-checkpoint-box flex flex-col gap-4">
+                    <div className="checkpoint-banner">
+                      <span className="checkpoint-eyebrow">{lesson.moduleTitle || "MODULE CHECKPOINT"}</span>
+                      <h3 className="checkpoint-question">{checkpoint?.question || lesson.objective}</h3>
+                    </div>
+
+                    {checkpoint?.options?.length ? (
+                      <div className="answer-options flex flex-col gap-2.5">
+                        {checkpoint.options.map((choice, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            className="answer-option flex items-center gap-3 p-3.5 text-left cursor-pointer"
+                            onClick={() => submitCheckpoint(i)}
+                          >
+                            <span className="option-letter">{String.fromCharCode(65 + i)}</span>
+                            <span className="option-text">{choice}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="checkpoint-freeform flex flex-col gap-3">
+                        <label className="practice-field-label">
+                          <span className="practice-field-title">Your understanding & reasoning</span>
+                          <textarea
+                            value={answer}
+                            onChange={(e) => setAnswer(e.target.value)}
+                            placeholder="Explain your approach and the key intuition in your own words…"
+                            className="practice-textarea"
+                          />
+                        </label>
+                        <button type="button" className="primary-btn self-start" onClick={() => submitCheckpoint(-1)}>
+                          Save Practice Evidence
+                        </button>
+                      </div>
+                    )}
+
+                    {result && (
+                      <div
+                        className={`feedback-box ${
+                          result.correct === true ? "correct" : result.correct === false ? "incorrect" : ""
+                        }`}
+                        role="status"
+                      >
+                        <strong>
+                          {result.correct === true ? "Correct" : result.correct === false ? "Not yet" : "Attempt saved"}
+                        </strong>
+                        <p>{result.text}</p>
+                      </div>
+                    )}
+                    <p className="muted-copy">
+                      Attempts are recorded in your learner profile as evidence of conceptual understanding.
+                    </p>
+                  </div>
+                ) : (
+                  /* Studio Runner / Launch State */
+                  <div className="practice-studio-content flex flex-col gap-4">
+                    {studioStatus.message && (
+                      <div className={`practice-status-banner is-${studioStatus.kind}`} role="status" aria-live="polite">
+                        <span>{studioStatus.message}</span>
+                        {studioStatus.kind === "error" &&
+                          (!p.remote ? (
+                            <button type="button" className="quiet-btn compact" onClick={() => p.openAccount()}>
+                              Sign in
+                            </button>
+                          ) : (
                             <button
-                              key={i}
                               type="button"
-                              className="answer-option flex items-center gap-3 p-3 text-left cursor-pointer"
-                              onClick={() => submitCheckpoint(i)}
+                              className="quiet-btn compact"
+                              disabled={Boolean(generatingKey)}
+                              onClick={() => generateExercises(Boolean(studioSet?.exercises?.length))}
                             >
-                              <span className="option-letter">{String.fromCharCode(65 + i)}</span>
-                              <span className="option-text">{choice}</span>
+                              Retry
                             </button>
                           ))}
-                        </div>
-                      ) : (
-                        <div className="checkpoint-freeform flex flex-col gap-3">
-                          <label className="practice-field-label">
-                            <span className="practice-field-title">Your understanding & reasoning</span>
-                            <textarea
-                              value={answer}
-                              onChange={(e) => setAnswer(e.target.value)}
-                              placeholder="Explain your approach and the key intuition in your own words…"
-                              className="practice-textarea"
-                            />
-                          </label>
-                          <button type="button" className="primary-btn self-start" onClick={() => submitCheckpoint(-1)}>
-                            Save Practice Evidence
+                      </div>
+                    )}
+
+                    {!isGeneratingCurrent && studioSet?.exercises?.length > 0 ? (
+                      <PracticeStudioRunner
+                        exercises={studioSet.exercises}
+                        mode={mode}
+                        lesson={lesson}
+                        initialProgress={studioSet.progress}
+                        onPersistProgress={handlePersistProgress}
+                        onRecordAttempt={handleRecordAttempt}
+                      />
+                    ) : (
+                      !isGeneratingCurrent && (
+                        <div className="practice-mode-empty-card flex flex-col items-center justify-center p-8 text-center gap-3">
+                          <div className={`empty-mode-icon accent-${activeModeMeta.accent}`}>
+                            <ModeIcon type={activeModeMeta.id} size={36} />
+                          </div>
+                          <h3 className="empty-mode-title">{activeModeMeta.label} Studio</h3>
+                          <p className="empty-mode-desc max-w-md">{activeModeMeta.hint}</p>
+                          <button
+                            type="button"
+                            className="primary-btn mt-2"
+                            disabled={Boolean(generatingKey)}
+                            onClick={() => generateExercises(false)}
+                          >
+                            Generate {activeModeMeta.label} Exercises
                           </button>
                         </div>
-                      )}
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          <EmptyState
+            title="Choose a lesson first"
+            body="Open a course to see its practice checkpoints and interactive exercises."
+            action="Browse courses"
+            onAction={() => p.go("courses")}
+          />
+        )}
+      </div>
 
-                      {result && (
-                        <div
-                          className={`feedback-box ${
-                            result.correct === true ? "correct" : result.correct === false ? "incorrect" : ""
-                          }`}
-                          role="status"
-                        >
-                          <strong>
-                            {result.correct === true ? "Correct" : result.correct === false ? "Not yet" : "Attempt saved"}
-                          </strong>
-                          <p>{result.text}</p>
-                        </div>
-                      )}
-                      <p className="muted-copy">
-                        Attempts are recorded in your learner profile as evidence of conceptual understanding.
-                      </p>
-                    </div>
-                  ) : (
-                    /* Studio Runner / Launch State */
-                    <div className="practice-studio-content flex flex-col gap-4">
-                      {studioStatus.message && (
-                        <div className={`practice-status-banner is-${studioStatus.kind}`} role="status" aria-live="polite">
-                          <span>{studioStatus.message}</span>
-                          {studioStatus.kind === "error" &&
-                            (!p.remote ? (
-                              <button type="button" className="quiet-btn compact" onClick={() => p.openAccount()}>
-                                Sign in
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                className="quiet-btn compact"
-                                disabled={Boolean(generatingKey)}
-                                onClick={() => generateExercises(Boolean(studioSet?.exercises?.length))}
-                              >
-                                Retry
-                              </button>
-                            ))}
-                        </div>
-                      )}
-
-                      {!isGeneratingCurrent && studioSet?.exercises?.length > 0 ? (
-                        <PracticeStudioRunner
-                          exercises={studioSet.exercises}
-                          mode={mode}
-                          lesson={lesson}
-                          initialProgress={studioSet.progress}
-                          onPersistProgress={handlePersistProgress}
-                          onRecordAttempt={handleRecordAttempt}
-                        />
-                      ) : (
-                        !isGeneratingCurrent && (
-                          <div className="practice-mode-empty-card flex flex-col items-center justify-center p-8 text-center gap-3">
-                            <div className={`empty-mode-icon accent-${activeModeMeta.accent}`}>
-                              <ModeIcon type={activeModeMeta.id} size={36} />
-                            </div>
-                            <h3 className="empty-mode-title">{activeModeMeta.label} Studio</h3>
-                            <p className="empty-mode-desc max-w-md">{activeModeMeta.hint}</p>
-                            <button
-                              type="button"
-                              className="primary-btn mt-2"
-                              disabled={Boolean(generatingKey)}
-                              onClick={() => generateExercises(false)}
-                            >
-                              Generate {activeModeMeta.label} Exercises
-                            </button>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          ) : (
-            <EmptyState
-              title="Choose a lesson first"
-              body="Open a course to see its practice checkpoints and interactive exercises."
-              action="Browse courses"
-              onAction={() => p.go("courses")}
-            />
-          )}
-        </div>
-      </section>
-
-      {/* Aside: Recent Evidence & AI Tutor */}
-      <aside className="practice-aside flex flex-col gap-4">
-        <Panel title="Recent Evidence" icon="progress">
-          <EvidenceList attempts={scopedAttempts.slice(0, 6)} />
-        </Panel>
-        <Panel title="AI Tutor Practice" icon="tutor">
-          <div className="side-panel-copy flex flex-col gap-2 p-4">
-            <p>Need guidance or hints? Ask the AI Tutor for contextual feedback and deeper concept breakdowns.</p>
-            <button type="button" className="text-button" onClick={() => p.go("tutor")}>
-              Open AI Tutor ↗
-            </button>
+      {/* Aside: Glassmorphic with moving border colors! */}
+      <aside className="practice-aside flex flex-col gap-5">
+        <div className="glass-moving-border-card evidence-card-wrap">
+          <div className="glass-card-inner">
+            <div className="glass-card-head flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="glass-icon-glow cyan">
+                  <Icon name="progress" size={17} />
+                </span>
+                <h3 className="glass-card-title">Recent Evidence</h3>
+              </div>
+              <span className="glass-pill-badge">Active Log</span>
+            </div>
+            <div className="glass-card-content">
+              <EvidenceList attempts={scopedAttempts.slice(0, 6)} />
+            </div>
           </div>
-        </Panel>
+        </div>
+
+        <div className="glass-moving-border-card tutor-card-wrap">
+          <div className="glass-card-inner">
+            <div className="glass-card-head flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="glass-icon-glow violet">
+                  <Icon name="tutor" size={17} />
+                </span>
+                <h3 className="glass-card-title">AI Tutor Practice</h3>
+              </div>
+              <span className="glass-pill-badge">Adaptive Help</span>
+            </div>
+            <div className="glass-card-content p-4 flex flex-col gap-3">
+              <p className="glass-tutor-desc">
+                Need guidance or hints? Ask the AI Tutor for contextual feedback and deeper concept breakdowns.
+              </p>
+              <button type="button" className="glass-tutor-btn flex items-center justify-center gap-2" onClick={() => p.go("tutor")}>
+                <span>Open AI Tutor</span>
+                <span className="tutor-btn-arrow">↗</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </aside>
     </div>
   );
@@ -929,10 +961,10 @@ export function EvidenceList({
                   </span>
                 )}
               </div>
-              <div className="evidence-item-footer flex items-center gap-2 text-xs text-learnos-muted-2">
+              <div className="evidence-item-footer flex items-center gap-2 text-xs">
                 <span className="evidence-mode-chip">{modeLabel}</span>
                 <span className="evidence-dot-sep">•</span>
-                <span>{prettyDate(a.created_at, { month: "short", day: "numeric" })}</span>
+                <span className="evidence-date">{prettyDate(a.created_at, { month: "short", day: "numeric" })}</span>
               </div>
             </div>
           );
@@ -1033,13 +1065,13 @@ export function EvidenceList({
             const typeLabel = exType ? exType.replace(/_/g, " ") : "checkpoint";
 
             return (
-              <div className="evidence-item-card flex items-center justify-between gap-3 p-3" key={a.id || `${startIdx + i}`}>
+              <div className="evidence-item-card flex items-center justify-between gap-3 p-3.5" key={a.id || `${startIdx + i}`}>
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="min-w-0">
-                    <strong className="block truncate text-sm">{a.concept || "Practice attempt"}</strong>
-                    <div className="flex items-center gap-2 text-xs text-learnos-muted-2 mt-0.5">
+                    <strong className="block truncate text-sm text-slate-100">{a.concept || "Practice attempt"}</strong>
+                    <div className="flex items-center gap-2 text-xs text-slate-300 mt-0.5">
                       <span className="evidence-mode-chip">{typeLabel}</span>
-                      <span>· {prettyDate(a.created_at, { month: "short", day: "numeric" })}</span>
+                      <span className="evidence-date">· {prettyDate(a.created_at, { month: "short", day: "numeric" })}</span>
                     </div>
                   </div>
                 </div>
