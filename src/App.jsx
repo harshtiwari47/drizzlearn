@@ -469,11 +469,7 @@ export default function App(){
     recordBehavior("page_view",{page,courseId:routeParams?.courseId||null,lessonId:routeParams?.lessonId||null});
   },[page,routeParams?.courseId,routeParams?.lessonId]);
   useEffect(() => {
-    if (page === "courses" || page === "course") {
-      document.body.setAttribute("data-page", page);
-    } else {
-      document.body.removeAttribute("data-page");
-    }
+    document.body.setAttribute("data-page", page);
     return () => {
       document.body.removeAttribute("data-page");
     };

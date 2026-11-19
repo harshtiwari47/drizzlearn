@@ -1,6 +1,111 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from "react";
 import { Icon, parseMarkdownToHtml, prettyDate } from "../components/common.jsx";
 
+function NotesBackgroundRibbons() {
+  return (
+    <div className="notes-ambient-ribbons-wrap" aria-hidden="true">
+      <svg
+        className="notes-ambient-ribbons-svg"
+        viewBox="0 0 1440 900"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <defs>
+          {/* Top-Right Golden Radial Glow */}
+          <radialGradient id="goldGlowTR" cx="88%" cy="10%" r="55%">
+            <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.18" />
+            <stop offset="40%" stopColor="#D97706" stopOpacity="0.06" />
+            <stop offset="100%" stopColor="#1C1817" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Bottom-Left Golden Radial Glow */}
+          <radialGradient id="goldGlowBL" cx="10%" cy="90%" r="50%">
+            <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.15" />
+            <stop offset="35%" stopColor="#D97706" stopOpacity="0.05" />
+            <stop offset="100%" stopColor="#1C1817" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Top-Right Ribbon Linear Gradient */}
+          <linearGradient id="goldRibbonTR" x1="560" y1="20" x2="1420" y2="70" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#F59E0B" stopOpacity="0" />
+            <stop offset="20%" stopColor="#FBBF24" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#FFFBEB" stopOpacity="0.95" />
+            <stop offset="75%" stopColor="#F59E0B" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#D97706" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Bottom-Left Ribbon Linear Gradient */}
+          <linearGradient id="goldRibbonBL" x1="0" y1="880" x2="680" y2="820" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#F59E0B" stopOpacity="0" />
+            <stop offset="25%" stopColor="#FFFBEB" stopOpacity="0.9" />
+            <stop offset="60%" stopColor="#FBBF24" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+          </linearGradient>
+
+          <filter id="ribbonCrispGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur1" />
+            <feGaussianBlur stdDeviation="8" result="blur2" />
+            <feMerge>
+              <feMergeNode in="blur2" />
+              <feMergeNode in="blur1" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="ribbonAtmosphere" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="14" />
+          </filter>
+        </defs>
+
+        {/* Ambient Glows */}
+        <rect width="1440" height="900" fill="url(#goldGlowTR)" />
+        <rect width="1440" height="900" fill="url(#goldGlowBL)" />
+
+        {/* Top-Right Elegant Luminous Golden Ribbon Wave */}
+        <path
+          d="M 540 -20 C 740 160 1000 145 1220 45 C 1320 -5 1410 20 1480 -10"
+          stroke="rgba(245, 158, 11, 0.08)"
+          strokeWidth="16"
+          filter="url(#ribbonAtmosphere)"
+        />
+        <path
+          d="M 540 -20 C 740 160 1000 145 1220 45 C 1320 -5 1410 20 1480 -10"
+          stroke="rgba(251, 191, 36, 0.25)"
+          strokeWidth="6"
+          filter="url(#ribbonCrispGlow)"
+        />
+        <path
+          d="M 540 -20 C 740 160 1000 145 1220 45 C 1320 -5 1410 20 1480 -10"
+          stroke="url(#goldRibbonTR)"
+          strokeWidth="2.5"
+          filter="url(#ribbonCrispGlow)"
+        />
+
+        {/* Bottom-Left Elegant Luminous Golden Ribbon Wave */}
+        <path
+          d="M -40 760 C 130 700 280 810 440 865 C 540 900 640 915 760 925"
+          stroke="rgba(245, 158, 11, 0.07)"
+          strokeWidth="16"
+          filter="url(#ribbonAtmosphere)"
+        />
+        <path
+          d="M -40 760 C 130 700 280 810 440 865 C 540 900 640 915 760 925"
+          stroke="rgba(251, 191, 36, 0.22)"
+          strokeWidth="5"
+          filter="url(#ribbonCrispGlow)"
+        />
+        <path
+          d="M -40 760 C 130 700 280 810 440 865 C 540 900 640 915 760 925"
+          stroke="url(#goldRibbonBL)"
+          strokeWidth="2.2"
+          filter="url(#ribbonCrispGlow)"
+        />
+      </svg>
+    </div>
+  );
+}
+
 function NotesPage(p) {
   const notesList = p.data?.notes || [];
   const [selected, setSelected] = useState(notesList[0]?.id || "");
@@ -189,12 +294,11 @@ function NotesPage(p) {
   }, [draft?.body]);
   const readTimeMinutes = useMemo(() => Math.max(1, Math.ceil(wordCount / 200)), [wordCount]);
 
-  // Selected course and lesson display names for context tags
-  const currentCourse = allCourses.find(c => c.id === selectedCourseId);
-  const currentLessonMeta = draft?.lesson_id ? allLessonsMap.get(draft.lesson_id) : null;
-
   return (
     <div className="notes-reading-page">
+      {/* Background Golden Ribbon Waves */}
+      <NotesBackgroundRibbons />
+
       {/* 1. Header Bar: Minimal Study Notes title with amber "Notes" + top-right telemetry badges */}
       <header className="notes-reading-header">
         <h1 className="notes-reading-title">
@@ -217,7 +321,7 @@ function NotesPage(p) {
       <div className="notes-reading-grid">
         {/* Left Column: Minimal Note List */}
         <aside className="notes-reading-sidebar">
-          {/* Top row: All Notes label + count, and + New button */}
+          {/* Row 1: All Notes label + count, and + New button */}
           <div className="notes-sidebar-header-row">
             <div className="notes-sidebar-label-cluster">
               <span className="notes-amber-icon" aria-hidden="true">
@@ -238,7 +342,7 @@ function NotesPage(p) {
             </button>
           </div>
 
-          {/* Search Bar */}
+          {/* Row 2: Search Bar */}
           <div className="notes-search-container">
             <Icon name="search" size={14} />
             <input
@@ -262,7 +366,7 @@ function NotesPage(p) {
           </div>
 
           {/* Course filter if courses exist */}
-          {allCourses.length > 0 && (
+          {allCourses.length > 1 && (
             <div className="notes-course-filter-strip">
               <select
                 value={filterCourse}
@@ -281,7 +385,7 @@ function NotesPage(p) {
             </div>
           )}
 
-          {/* Minimal Note List with Separators */}
+          {/* Row 3+: Minimal Note List with Separators */}
           <div className="notes-compact-list">
             {notesList.length === 0 ? (
               <div className="notes-sidebar-empty">
@@ -349,7 +453,7 @@ function NotesPage(p) {
         <main className="notes-reading-main">
           {draft ? (
             <div className="notes-reading-content-flow">
-              {/* Contextual Course and Lesson Tag Selectors */}
+              {/* Row 1: Contextual Course and Lesson Tag Selectors */}
               <div className="notes-context-tags-row">
                 <div className="notes-context-tag">
                   <Icon name="layers" size={13} />
@@ -405,7 +509,7 @@ function NotesPage(p) {
                 )}
               </div>
 
-              {/* Minimal Action Toolbar Row */}
+              {/* Row 2: Minimal Action Toolbar Row */}
               <div className="notes-reading-actions-row">
                 <button
                   type="button"
@@ -474,7 +578,7 @@ function NotesPage(p) {
                 </button>
               </div>
 
-              {/* Prominent Document Title */}
+              {/* Row 3: Prominent Document Title */}
               <div className="notes-reading-title-wrap">
                 {viewMode === "preview" ? (
                   <h1 className="notes-reading-doc-title">
@@ -491,7 +595,7 @@ function NotesPage(p) {
                 )}
               </div>
 
-              {/* Compact Metadata Row */}
+              {/* Row 4: Compact Metadata Row */}
               <div className="notes-reading-metadata-row">
                 <span className="meta-point">
                   <Icon name="calendar" size={13} />
