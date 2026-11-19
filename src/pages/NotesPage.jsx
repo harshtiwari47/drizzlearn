@@ -3,106 +3,106 @@ import { Icon, parseMarkdownToHtml, prettyDate } from "../components/common.jsx"
 
 function NotesBackgroundRibbons() {
   return (
-    <div className="notes-ambient-ribbons-wrap" aria-hidden="true">
-      <svg
-        className="notes-ambient-ribbons-svg"
-        viewBox="0 0 1440 900"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        preserveAspectRatio="xMidYMid slice"
-      >
-        <defs>
-          {/* Top-Right Golden Radial Glow */}
-          <radialGradient id="goldGlowTR" cx="88%" cy="10%" r="55%">
-            <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.18" />
-            <stop offset="40%" stopColor="#D97706" stopOpacity="0.06" />
-            <stop offset="100%" stopColor="#1C1817" stopOpacity="0" />
-          </radialGradient>
+    <>
+      {/* Top-Right Golden Ribbon */}
+      <div className="notes-ambient-ribbon-tr" aria-hidden="true">
+        <svg
+          viewBox="0 0 900 450"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="xMaxYMin meet"
+        >
+          <defs>
+            <linearGradient id="goldRibbonTR" x1="0" y1="20" x2="880" y2="80" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#F59E0B" stopOpacity="0" />
+              <stop offset="20%" stopColor="#FBBF24" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#FFFBEB" stopOpacity="0.95" />
+              <stop offset="80%" stopColor="#F59E0B" stopOpacity="0.65" />
+              <stop offset="100%" stopColor="#D97706" stopOpacity="0" />
+            </linearGradient>
+            <filter id="ribbonCrispTR" x="-200%" y="-200%" width="500%" height="500%">
+              <feGaussianBlur stdDeviation="3" result="b1" />
+              <feGaussianBlur stdDeviation="7" result="b2" />
+              <feMerge>
+                <feMergeNode in="b2" />
+                <feMergeNode in="b1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="ribbonAtmosphereTR" x="-250%" y="-250%" width="600%" height="600%">
+              <feGaussianBlur stdDeviation="16" />
+            </filter>
+          </defs>
+          <path
+            d="M 20 -10 C 220 170 480 155 700 55 C 780 15 840 30 900 5"
+            stroke="rgba(245, 158, 11, 0.08)"
+            strokeWidth="16"
+            filter="url(#ribbonAtmosphereTR)"
+          />
+          <path
+            d="M 20 -10 C 220 170 480 155 700 55 C 780 15 840 30 900 5"
+            stroke="rgba(251, 191, 36, 0.25)"
+            strokeWidth="6"
+            filter="url(#ribbonCrispTR)"
+          />
+          <path
+            d="M 20 -10 C 220 170 480 155 700 55 C 780 15 840 30 900 5"
+            stroke="url(#goldRibbonTR)"
+            strokeWidth="2.5"
+            filter="url(#ribbonCrispTR)"
+          />
+        </svg>
+      </div>
 
-          {/* Bottom-Left Golden Radial Glow */}
-          <radialGradient id="goldGlowBL" cx="10%" cy="90%" r="50%">
-            <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.15" />
-            <stop offset="35%" stopColor="#D97706" stopOpacity="0.05" />
-            <stop offset="100%" stopColor="#1C1817" stopOpacity="0" />
-          </radialGradient>
-
-          {/* Top-Right Ribbon Linear Gradient */}
-          <linearGradient id="goldRibbonTR" x1="560" y1="20" x2="1420" y2="70" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#F59E0B" stopOpacity="0" />
-            <stop offset="20%" stopColor="#FBBF24" stopOpacity="0.6" />
-            <stop offset="50%" stopColor="#FFFBEB" stopOpacity="0.95" />
-            <stop offset="75%" stopColor="#F59E0B" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#D97706" stopOpacity="0" />
-          </linearGradient>
-
-          {/* Bottom-Left Ribbon Linear Gradient */}
-          <linearGradient id="goldRibbonBL" x1="0" y1="880" x2="680" y2="820" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#F59E0B" stopOpacity="0" />
-            <stop offset="25%" stopColor="#FFFBEB" stopOpacity="0.9" />
-            <stop offset="60%" stopColor="#FBBF24" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
-          </linearGradient>
-
-          <filter id="ribbonCrispGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur1" />
-            <feGaussianBlur stdDeviation="8" result="blur2" />
-            <feMerge>
-              <feMergeNode in="blur2" />
-              <feMergeNode in="blur1" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          <filter id="ribbonAtmosphere" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="14" />
-          </filter>
-        </defs>
-
-        {/* Ambient Glows */}
-        <rect width="1440" height="900" fill="url(#goldGlowTR)" />
-        <rect width="1440" height="900" fill="url(#goldGlowBL)" />
-
-        {/* Top-Right Elegant Luminous Golden Ribbon Wave */}
-        <path
-          d="M 540 -20 C 740 160 1000 145 1220 45 C 1320 -5 1410 20 1480 -10"
-          stroke="rgba(245, 158, 11, 0.08)"
-          strokeWidth="16"
-          filter="url(#ribbonAtmosphere)"
-        />
-        <path
-          d="M 540 -20 C 740 160 1000 145 1220 45 C 1320 -5 1410 20 1480 -10"
-          stroke="rgba(251, 191, 36, 0.25)"
-          strokeWidth="6"
-          filter="url(#ribbonCrispGlow)"
-        />
-        <path
-          d="M 540 -20 C 740 160 1000 145 1220 45 C 1320 -5 1410 20 1480 -10"
-          stroke="url(#goldRibbonTR)"
-          strokeWidth="2.5"
-          filter="url(#ribbonCrispGlow)"
-        />
-
-        {/* Bottom-Left Elegant Luminous Golden Ribbon Wave */}
-        <path
-          d="M -40 760 C 130 700 280 810 440 865 C 540 900 640 915 760 925"
-          stroke="rgba(245, 158, 11, 0.07)"
-          strokeWidth="16"
-          filter="url(#ribbonAtmosphere)"
-        />
-        <path
-          d="M -40 760 C 130 700 280 810 440 865 C 540 900 640 915 760 925"
-          stroke="rgba(251, 191, 36, 0.22)"
-          strokeWidth="5"
-          filter="url(#ribbonCrispGlow)"
-        />
-        <path
-          d="M -40 760 C 130 700 280 810 440 865 C 540 900 640 915 760 925"
-          stroke="url(#goldRibbonBL)"
-          strokeWidth="2.2"
-          filter="url(#ribbonCrispGlow)"
-        />
-      </svg>
-    </div>
+      {/* Bottom-Left Golden Ribbon (Sweeps into footer) */}
+      <div className="notes-ambient-ribbon-bl" aria-hidden="true">
+        <svg
+          viewBox="0 0 900 450"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="xMinYMax meet"
+        >
+          <defs>
+            <linearGradient id="goldRibbonBL" x1="0" y1="440" x2="850" y2="380" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#F59E0B" stopOpacity="0" />
+              <stop offset="25%" stopColor="#FFFBEB" stopOpacity="0.9" />
+              <stop offset="65%" stopColor="#FBBF24" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+            </linearGradient>
+            <filter id="ribbonCrispBL" x="-200%" y="-200%" width="500%" height="500%">
+              <feGaussianBlur stdDeviation="3" result="b1" />
+              <feGaussianBlur stdDeviation="7" result="b2" />
+              <feMerge>
+                <feMergeNode in="b2" />
+                <feMergeNode in="b1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="ribbonAtmosphereBL" x="-250%" y="-250%" width="600%" height="600%">
+              <feGaussianBlur stdDeviation="16" />
+            </filter>
+          </defs>
+          <path
+            d="M -30 280 C 140 220 300 330 460 380 C 580 415 690 425 820 435"
+            stroke="rgba(245, 158, 11, 0.07)"
+            strokeWidth="16"
+            filter="url(#ribbonAtmosphereBL)"
+          />
+          <path
+            d="M -30 280 C 140 220 300 330 460 380 C 580 415 690 425 820 435"
+            stroke="rgba(251, 191, 36, 0.22)"
+            strokeWidth="5"
+            filter="url(#ribbonCrispBL)"
+          />
+          <path
+            d="M -30 280 C 140 220 300 330 460 380 C 580 415 690 425 820 435"
+            stroke="url(#goldRibbonBL)"
+            strokeWidth="2.2"
+            filter="url(#ribbonCrispBL)"
+          />
+        </svg>
+      </div>
+    </>
   );
 }
 

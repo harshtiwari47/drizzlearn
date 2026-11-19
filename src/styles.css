@@ -1977,20 +1977,39 @@
     /* ==========================================================================
        Study Notes — Minimal, Reading-First Graphite & Amber UI
        ========================================================================== */
-    /* Ambient Fixed Golden Ribbon Waves in Viewport */
-    .notes-ambient-ribbons-wrap {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
+    /* Ambient Luminous Golden Ribbon Waves (Anchored to corners, no content clash) */
+    .notes-ambient-ribbon-tr {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: min(75vw, 950px);
+      height: 420px;
       pointer-events: none;
       z-index: 0;
-      overflow: hidden;
+      overflow: visible;
     }
-    .notes-ambient-ribbons-svg {
+    .notes-ambient-ribbon-tr svg {
       width: 100%;
       height: 100%;
       display: block;
+      overflow: visible;
+    }
+
+    .notes-ambient-ribbon-bl {
+      position: absolute;
+      bottom: -20px;
+      left: 0;
+      width: min(70vw, 880px);
+      height: 380px;
+      pointer-events: none;
+      z-index: 0;
+      overflow: visible;
+    }
+    .notes-ambient-ribbon-bl svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
     }
 
     .notes-reading-page {
@@ -2002,8 +2021,10 @@
       flex-direction: column;
       gap: 20px;
       margin: 0 !important;
-      padding: 24px 0 48px 0 !important;
+      padding: 24px 0 60px 0 !important;
       box-sizing: border-box;
+      min-height: calc(100vh - 180px);
+      overflow-x: clip;
     }
 
     .notes-reading-header {
@@ -27825,6 +27846,28 @@ body:has(.app-shell[data-page="notes"]),
 .app-shell[data-page="notes"] .app-footer-adaptive,
 .app-shell-settings-page .app-footer-adaptive {
   margin-bottom: 0 !important;
+}
+
+/* Notes Page Adaptive Footer: Seamless Background Extension Till Footer */
+.app-shell[data-page="notes"] .app-footer-adaptive {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+  margin-top: 60px !important;
+  margin-bottom: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.app-shell[data-page="notes"] .footer-adaptive-container {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  max-width: 100% !important;
 }
 
 .app-shell[data-page="settings"] .topbar,
