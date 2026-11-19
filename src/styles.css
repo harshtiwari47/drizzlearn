@@ -4153,7 +4153,7 @@
     .lesson-reading-column {
       display: flex;
       flex-direction: column;
-      gap: 28px;
+      gap: 36px;
       min-width: 0;
       width: 100%;
     }
@@ -4162,7 +4162,10 @@
     .lesson-header-section {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
+      max-width: 880px;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .lesson-meta-chips {
@@ -4175,16 +4178,17 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      padding: 4px 10px;
+      padding: 4px 11px;
       border-radius: 9999px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.07);
       color: #9CA3AF;
       font-size: 11.5px;
       font-weight: 600;
+      letter-spacing: 0.01em;
     }
     .lesson-chip.module-chip {
-      color: #D1D5DB;
+      color: #E5E7EB;
       background: rgba(255, 255, 255, 0.06);
     }
     .lesson-chip.passed-chip {
@@ -4196,43 +4200,51 @@
     .lesson-page-title {
       margin: 0 !important;
       font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-      font-size: clamp(28px, 3vw, 36px) !important;
+      font-size: clamp(28px, 3.2vw, 38px) !important;
       font-weight: 800 !important;
       letter-spacing: -0.035em !important;
       color: #FFFFFF !important;
-      line-height: 1.25 !important;
+      line-height: 1.2 !important;
     }
 
-    /* Clean Learning Objective (No uppercase label or heavy card) */
+    /* Clean Learning Objective (Warm lead callout quote) */
     .lesson-lead-objective {
-      padding: 12px 16px;
-      border-radius: 10px;
-      background: rgba(245, 158, 11, 0.04);
-      border-left: 3px solid #F59E0B;
-      border-top: 1px solid rgba(245, 158, 11, 0.12);
-      border-right: 1px solid rgba(245, 158, 11, 0.12);
-      border-bottom: 1px solid rgba(245, 158, 11, 0.12);
+      position: relative;
+      padding: 16px 20px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(255, 255, 255, 0.015) 100%);
+      border-left: 3.5px solid #F59E0B;
+      border-top: 1px solid rgba(245, 158, 11, 0.14);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: 4px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     }
     .lesson-lead-objective p {
       margin: 0;
-      color: #E5E7EB;
-      font-size: 14.5px;
-      line-height: 1.6;
+      color: #F3F4F6;
+      font-family: var(--font-ui, 'Manrope', sans-serif);
+      font-size: 15.5px;
+      line-height: 1.65;
       font-weight: 500;
+      letter-spacing: -0.01em;
     }
 
-    /* Explanation Depth Control */
+    /* Explanation Depth Control with subtle bottom boundary */
     .lesson-depth-control-row {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-top: 4px;
+      gap: 14px;
+      margin: 10px 0 4px 0;
+      padding-bottom: 22px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
       flex-wrap: wrap;
     }
     .lesson-depth-caption {
       color: #9CA3AF;
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 600;
+      letter-spacing: -0.01em;
     }
     .lesson-depth-pill-group {
       display: inline-flex;
@@ -4246,10 +4258,10 @@
     .lesson-depth-btn {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 5px 13px;
+      gap: 6px;
+      padding: 6px 14px;
       border-radius: 9999px;
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 600;
       color: #9CA3AF;
       border: none;
@@ -4283,17 +4295,188 @@
       background: rgba(245, 158, 11, 0.1);
     }
 
-    /* Content Body & TutorMarkdown */
+    /* Content Body & Modern Reading Typography */
     .lesson-content-body {
-      color: #D1D5DB;
-      font-size: 15px;
-      line-height: 1.75;
+      width: 100%;
+      max-width: 880px;
+      box-sizing: border-box;
     }
     .lesson-markdown-wrap {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 20px;
     }
+
+    /* Lesson Prose: Overriding compact chat styles for long-form reading */
+    .lesson-content-body .tutor-markdown {
+      margin-top: 0;
+      color: #E2E8F0 !important;
+      font-family: var(--font-ui, 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif) !important;
+      font-size: 16.5px !important;
+      line-height: 1.82 !important;
+      letter-spacing: -0.011em !important;
+      font-weight: 400;
+      max-width: 100%;
+    }
+
+    .lesson-content-body .tutor-markdown p {
+      margin: 0 0 24px 0 !important;
+      color: #E2E8F0 !important;
+      font-family: var(--font-ui, 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif) !important;
+      font-size: 16.5px !important;
+      line-height: 1.82 !important;
+      letter-spacing: -0.011em !important;
+      white-space: normal;
+    }
+
+    .lesson-content-body .tutor-markdown p:last-child {
+      margin-bottom: 0 !important;
+    }
+
+    .lesson-content-body .tutor-markdown strong {
+      color: #FFFFFF !important;
+      font-weight: 700 !important;
+    }
+
+    .lesson-content-body .tutor-markdown em {
+      color: #FDE68A !important;
+      font-style: italic;
+    }
+
+    .lesson-content-body .tutor-markdown h1,
+    .lesson-content-body .tutor-markdown h2,
+    .lesson-content-body .tutor-markdown h3,
+    .lesson-content-body .tutor-markdown h4 {
+      font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
+      color: #FFFFFF !important;
+      letter-spacing: -0.025em !important;
+      line-height: 1.35 !important;
+      margin: 36px 0 16px 0 !important;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .lesson-content-body .tutor-markdown h1 {
+      font-size: 26px !important;
+      font-weight: 800 !important;
+    }
+    .lesson-content-body .tutor-markdown h2 {
+      font-size: 22px !important;
+      font-weight: 700 !important;
+    }
+    .lesson-content-body .tutor-markdown h3 {
+      font-size: 18px !important;
+      font-weight: 700 !important;
+      color: #FBBF24 !important;
+    }
+    .lesson-content-body .tutor-markdown h4 {
+      font-size: 16px !important;
+      font-weight: 700 !important;
+      color: #E5E7EB !important;
+    }
+
+    .lesson-content-body .tutor-markdown h1::before,
+    .lesson-content-body .tutor-markdown h2::before,
+    .lesson-content-body .tutor-markdown h3::before {
+      content: "";
+      display: inline-block;
+      width: 3.5px;
+      height: 18px;
+      background: #F59E0B;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* Lists with warm amber numbers & clean vertical rhythm */
+    .lesson-content-body .tutor-markdown ul,
+    .lesson-content-body .tutor-markdown ol {
+      margin: 18px 0 26px 0 !important;
+      padding-left: 28px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+    }
+
+    .lesson-content-body .tutor-markdown li {
+      color: #E2E8F0 !important;
+      font-size: 16px !important;
+      line-height: 1.78 !important;
+      letter-spacing: -0.01em !important;
+      padding-left: 4px;
+    }
+
+    .lesson-content-body .tutor-markdown li::marker {
+      color: #F59E0B !important;
+      font-weight: 700 !important;
+      font-family: var(--font-display, 'Space Grotesk', sans-serif);
+    }
+
+    /* Inline Code Spans with Warm Amber Accent */
+    .lesson-content-body .tutor-markdown code,
+    .lesson-content-body .tutor-inline-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'JetBrains Mono', monospace !important;
+      font-size: 0.88em !important;
+      font-weight: 600 !important;
+      padding: 2.5px 7px !important;
+      border-radius: 6px !important;
+      background: rgba(245, 158, 11, 0.12) !important;
+      color: #FDE68A !important;
+      border: 1px solid rgba(245, 158, 11, 0.24) !important;
+      letter-spacing: -0.01em !important;
+    }
+
+    /* Hide internal citations if any rendered */
+    .lesson-content-body .tutor-citation-badge {
+      display: none !important;
+    }
+
+    /* Blockquotes */
+    .lesson-content-body .tutor-markdown blockquote {
+      margin: 24px 0 !important;
+      padding: 16px 22px !important;
+      border-left: 3.5px solid #F59E0B !important;
+      border-radius: 0 12px 12px 0 !important;
+      background: rgba(245, 158, 11, 0.05) !important;
+      border-top: 1px solid rgba(245, 158, 11, 0.12) !important;
+      border-right: 1px solid rgba(245, 158, 11, 0.12) !important;
+      border-bottom: 1px solid rgba(245, 158, 11, 0.12) !important;
+      color: #F3F4F6 !important;
+      font-size: 15.5px !important;
+      line-height: 1.72 !important;
+    }
+    .lesson-content-body .tutor-markdown blockquote p {
+      color: #F3F4F6 !important;
+      font-size: 15.5px !important;
+      line-height: 1.72 !important;
+      margin: 0 !important;
+    }
+
+    /* Code Blocks */
+    .lesson-content-body .tutor-code-block {
+      margin: 24px 0 !important;
+      border-radius: 14px !important;
+      background: #080A0D !important;
+      border: 1px solid rgba(255, 255, 255, 0.09) !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+    }
+    .lesson-content-body .tutor-code-block code {
+      background: transparent !important;
+      border: none !important;
+      color: #F3F4F6 !important;
+      font-size: 14.5px !important;
+      line-height: 1.65 !important;
+      padding: 0 !important;
+    }
+
+    /* Horizontal Rules */
+    .lesson-content-body .tutor-markdown hr {
+      margin: 32px 0 !important;
+      border: none !important;
+      height: 1px !important;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12) 20%, rgba(255, 255, 255, 0.12) 80%, transparent) !important;
+    }
+
     .lesson-depth-banner {
       display: inline-flex;
       align-items: center;
@@ -4328,68 +4511,78 @@
 
     /* Worked Example */
     .lesson-example-card {
-      padding: 20px 24px;
-      border-radius: 14px;
+      max-width: 880px;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 24px 28px;
+      border-radius: 16px;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.07);
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     }
     .example-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
       color: #F59E0B;
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 700;
       letter-spacing: 0.02em;
     }
     .example-text {
       margin: 0;
-      color: #E5E7EB;
-      font-size: 14px;
-      line-height: 1.65;
+      color: #E2E8F0;
+      font-size: 15.5px;
+      line-height: 1.75;
+      letter-spacing: -0.01em;
     }
 
-    /* Clean Understanding Checkpoint (No uppercase labels or helper text) */
+    /* Clean Understanding Checkpoint */
     .lesson-checkpoint-card {
-      padding: 26px 28px;
+      max-width: 880px;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 28px 32px;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.025);
+      background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      gap: 22px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
     }
     .checkpoint-question {
       margin: 0 !important;
       font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
-      font-size: 17px !important;
+      font-size: 18.5px !important;
       font-weight: 700 !important;
+      letter-spacing: -0.02em !important;
       color: #FFFFFF !important;
-      line-height: 1.45 !important;
+      line-height: 1.4 !important;
     }
     .checkpoint-options-grid {
       display: flex;
       flex-direction: column;
-      gap: 9px;
+      gap: 10px;
     }
     .checkpoint-choice-btn {
       display: flex;
       align-items: center;
       gap: 14px;
-      padding: 12px 16px;
+      padding: 13px 18px;
       border-radius: 12px;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.07);
       color: #E5E7EB;
       text-align: left;
-      font-size: 13.5px;
+      font-size: 14px;
       cursor: pointer;
       transition: all 0.16s ease;
       width: 100%;
+      box-sizing: border-box;
     }
     .checkpoint-choice-btn:hover {
       background: rgba(255, 255, 255, 0.05);
@@ -4413,9 +4606,9 @@
       color: #FFFFFF;
     }
     .choice-letter {
-      width: 26px;
-      height: 26px;
-      border-radius: 7px;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
       background: rgba(255, 255, 255, 0.06);
       display: grid;
       place-items: center;
@@ -4516,6 +4709,9 @@
 
     /* Bottom Navigation */
     .lesson-bottom-nav-bar {
+      max-width: 880px;
+      width: 100%;
+      box-sizing: border-box;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;

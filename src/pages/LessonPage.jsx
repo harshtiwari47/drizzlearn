@@ -4,6 +4,18 @@ import { TutorMarkdown } from "../tutor-markdown.jsx";
 
 const LESSON_DEPTH_STORAGE_KEY = "learnos.lesson_depth.v1";
 
+/**
+ * Sanitize internal UUID citations (e.g., (lesson:uuid), [lesson:uuid], (note:uuid))
+ * so raw database IDs do not pollute learner reading prose.
+ */
+export function sanitizeLessonReading(raw) {
+  if (!raw) return "";
+  return String(raw)
+    .replace(/\s*[\(\[]\s*(?:lesson|note|attempt|flashcard):[a-f0-9-]+\s*[\)\]]/gi, "")
+    .replace(/ {2,}/g, " ")
+    .trim();
+}
+
 export function readStoredDepths(lessonId) {
   if (!lessonId || typeof window === "undefined" || typeof localStorage === "undefined") return {};
   try {
@@ -151,12 +163,13 @@ export function LessonPage(p) {
     }
   };
 
-  const currentMarkdownContent =
+  const currentMarkdownContent = sanitizeLessonReading(
     depth === "simpler"
       ? (tailored.simpler || "")
       : depth === "deep"
       ? (tailored.deep || "")
-      : (lesson.content_markdown || lesson.content || paragraphs.join("\n\n"));
+      : (lesson.content_markdown || lesson.content || paragraphs.join("\n\n"))
+  );
 
   return (
     <div className="lesson-workspace-page">
@@ -247,10 +260,10 @@ export function LessonPage(p) {
 
             <h1 className="lesson-page-title">{lesson.title}</h1>
 
-            {/* Clean Learning Objective (No uppercase label or heavy card) */}
+            {/* Clean Learning Objective (Warm lead callout quote) */}
             {lesson.objective && (
               <div className="lesson-lead-objective">
-                <p>{lesson.objective}</p>
+                <p>{sanitizeLessonReading(lesson.objective)}</p>
               </div>
             )}
 
@@ -336,7 +349,7 @@ export function LessonPage(p) {
                 <Icon name="spark" size={14} />
                 <span>Worked example</span>
               </div>
-              <p className="example-text">{lesson.worked_example || lesson.workedExample}</p>
+              <p className="example-text">{sanitizeLessonReading(lesson.worked_example || lesson.workedExample)}</p>
             </section>
           )}
 
