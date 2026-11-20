@@ -4,6 +4,14 @@ export const DEFAULT_NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1";
 export const DEFAULT_NVIDIA_MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b";
 export const DEFAULT_GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai";
 export const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite";
+export const DEFAULT_GROQ_BASE_URL = "https://api.groq.com/openai/v1";
+export const DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b";
+
+export const DEFAULT_GROQ_FALLBACK_MODELS = Object.freeze([
+  "openai/gpt-oss-120b",
+  "openai/gpt-oss-20b",
+  "qwen/qwen3.8-27b",
+]);
 
 export const DEFAULT_GEMINI_FALLBACK_MODELS = Object.freeze([
   "gemini-3.5-flash-lite",
@@ -58,6 +66,7 @@ export function aiError(code, message, { retryable = false, status } = {}) {
  * Human-readable provider label for user-facing error messages.
  */
 export function providerDisplayName(name) {
+  if (name === "groq") return "Groq";
   return name === "gemini" ? "Gemini" : "NVIDIA";
 }
 
@@ -102,6 +111,9 @@ function dedupeModels(models) {
 }
 
 function isCustomBaseUrl(providerName, baseUrl) {
+  if (providerName === "groq") {
+    return !baseUrl.includes("groq.com");
+  }
   if (providerName === "gemini") {
     return !baseUrl.includes("googleapis.com");
   }
@@ -109,6 +121,10 @@ function isCustomBaseUrl(providerName, baseUrl) {
 }
 
 function providerTimeoutMs(providerName) {
+  if (providerName === "groq") {
+    const raw = Number(process.env.GROQ_TIMEOUT_MS) || Number(process.env.AI_TIMEOUT_MS) || 30_000;
+    return Math.max(1_000, Math.min(raw, 120_000));
+  }
   const raw =
     providerName === "gemini"
       ? Number(process.env.GEMINI_TIMEOUT_MS) || Number(process.env.AI_TIMEOUT_MS) || 35_000
@@ -134,6 +150,26 @@ function buildProviderModels(providerName, baseUrl, configuredPrimary, defaultPr
 export function getProviders() {
   const providers = [];
   const preferred = (process.env.AI_PROVIDER || "").toLowerCase();
+
+  const groqKey = process.env.GROQ_API_KEY;
+  const groqBaseUrl = (process.env.GROQ_BASE_URL || DEFAULT_GROQ_BASE_URL).replace(/\/$/, "");
+  const groqPrimary = process.env.GROQ_MODEL || "";
+  const groqConfig = groqKey
+    ? {
+        name: "groq",
+        apiKey: groqKey,
+        baseUrl: groqBaseUrl,
+        model: groqPrimary || DEFAULT_GROQ_MODEL,
+        models: buildProviderModels(
+          "groq",
+          groqBaseUrl,
+          groqPrimary,
+          DEFAULT_GROQ_MODEL,
+          "GROQ_FALLBACK_MODELS",
+          DEFAULT_GROQ_FALLBACK_MODELS
+        ),
+      }
+    : null;
 
   const nvidiaKey = process.env.NVIDIA_API_KEY || process.env.AI_API_KEY;
   const nvidiaBaseUrl = (process.env.NVIDIA_BASE_URL || process.env.AI_BASE_URL || DEFAULT_NVIDIA_BASE_URL).replace(/\/$/, "");
@@ -175,11 +211,17 @@ export function getProviders() {
       }
     : null;
 
-  if (preferred === "gemini") {
+  if (preferred === "groq" || (!preferred && groqConfig)) {
+    if (groqConfig) providers.push(groqConfig);
     if (geminiConfig) providers.push(geminiConfig);
+    if (nvidiaConfig) providers.push(nvidiaConfig);
+  } else if (preferred === "gemini") {
+    if (geminiConfig) providers.push(geminiConfig);
+    if (groqConfig) providers.push(groqConfig);
     if (nvidiaConfig) providers.push(nvidiaConfig);
   } else {
     if (nvidiaConfig) providers.push(nvidiaConfig);
+    if (groqConfig) providers.push(groqConfig);
     if (geminiConfig) providers.push(geminiConfig);
   }
   return providers;
@@ -201,11 +243,12 @@ export function getCandidates() {
     modelList.forEach((model, index) => {
       const lower = model.toLowerCase();
       const supportsReasoningEffort =
-        provider.name === "gemini" &&
-        !isCustomUrl &&
-        !lower.includes("flash-lite") &&
-        !lower.includes("gemma") &&
-        GEMINI_THINKING_MODELS.has(lower);
+        (provider.name === "gemini" &&
+          !isCustomUrl &&
+          !lower.includes("flash-lite") &&
+          !lower.includes("gemma") &&
+          GEMINI_THINKING_MODELS.has(lower)) ||
+        (provider.name === "groq" && lower.includes("gpt-oss"));
 
       candidates.push({
         name: provider.name,

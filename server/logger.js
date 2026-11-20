@@ -24,6 +24,7 @@ const BCRYPT_HASH_PATTERN = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{30,}$/;
 const MONGO_URI_CREDENTIALS_PATTERN = /(mongodb(?:\+srv)?:\/\/[^:]+:)([^@]+)(@)/gi;
 const POSTGRES_URI_CREDENTIALS_PATTERN = /(postgres(?:ql)?:\/\/[^:]+:)([^@]+)(@)/gi;
 const BEARER_TOKEN_PATTERN = /Bearer\s+[A-Za-z0-9_\-\.~+/]+=*/gi;
+const GROQ_KEY_PATTERN = /gsk_[A-Za-z0-9]{20,}/gi;
 const NVIDIA_KEY_PATTERN = /nvapi-[A-Za-z0-9_\-]{16,}/gi;
 const GEMINI_KEY_PATTERN = /(?:AIzaSy[A-Za-z0-9_\-]{33}|AQ\.[A-Za-z0-9_\-]{40,})/gi;
 const JWT_PATTERN = /ey[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+/g;
@@ -40,6 +41,7 @@ export function sanitizeString(str) {
     .replace(MONGO_URI_CREDENTIALS_PATTERN, "$1***$3")
     .replace(POSTGRES_URI_CREDENTIALS_PATTERN, "$1***$3")
     .replace(BEARER_TOKEN_PATTERN, "Bearer [REDACTED]")
+    .replace(GROQ_KEY_PATTERN, "[GROQ_KEY_REDACTED]")
     .replace(NVIDIA_KEY_PATTERN, "nvapi-[REDACTED]")
     .replace(GEMINI_KEY_PATTERN, "[GEMINI_KEY_REDACTED]")
     .replace(JWT_PATTERN, "[JWT_REDACTED]")

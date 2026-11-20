@@ -88,6 +88,7 @@ async function readSseCompletion(response, { providerLabel, ttftDeadline, chunkI
   const chunks = [];
   let buffer = "";
   let hasFirstContent = false;
+  let hasStreamActivity = false;
   let done = false;
 
   const processLine = (rawLine) => {
@@ -108,7 +109,10 @@ async function readSseCompletion(response, { providerLabel, ttftDeadline, chunkI
     const delta = parsed?.choices?.[0]?.delta?.content ?? parsed?.choices?.[0]?.message?.content ?? "";
     if (typeof delta === "string" && delta.length > 0) {
       hasFirstContent = true;
+      hasStreamActivity = true;
       chunks.push(delta);
+    } else if (parsed?.choices?.[0]?.delta?.reasoning || parsed?.choices?.[0]?.delta?.reasoning_content) {
+      hasStreamActivity = true;
     }
   };
 
@@ -136,7 +140,7 @@ async function readSseCompletion(response, { providerLabel, ttftDeadline, chunkI
       break;
     }
 
-    if (hasFirstContent) {
+    if (hasFirstContent || hasStreamActivity) {
       const remaining = deadline ? Math.max(1, deadline - Date.now()) : chunkIdleTimeoutMs;
       armTimer(Math.min(chunkIdleTimeoutMs, remaining));
     } else {
@@ -182,7 +186,12 @@ async function providerAttempt(
   const resolvedMaxTokens = Math.max(128, Math.min(Number(maxTokens) || 1200, MAX_PROVIDER_TOKENS));
   const resolvedTemperature = Math.max(0, Math.min(Number(temperature) || 0, 1));
   const providerLabel = providerDisplayName(candidate.name);
-  const keyEnvVar = candidate.name === "gemini" ? "GEMINI_API_KEY" : "NVIDIA_API_KEY";
+  const keyEnvVar =
+    candidate.name === "gemini"
+      ? "GEMINI_API_KEY"
+      : candidate.name === "groq"
+      ? "GROQ_API_KEY"
+      : "NVIDIA_API_KEY";
 
   try {
     let response = null;
@@ -217,9 +226,15 @@ async function providerAttempt(
 
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
+        const modelVarHint =
+          candidate.name === "nvidia"
+            ? " and NVIDIA_MODEL"
+            : candidate.name === "groq"
+            ? " and GROQ_MODEL"
+            : "";
         throw aiError(
           "AI_PROVIDER_AUTH",
-          `${providerLabel} rejected the configured credential or model. Check ${keyEnvVar}${candidate.name === "nvidia" ? " and NVIDIA_MODEL" : ""} in the server environment.`,
+          `${providerLabel} rejected the configured credential or model. Check ${keyEnvVar}${modelVarHint} in the server environment.`,
           { status: response.status }
         );
       }
