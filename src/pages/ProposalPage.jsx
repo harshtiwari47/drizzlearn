@@ -123,13 +123,13 @@ export function ProposalPage(p) {
       for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
           if (attempt > 1) {
-            setImproveProgress({
+            setImproveProgress((prev) => ({
               stage: "retrying",
-              percent: 15,
+              percent: Math.max(prev?.percent || 0, 20),
               message: `Refining revision format (retry ${attempt} of ${MAX_RETRIES})…`,
-              model: "",
-              provider: "",
-            });
+              model: prev?.model || "",
+              provider: prev?.provider || "",
+            }));
             await new Promise((r) => setTimeout(r, 1000));
           }
 
@@ -161,9 +161,21 @@ export function ProposalPage(p) {
         }
       }
       setImproveError(lastError?.message || "The revision could not be generated. Your current proposal is still available.");
+      if (lastError) {
+        setImproveProgress((prev) => ({
+          stage: "error",
+          percent: prev?.percent || 0,
+          message: `Revision paused at ${prev?.percent || 0}%`,
+          model: prev?.model || "",
+          provider: prev?.provider || "",
+          error: lastError.message,
+        }));
+      }
     } finally {
       setImproving(false);
-      setImproveProgress(null);
+      if (!lastError) {
+        setImproveProgress(null);
+      }
     }
   }
 

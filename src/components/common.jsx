@@ -217,25 +217,65 @@ export function mergeStreamProgress(prev, frame, fallback = "Crafting your custo
     message: frame?.message || prev?.message || fallback,
     model: frame?.model ?? prev?.model ?? "",
     provider: frame?.provider ?? prev?.provider ?? "",
+    goalId: frame?.goalId ?? prev?.goalId ?? null,
+    error: frame?.error ?? prev?.error ?? null,
   };
 }
 
-export function GenerationProgressCard({progress,fallbackMessage="Crafting your customized course…",ariaLabel="Course generation progress",note=""}){
-  const rawPercent=Number(progress?.percent);
-  const percent=Number.isFinite(rawPercent)?Math.max(0,Math.min(100,Math.round(rawPercent))):0;
-  const message=progress?.message||fallbackMessage;
-  const model=progress?.model;
-  const provider=progress?.provider;
+export function GenerationProgressCard({
+  progress,
+  fallbackMessage = "Crafting your customized course…",
+  ariaLabel = "Course generation progress",
+  note = "",
+  onRetry = null,
+  onDismiss = null,
+}) {
+  const rawPercent = Number(progress?.percent);
+  const percent = Number.isFinite(rawPercent) ? Math.max(0, Math.min(100, Math.round(rawPercent))) : 0;
+  const isError = progress?.stage === "error" || Boolean(progress?.error);
+  const message = isError
+    ? (progress?.message || `Generation paused at ${percent}%`)
+    : (progress?.message || fallbackMessage);
+  const model = progress?.model;
+  const provider = progress?.provider;
+  const errorMessage = progress?.error;
+
   return (
-    <div className="course-generation-progress flex flex-col gap-2.5 p-4 rounded-xl border border-learnos-purple/40 bg-learnos-purple/10" role="status" aria-live="polite">
+    <div
+      className={`course-generation-progress flex flex-col gap-3 p-4 rounded-xl border transition-all ${
+        isError
+          ? "generation-progress-paused border-rose-500/40 bg-rose-950/25 shadow-lg shadow-rose-950/20"
+          : "border-learnos-purple/40 bg-learnos-purple/10"
+      }`}
+      role="status"
+      aria-live="polite"
+    >
       <div className="generation-progress-header flex items-center justify-between gap-2 flex-wrap">
-        <span className="generation-progress-label flex items-center gap-2 font-semibold text-sm text-learnos-lavender">
-          <Icon name="spark" size={18}/>
+        <span
+          className={`generation-progress-label flex items-center gap-2 font-semibold text-sm ${
+            isError ? "text-rose-300" : "text-learnos-lavender"
+          }`}
+        >
+          <Icon name={isError ? "alert" : "spark"} size={18} />
           <span>{message}</span>
         </span>
         <div className="generation-progress-meta flex items-center gap-2 flex-wrap">
-          {model&&<span className="generation-model-badge" title={provider?`${provider} · ${model}`:model} aria-label={`Active model: ${model}`}>{model}</span>}
-          <span className="generation-stage-pill generation-percent-pill">{percent}%</span>
+          {model && (
+            <span
+              className={`generation-model-badge ${isError ? "border-rose-500/30 text-rose-300" : ""}`}
+              title={provider ? `${provider} · ${model}` : model}
+              aria-label={`Active model: ${model}`}
+            >
+              {model}
+            </span>
+          )}
+          <span
+            className={`generation-stage-pill generation-percent-pill ${
+              isError ? "border-rose-500/40 bg-rose-500/10 text-rose-300" : ""
+            }`}
+          >
+            {percent}%
+          </span>
         </div>
       </div>
       <div
@@ -246,9 +286,43 @@ export function GenerationProgressCard({progress,fallbackMessage="Crafting your 
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        <div className="generation-progress-bar h-full rounded-full bg-gradient-to-r from-learnos-purple to-learnos-lime" style={{width:`${percent}%`}}/>
+        <div
+          className={`generation-progress-bar h-full rounded-full transition-all duration-300 ${
+            isError
+              ? "bg-gradient-to-r from-amber-500 to-rose-500"
+              : "bg-gradient-to-r from-learnos-purple to-learnos-lime"
+          }`}
+          style={{ width: `${Math.max(4, percent)}%` }}
+        />
       </div>
-      {note&&<p className="generation-routing-note text-sm text-learnos-muted">{note}</p>}
+      {isError && errorMessage && (
+        <div className="generation-error-detail text-xs text-rose-200/90 leading-relaxed bg-black/40 p-2.5 rounded-lg border border-rose-500/25">
+          <strong className="text-rose-300">Status note:</strong> {errorMessage}
+        </div>
+      )}
+      {isError && (onRetry || onDismiss) && (
+        <div className="generation-error-actions flex items-center gap-2 pt-1">
+          {onRetry && (
+            <button
+              type="button"
+              className="generation-action-btn generation-retry-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 text-xs font-semibold border border-rose-500/40 transition-colors"
+              onClick={onRetry}
+            >
+              <span>Resume Generation ↻</span>
+            </button>
+          )}
+          {onDismiss && (
+            <button
+              type="button"
+              className="generation-action-btn generation-dismiss-btn px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs font-medium border border-white/10 transition-colors"
+              onClick={onDismiss}
+            >
+              <span>Clear & Start Over</span>
+            </button>
+          )}
+        </div>
+      )}
+      {note && !isError && <p className="generation-routing-note text-sm text-learnos-muted">{note}</p>}
     </div>
   );
 }

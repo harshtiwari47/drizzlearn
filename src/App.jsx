@@ -183,6 +183,8 @@ function mergeStreamProgress(prev,frame,fallback="Crafting your customized cours
     message:frame?.message||prev?.message||fallback,
     model:frame?.model??prev?.model??"",
     provider:frame?.provider??prev?.provider??"",
+    goalId:frame?.goalId??prev?.goalId??null,
+    error:frame?.error??prev?.error??null,
   };
 }
 function processNdjsonLine(rawLine,onProgress){
@@ -380,8 +382,26 @@ function PageContent(props){
 export default function App(){
   const [data,setData]=useState(loadSaved),[user,setUser]=useState(loadCachedUser),[remote,setRemote]=useState(()=>Boolean(loadCachedUser())),[page,setPage]=useState(initialPage),[routeParams,setRouteParams]=useState(()=>initialRoute().params),[routeQuery,setRouteQuery]=useState(()=>initialRoute().query),[toast,setToast]=useState(""),[busy,setBusy]=useState(false),[queryText,setQueryText]=useState(""),[searchResults,setSearchResults]=useState(null),[modal,setModal]=useState(null),[activeLessonId,setActiveLessonId]=useState(()=>initialRoute().params?.lessonId||null),[proposal,setProposal]=useState(null),[courseFilter,setCourseFilter]=useState("all"),[mobileMoreOpen,setMobileMoreOpen]=useState(false),[mobileDrawerOpen,setMobileDrawerOpen]=useState(false),[generatingCourseId,setGeneratingCourseId]=useState(null);
   const [loginMode,setLoginMode]=useState(initialLoginMode),[authError,setAuthError]=useState(""),[authMessage,setAuthMessage]=useState(""),[returnPage,setReturnPage]=useState("home");
-  const [generationProgress,setGenerationProgress]=useState(null);
-  const [generationError,setGenerationError]=useState("");
+  const [generationProgress,setGenerationProgress]=useState(() => {
+    try {
+      const saved = localStorage.getItem("drizzlearn.generation_progress");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") return parsed;
+      }
+    } catch (_) {}
+    return null;
+  });
+  const [generationError,setGenerationError]=useState(() => {
+    try {
+      const saved = localStorage.getItem("drizzlearn.generation_progress");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.error) return String(parsed.error);
+      }
+    } catch (_) {}
+    return "";
+  });
   const [deletingCourseId,setDeletingCourseId]=useState(null);
   const [deleteCourseError,setDeleteCourseError]=useState("");
   const [activeRequests,setActiveRequests]=useState(0);
@@ -556,13 +576,33 @@ export default function App(){
   const openLesson=(id)=>{const target=data.courses.find(c=>c.modules?.some(m=>m.lessons?.some(l=>l.id===id)));if(target)updateData(current=>({...current,activeCourseId:target.id}));setActiveLessonId(id);go("lesson",{params:{lessonId:id}});};
   const persistRemote=async()=>{if(remote)await refreshRemote();};
   const submitGoal=async(form)=>{
-    if(!remote){sessionStorage.setItem("learnos.goal.draft",JSON.stringify(form));flashToast("Your goal is saved. Sign in to generate a course plan.");openAccount();return;}
+    if(!remote){
+      try {
+        localStorage.setItem("drizzlearn.create_course_draft", JSON.stringify(form));
+        sessionStorage.setItem("learnos.goal.draft", JSON.stringify(form));
+      } catch (_) {}
+      flashToast("Your goal is saved. Sign in to generate a course plan.");
+      openAccount();
+      return;
+    }
     setBusy(true);
     setGenerationError("");
-    setGenerationProgress({stage:"initializing",percent:5,message:"Saving goal & starting curriculum synthesis…",model:"",provider:""});
+
+    const existingGoalId = form?.goalId || generationProgress?.goalId || null;
+    const initialProgress = {
+      stage: "initializing",
+      percent: Math.max(generationProgress?.percent || 0, 5),
+      message: "Saving goal & starting curriculum synthesis…",
+      model: generationProgress?.model || "",
+      provider: generationProgress?.provider || "",
+      goalId: existingGoalId,
+      error: null,
+    };
+    setGenerationProgress(initialProgress);
+    try { localStorage.setItem("drizzlearn.generation_progress", JSON.stringify(initialProgress)); } catch (_) {}
 
     const MAX_RETRIES = 4;
-    let goalId = null;
+    let goalId = existingGoalId;
     let lastError = null;
 
     try{
@@ -571,26 +611,46 @@ export default function App(){
           if(!goalId){
             const created = await request("goals", { method: "POST", body: JSON.stringify(form) });
             goalId = created.goal.id;
+            try {
+              const curDraft = JSON.parse(localStorage.getItem("drizzlearn.create_course_draft") || "{}");
+              localStorage.setItem("drizzlearn.create_course_draft", JSON.stringify({ ...curDraft, goalId }));
+            } catch (_) {}
           }
 
           if(attempt > 1){
-            setGenerationProgress({
-              stage: "retrying",
-              percent: Math.min(30, 5 + attempt * 6),
-              message: `Refining course structure (auto-retry ${attempt} of ${MAX_RETRIES})…`,
-              model: "",
-              provider: "",
+            setGenerationProgress((prev) => {
+              const nextProgress = {
+                stage: "retrying",
+                percent: Math.max(prev?.percent || 0, 20),
+                message: `Refining course structure (auto-retry ${attempt} of ${MAX_RETRIES})…`,
+                model: prev?.model || "",
+                provider: prev?.provider || "",
+                goalId,
+                error: null,
+              };
+              try { localStorage.setItem("drizzlearn.generation_progress", JSON.stringify(nextProgress)); } catch (_) {}
+              return nextProgress;
             });
             await new Promise((r) => setTimeout(r, 1000));
           }
 
           const result = await requestStream(`goals/${goalId}/proposal?stream=1`, { method: "POST", body: JSON.stringify({}) }, (frame) => {
-            setGenerationProgress((prev) => mergeStreamProgress(prev, frame, "Crafting your customized course…"));
+            setGenerationProgress((prev) => {
+              const updated = mergeStreamProgress(prev, { ...frame, goalId }, "Crafting your customized course…");
+              try { localStorage.setItem("drizzlearn.generation_progress", JSON.stringify(updated)); } catch (_) {}
+              return updated;
+            });
           });
 
           setProposal(result.course);
-          sessionStorage.removeItem("learnos.goal.draft");
-          sessionStorage.removeItem("learnos.goal.prefill");
+          setGenerationProgress(null);
+          setGenerationError("");
+          try {
+            localStorage.removeItem("drizzlearn.create_course_draft");
+            localStorage.removeItem("drizzlearn.generation_progress");
+            sessionStorage.removeItem("learnos.goal.draft");
+            sessionStorage.removeItem("learnos.goal.prefill");
+          } catch (_) {}
           go("proposal", { params: { courseId: result.course?.id } });
           return;
         }catch(error){
@@ -612,10 +672,22 @@ export default function App(){
 
       const msg = lastError?.message || "Course generation could not be completed.";
       setGenerationError(msg);
+      setGenerationProgress((prev) => {
+        const pausedProgress = {
+          stage: "error",
+          percent: prev?.percent || 0,
+          message: `Generation paused at ${prev?.percent || 0}%`,
+          model: prev?.model || "",
+          provider: prev?.provider || "",
+          error: msg,
+          goalId,
+        };
+        try { localStorage.setItem("drizzlearn.generation_progress", JSON.stringify(pausedProgress)); } catch (_) {}
+        return pausedProgress;
+      });
       flashToast(msg, 7000);
     }finally{
       setBusy(false);
-      setGenerationProgress(null);
     }
   };
   const approveProposal=async(acceptOverload=false,courseOverride=null)=>{

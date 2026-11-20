@@ -1,12 +1,19 @@
 import React, { useRef, useState, useMemo, useEffect } from "react";
 import { Icon, GenerationProgressCard } from "../components/common.jsx";
 
+const DRAFT_STORAGE_KEY = "drizzlearn.create_course_draft";
+const PROGRESS_STORAGE_KEY = "drizzlearn.generation_progress";
+
 function readGoalDraft() {
   try {
-    return JSON.parse(sessionStorage.getItem("learnos.goal.draft") || "{}");
-  } catch {
-    return {};
-  }
+    const local = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (local) return JSON.parse(local);
+  } catch (_) {}
+  try {
+    const session = sessionStorage.getItem("learnos.goal.draft");
+    if (session) return JSON.parse(session);
+  } catch (_) {}
+  return {};
 }
 
 export { readGoalDraft };
@@ -17,20 +24,67 @@ function CreateCoursePage(props) {
   const currentPos = useRef({ x: 0, y: 0, opacity: 0 });
   const rafId = useRef(null);
 
-  const [topic, setTopic] = useState(() => sessionStorage.getItem("learnos.goal.prefill") || readGoalDraft().topic || "");
-  const [outcome, setOutcome] = useState(() => readGoalDraft().desiredOutcome || "");
-  const [level, setLevel] = useState("Beginner");
-  const [purpose, setPurpose] = useState("Personal learning");
-  const [weekly, setWeekly] = useState(props.data?.settings?.weeklyMinutes || 360);
-  const [weeks, setWeeks] = useState(8);
-  const [date, setDate] = useState("");
+  const initialDraft = useMemo(() => readGoalDraft(), []);
+  const prefill = typeof window !== "undefined" ? sessionStorage.getItem("learnos.goal.prefill") : "";
+
+  const [topic, setTopic] = useState(() => prefill || initialDraft.topic || "");
+  const [outcome, setOutcome] = useState(() => initialDraft.desiredOutcome || "");
+  const [level, setLevel] = useState(() => initialDraft.currentLevel || "Beginner");
+  const [purpose, setPurpose] = useState(() => initialDraft.purpose || "Personal learning");
+  const [weekly, setWeekly] = useState(() => initialDraft.weeklyMinutes || props.data?.settings?.weeklyMinutes || 360);
+  const [weeks, setWeeks] = useState(() => initialDraft.targetWeeks || 8);
+  const [date, setDate] = useState(() => initialDraft.targetDate || "");
 
   const weeklyHours = useMemo(() => {
     return Math.round(Number(weekly) / 60);
   }, [weekly]);
 
+  const hasSavedDraft = Boolean(topic.trim() || outcome.trim());
+
+  // Auto-save form inputs to localStorage so refreshing or closing the tab restores everything
+  useEffect(() => {
+    if (topic.trim() || outcome.trim()) {
+      const draftData = {
+        topic,
+        desiredOutcome: outcome,
+        currentLevel: level,
+        purpose,
+        weeklyMinutes: Number(weekly),
+        targetWeeks: Number(weeks),
+        targetDate: date || null,
+        goalId: props.generationProgress?.goalId || initialDraft.goalId || null,
+        updatedAt: Date.now(),
+      };
+      try {
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+        sessionStorage.setItem("learnos.goal.draft", JSON.stringify(draftData));
+      } catch (_) {}
+    }
+  }, [topic, outcome, level, purpose, weekly, weeks, date, props.generationProgress?.goalId, initialDraft.goalId]);
+
+  const handleClearDraft = () => {
+    setTopic("");
+    setOutcome("");
+    setLevel("Beginner");
+    setPurpose("Personal learning");
+    setWeekly(props.data?.settings?.weeklyMinutes || 360);
+    setWeeks(8);
+    setDate("");
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      localStorage.removeItem(PROGRESS_STORAGE_KEY);
+      sessionStorage.removeItem("learnos.goal.draft");
+      sessionStorage.removeItem("learnos.goal.prefill");
+    } catch (_) {}
+    if (props.setGenerationProgress) props.setGenerationProgress(null);
+    if (props.setGenerationError) props.setGenerationError("");
+  };
+
   const runSubmit = async () => {
     sessionStorage.removeItem("learnos.goal.prefill");
+    const savedDraft = readGoalDraft();
+    const existingGoalId = props.generationProgress?.goalId || savedDraft.goalId || null;
+
     await props.submitGoal({
       topic,
       desiredOutcome: outcome,
@@ -38,7 +92,8 @@ function CreateCoursePage(props) {
       purpose,
       weeklyMinutes: Number(weekly),
       targetWeeks: Number(weeks),
-      targetDate: date || null
+      targetDate: date || null,
+      goalId: existingGoalId,
     });
   };
 
@@ -142,7 +197,23 @@ function CreateCoursePage(props) {
             <Icon name="arrowLeft" size={22} />
           </button>
           <div className="create-course-title-wrap">
-            <h1 className="create-course-title">Create a course</h1>
+            <div className="create-course-title-header-badge-row flex items-center gap-3 flex-wrap">
+              <h1 className="create-course-title">Create a course</h1>
+              {hasSavedDraft && (
+                <div className="create-course-draft-pill flex items-center gap-2" role="status" aria-label="Draft saved locally">
+                  <span className="draft-saved-dot" aria-hidden="true" />
+                  <span className="draft-saved-text">Draft saved</span>
+                  <button
+                    type="button"
+                    className="draft-clear-btn"
+                    onClick={handleClearDraft}
+                    title="Clear saved draft and start fresh"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+            </div>
             <p className="create-course-subtitle">
               Define what you want to learn to build your structured roadmap.
             </p>
@@ -305,20 +376,22 @@ function CreateCoursePage(props) {
           </div>
         </div>
 
-        {/* Progress Display */}
-        {props.busy && (
+        {/* Progress Display: keep visible during active streaming OR when generation pauses/fails with error */}
+        {(props.busy || (props.generationProgress && props.generationProgress.percent > 0)) && (
           <div className="create-course-progress-wrap">
             <GenerationProgressCard
               progress={props.generationProgress}
               fallbackMessage="Building your course plan…"
               ariaLabel="Course generation progress"
               note="Structuring modules, lessons, and practice checkpoints."
+              onRetry={retryGeneration}
+              onDismiss={handleClearDraft}
             />
           </div>
         )}
 
-        {/* Error Notification */}
-        {props.generationError && !props.busy && (
+        {/* Fallback Error Notification (only shown if GenerationProgressCard is not active) */}
+        {props.generationError && !props.busy && !props.generationProgress && (
           <div className="create-course-error-row" role="alert">
             <span className="error-icon text-rose-400">
               <Icon name="alert" size={17} />
